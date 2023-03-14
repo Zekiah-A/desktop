@@ -29,7 +29,7 @@ window.MouseMoved += (_, args) =>
     mainPage.HitTest(args.X, args.Y, TestType.Hover);
 };
 
-var backgroundStream = File.OpenRead(@"Resources/Brand/dirt_background.png");
+var backgroundStream = File.OpenRead(@"Resources/Textures/Background/panorama_2.png");
 var backgroundTexture = new Texture(new Image(backgroundStream))
 {
     Repeated = true
@@ -37,17 +37,42 @@ var backgroundTexture = new Texture(new Image(backgroundStream))
 var backgroundRect = new TextureRect(backgroundTexture, () => 0, () => 0, () => (int) window.GetView().Size.X, () => (int) window.GetView().Size.Y);
 mainPage.Children.Add(backgroundRect);
 
-var button = new Button("Play game", 
+var playButton = new Button("Play", 
     () => (int) (window.GetView().Center.X - 0.5 * window.GetView().Center.X),
-    () => (int) (window.GetView().Size.Y * 0.8),
+    () => (int) (window.GetView().Size.Y * 0.5),
     () => (int) (0.5 * window.GetView().Size.X), 
     () => (int) (0.05 * window.GetView().Size.X));
-button.OnMouseUp += (_, _) =>
+playButton.OnMouseUp += (_, _) =>
 {
     mainPage = null;
 };
+mainPage.Children.Add(playButton);
 
-mainPage.Children.Add(button);
+var accountButton = new Button("Account & Profile", 
+    () => (int) (window.GetView().Center.X - 0.5 * window.GetView().Center.X),
+    () => (int) (window.GetView().Size.Y * 0.58),
+    () => (int) (0.5 * window.GetView().Size.X), 
+    () => (int) (0.05 * window.GetView().Size.X));
+mainPage.Children.Add(accountButton);
+
+var optionsButton = new Button("Options", 
+    () => (int) (window.GetView().Center.X - (0.5 * window.GetView().Center.X)),
+    () => (int) (window.GetView().Size.Y * 0.7),
+    () => (int) (0.25 * window.GetView().Size.X - 8), 
+    () => (int) (0.05 * window.GetView().Size.X));
+mainPage.Children.Add(optionsButton);
+
+var quitButton = new Button("Quit", 
+    () => (int) (window.GetView().Center.X + 8),
+    () => (int) (window.GetView().Size.Y * 0.7),
+    () => (int) (0.25 * window.GetView().Size.X - 8), 
+    () => (int) (0.05 * window.GetView().Size.X));
+quitButton.OnMouseUp += (_, _) =>
+{
+    Environment.Exit(0);
+};
+mainPage.Children.Add(quitButton);
+
 
 // Render loop
 while (window.IsOpen)
@@ -55,9 +80,8 @@ while (window.IsOpen)
     window.DispatchEvents();
     window.Clear(Color.Black);
 
-    if (mainPage != null)
-        mainPage.Render(window);
-    
+    mainPage?.Render(window);
+
     window.Display();
     Thread.Sleep(16);
 }
