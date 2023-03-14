@@ -6,8 +6,8 @@ namespace OpenMc2D.Gui;
 public class Page : Control
 {
     public List<Control> Children;
-
-    public Page(Func<int> x, Func<int> y, Func<int> width, Func<int> height) : base(x, y, width, height)
+    
+    public Page()
     {
         Children = new List<Control>();
     }

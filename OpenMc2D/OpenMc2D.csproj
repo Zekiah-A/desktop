@@ -19,4 +19,10 @@
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
     </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Blocks" />
+      <Folder Include="Entities" />
+      <Folder Include="Networking" />
+    </ItemGroup>
 </Project>

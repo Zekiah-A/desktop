@@ -11,14 +11,22 @@ public abstract class Control
     public event EventHandler<EventArgs>? OnMouseDown;
     public event EventHandler<EventArgs>? OnMouseUp;
 
-    public Control(Func<int> x, Func<int> y, Func<int> width, Func<int> height)
+    protected Control(Func<int> x, Func<int> y, Func<int>? width = null, Func<int>? height = null)
     {
         Bounds.StartX = x;
         Bounds.StartY = y;
-        Bounds.EndX = () => x() + width();
-        Bounds.EndY = () => y() + height();
+        Bounds.EndX = () => x() + (width?.Invoke() ?? 0);
+        Bounds.EndY = () => y() + (height?.Invoke() ?? 0);
     }
-    
+
+    protected Control()
+    {
+        Bounds.StartX = () => 0;
+        Bounds.StartY = () => 0;
+        Bounds.EndX = () => 0;
+        Bounds.EndY = () => 0;
+    }
+
     public virtual bool HitTest(int x, int y, TestType type)
     {
         if (type == TestType.Up && State == State.Pressed)
@@ -28,9 +36,13 @@ public abstract class Control
             return true;
         }
 
-        if (x > Bounds.StartX() && x < Bounds.EndX()
-            && y > Bounds.StartY() && y < Bounds.EndY() && State != State.Pressed)
+        if (x > Bounds.StartX() && x < Bounds.EndX() && y > Bounds.StartY() && y < Bounds.EndY())
         {
+            if (State == State.Pressed)
+            {
+                return false;
+            }
+            
             if (type == TestType.Hover && State != State.Hover)
             {
                 State = State.Hover;
@@ -55,8 +67,5 @@ public abstract class Control
         return false;
     }
 
-    public virtual void Render(RenderWindow window)
-    {
-        
-    }
+    public virtual void Render(RenderWindow window) { }
 }
