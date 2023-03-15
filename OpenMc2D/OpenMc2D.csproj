@@ -7,6 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="NetCoreServer" Version="7.0.0" />
         <PackageReference Include="SFML.Net" Version="2.5.0" />
     </ItemGroup>
 
@@ -18,11 +19,5 @@
         <Content Include="Resources\**">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Blocks" />
-      <Folder Include="Entities" />
-      <Folder Include="Networking" />
     </ItemGroup>
 </Project>

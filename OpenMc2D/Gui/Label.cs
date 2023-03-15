@@ -9,6 +9,13 @@ public class Label : Control
     public int FontSize;
     public Color Colour;
 
+    public Label(string text, int fontSize, Color colour)
+    {
+        Text = text;
+        FontSize = fontSize;
+        Colour = colour;
+    }
+
     public Label(string text, int fontSize, Color colour, Func<int> x, Func<int> y)
     {
         Text = text;
