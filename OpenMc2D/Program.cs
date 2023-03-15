@@ -16,6 +16,7 @@ var gameData = new GameData
     PrivateKey = Storage.Get<string>(nameof(GameData.PrivateKey)) ?? "",
     AuthSignature = Storage.Get<string>(nameof(GameData.AuthSignature)) ?? ""
 };
+var connections = new Connections(gameData);
 
 // Window event listeners and input
 var window = new RenderWindow(new VideoMode(1540, 1080), "OpenMc2d");
@@ -86,12 +87,16 @@ var serversLabel = new Label("Connect to a server:", 28, Color.White)
     Bounds = new Bounds(() => (int) (window.GetView().Size.X / 2) - 156, () => 128, () => 0, () => 0)
 };
 serversPage.Children.Add(serversLabel);
-var serverList = new DisplayList(() => 64, () => 192, () => (int) (window.GetView().Size.X - 128), () => (int) (window.GetView().Size.X * 0.8));
-serverList.Children = new List<DisplayListItem>
+var serverList = new DisplayList(() => 64, () => 192,
+    () => (int) (window.GetView().Size.X - 128),
+    () => (int) (window.GetView().Size.X * 0.8));
+Task.Run(async () =>
 {
-    new(new Texture(@"Resources/Brand/grass_icon.png"), "MY SERVER", "This is a server ever"),
-    new(new Texture(@"Resources/Brand/grass_icon.png"), "MY SERVER", "This is a server ever"),
-};
+    serverList.Children = new List<DisplayListItem>
+    {
+        await connections.PreConnect("ws://localhost:27277")
+    };
+});
 serversPage.Children.Add(serverList);
 
 // Main page game UI
@@ -160,7 +165,8 @@ authPage.Children.Add(dirtBackgroundRect);
 authPage.Children.Add(dirtBackgroundRect);
 var authLabel = new Label("Game invite code:", 28, Color.Yellow)
 {
-    Bounds = new Bounds(() => (int) (window.GetView().Size.X / 2) - 128, () =>  (int) ((int) window.GetView().Size.Y * 0.1), () => 0, () => 0)
+    Bounds = new Bounds(() => (int) (window.GetView().Size.X / 2) - 128,
+        () => (int) ((int) window.GetView().Size.Y * 0.1), () => 0, () => 0)
 };
 authPage.Children.Add(authLabel);
 var authButton = new Button("Continue",
@@ -204,8 +210,12 @@ async Task<bool> Authorise(string? key = null)
     return true;
 }
 
-currentPage = authPage;
-//currentPage = await Authorise(Storage.Get<string>("AuthKey")) ? mainPage : authPage;
+currentPage = mainPage;
+// We must use Task.Run, because SFML hates async being used on the same thread as it's onw drawing code
+Task.Run(async () =>
+{
+    currentPage = await Authorise(Storage.Get<string>("AuthKey")) ? mainPage : authPage;
+});
 
 // Render loop
 while (window.IsOpen)

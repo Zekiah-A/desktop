@@ -18,7 +18,7 @@ public class DisplayListItem : Control
         Name = name;
         Description = description;
     }
-
+    
     public override void Render(RenderWindow window, View view)
     {
         if (State == State.Hover)
@@ -41,5 +41,22 @@ public class DisplayListItem : Control
             Texture = Texture
         };
         window.Draw(image);
+        
+        var font = new Font(@"Resources/Fonts/mojangles.ttf");
+        var nameText = new Text(Name, font)
+        {
+            CharacterSize = 32,
+            FillColor = Color.White,
+            Position = new Vector2f(Bounds.StartX() + image.Size.X + 24, Bounds.StartY() + 8)
+        };
+        window.Draw(nameText);
+        
+        var descriptionText = new Text(Description, font)
+        {
+            CharacterSize = 24,
+            FillColor = Color.White,
+            Position = new Vector2f(Bounds.StartX() + image.Size.X + 24, Bounds.StartY() + Height / 2)
+        };
+        window.Draw(descriptionText);
     }
 }

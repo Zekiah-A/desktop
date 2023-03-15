@@ -70,33 +70,33 @@ public ref struct ReadablePacket
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    byte ReadByte() => Data[Position++];
+    public byte ReadByte() => Data[Position++];
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    short ReadShort() => BinaryPrimitives.ReadInt16BigEndian(Data[(Position += 2)..]);
+    public short ReadShort() => BinaryPrimitives.ReadInt16BigEndian(Data[(Position += 2)..]);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    ushort ReadUShort() => BinaryPrimitives.ReadUInt16BigEndian(Data[(Position += 2)..]);
+    public ushort ReadUShort() => BinaryPrimitives.ReadUInt16BigEndian(Data[(Position += 2)..]);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    int ReadInt() => BinaryPrimitives.ReadInt32BigEndian(Data[(Position += 4)..]);
+    public int ReadInt() => BinaryPrimitives.ReadInt32BigEndian(Data[(Position += 4)..]);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    uint ReadUInt() => BinaryPrimitives.ReadUInt32BigEndian(Data[(Position += 4)..]);
+    public uint ReadUInt() => BinaryPrimitives.ReadUInt32BigEndian(Data[(Position += 4)..]);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    double ReadDouble() => BinaryPrimitives.ReadDoubleBigEndian(Data[(Position += 8)..]);
+    public double ReadDouble() => BinaryPrimitives.ReadDoubleBigEndian(Data[(Position += 8)..]);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    float ReadFloat() => BinaryPrimitives.ReadSingleBigEndian(Data[(Position += 4)..]);
+    public float ReadFloat() => BinaryPrimitives.ReadSingleBigEndian(Data[(Position += 4)..]);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    bool ReadBool() => Data[Position++] != 0;
+    public bool ReadBool() => Data[Position++] != 0;
 
     /// <summary>
     /// A variable length integer. Similar to VarInt, made up of UInt6, UInt14 or Uint31, allows range 0-2147483647.
     /// </summary>
-    uint ReadFlexInt()
+    public uint ReadFlexInt()
     {
         var value = (uint) Data[Position];
         if (value >= 64)
@@ -123,7 +123,7 @@ public ref struct ReadablePacket
     /// <summary>
     /// Variable length byte array, the first value will represent a FlexInt of the array length.
     /// </summary>
-    byte[] ReadByteArray()
+    public byte[] ReadByteArray()
     {
         var flexIntLength = 0;
         var arrayLength = (uint) Data[Position];
@@ -152,7 +152,7 @@ public ref struct ReadablePacket
     /// <summary>
     /// Variable length string, the first value will represent a FlexInt of the array length.
     /// </summary>
-    string ReadString()
+    public string ReadString()
     {
         var subArray = ReadByteArray();
         return Encoding.UTF8.GetString(subArray);
