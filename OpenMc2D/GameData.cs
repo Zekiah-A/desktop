@@ -7,7 +7,7 @@ namespace OpenMc2D;
 public class GameData
 {
     // Game runtime objects
-    public HttpClient HttpClient { get; init; }
+    public HttpClient HttpClient { get; init; } = new();
     public Item[] ItemIds { get; init; }
     public WatsonWsClient CurrentServer { get; set; }
     

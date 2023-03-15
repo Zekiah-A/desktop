@@ -22,7 +22,9 @@ public class Connections
 
     public async Task<DisplayListItem> PreConnect(string ip)
     {
-	    var server = new WatsonWsClient(new Uri($"{ip}/{gameData.Name}/{gameData.AuthSignature}/{gameData.PublicKey}"));
+	    var server = new WatsonWsClient(new Uri($"{ip}/{gameData.Name}" +
+            $@"/{NetworkingHelpers.EncodeURIComponent(gameData.PublicKey)}" +
+            $@"/{NetworkingHelpers.EncodeURIComponent(gameData.AuthSignature)}"));
 	    var name = ip;
 	    var motd = "Failed to connect";
 	    var imageTask = new TaskCompletionSource<Image>();
@@ -42,7 +44,6 @@ public class Connections
 
 	    server.ServerConnected += (sender, args) =>
 	    {
-		    Console.WriteLine("Server connected");
 		    timeout.Change(Timeout.Infinite, Timeout.Infinite);
 	    };
 
@@ -51,12 +52,11 @@ public class Connections
 		    var packet = (ReadablePacket) args.Data.ToArray();
 		    name = packet.ReadString();
 		    motd = packet.ReadString();
-		    var fetchTask = FetchImage(packet.ReadString());
+		    var imageUri = packet.ReadString();
 		    
 		    Task.Run(async () => 
 		    {
-			    var image = await fetchTask;
-			    imageTask.SetResult(image);
+			    imageTask.SetResult(await FetchImage(imageUri));
 		    });
 	    };
 
@@ -72,7 +72,7 @@ public class Connections
 	    {
 		    image = await imageTask.Task;
 	    }
-	    catch (TaskCanceledException)
+	    catch (Exception)
 	    {
 		    image = new Image(@"Resources/Brand/grass_icon.png");
 	    }

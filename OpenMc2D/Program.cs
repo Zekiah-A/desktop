@@ -198,15 +198,16 @@ async Task<bool> Authorise(string? key = null)
         return false;
     }
     
-    Storage.Save("AuthKey", key);
-    gameData.PublicKey = lines[0];
-    Storage.Save(nameof(GameData.PublicKey), lines[0]);
-    gameData.PrivateKey = lines[1];
-    Storage.Save(nameof(gameData.PrivateKey), lines[1]);
+    gameData.Name = lines[0];
+    gameData.PublicKey = lines[1];
+    gameData.PrivateKey = lines[2];
     gameData.AuthSignature = lines[3];
-    Storage.Save(nameof(gameData.AuthSignature), lines[2]);
-    gameData.Name =  lines[3];
-    Storage.Save(nameof(gameData.Name), lines[3]);
+    
+    Storage.Save("AuthKey", key);
+    Storage.Save(nameof(gameData.Name), gameData.Name);
+    Storage.Save(nameof(GameData.PublicKey), gameData.PublicKey);
+    Storage.Save(nameof(gameData.PrivateKey), gameData.PrivateKey);
+    Storage.Save(nameof(gameData.AuthSignature), gameData.AuthSignature);
     return true;
 }
 
@@ -214,7 +215,10 @@ currentPage = mainPage;
 // We must use Task.Run, because SFML hates async being used on the same thread as it's onw drawing code
 Task.Run(async () =>
 {
-    currentPage = await Authorise(Storage.Get<string>("AuthKey")) ? mainPage : authPage;
+    if (currentPage != authPage && !await Authorise(Storage.Get<string>("AuthKey")))
+    {
+        currentPage = authPage;
+    }
 });
 
 // Render loop

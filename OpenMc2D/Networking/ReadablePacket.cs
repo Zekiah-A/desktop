@@ -73,22 +73,22 @@ public ref struct ReadablePacket
     public byte ReadByte() => Data[Position++];
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public short ReadShort() => BinaryPrimitives.ReadInt16BigEndian(Data[(Position += 2)..]);
+    public short ReadShort() => BinaryPrimitives.ReadInt16BigEndian(Data[((Position += 2) - 2)..]);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ushort ReadUShort() => BinaryPrimitives.ReadUInt16BigEndian(Data[(Position += 2)..]);
+    public ushort ReadUShort() => BinaryPrimitives.ReadUInt16BigEndian(Data[((Position += 2) - 2)..]);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int ReadInt() => BinaryPrimitives.ReadInt32BigEndian(Data[(Position += 4)..]);
+    public int ReadInt() => BinaryPrimitives.ReadInt32BigEndian(Data[((Position += 4) - 4)..]);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public uint ReadUInt() => BinaryPrimitives.ReadUInt32BigEndian(Data[(Position += 4)..]);
+    public uint ReadUInt() => BinaryPrimitives.ReadUInt32BigEndian(Data[((Position += 4) - 4)..]);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public double ReadDouble() => BinaryPrimitives.ReadDoubleBigEndian(Data[(Position += 8)..]);
+    public double ReadDouble() => BinaryPrimitives.ReadDoubleBigEndian(Data[((Position += 8) - 8)..]);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public float ReadFloat() => BinaryPrimitives.ReadSingleBigEndian(Data[(Position += 4)..]);
+    public float ReadFloat() => BinaryPrimitives.ReadSingleBigEndian(Data[((Position += 4) - 4)..]);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool ReadBool() => Data[Position++] != 0;
@@ -109,7 +109,7 @@ public ref struct ReadablePacket
             else
             {
                 value = (uint) (BinaryPrimitives.ReadUInt16BigEndian(Data[Position..]) & 0x3FFF);
-                Position += 4;
+                Position += 2;
             }
         }
         else
@@ -125,28 +125,10 @@ public ref struct ReadablePacket
     /// </summary>
     public byte[] ReadByteArray()
     {
-        var flexIntLength = 0;
-        var arrayLength = (uint) Data[Position];
-        if (arrayLength >= 64)
-        {
-            if (arrayLength >= 128)
-            {
-                arrayLength = BinaryPrimitives.ReadUInt32BigEndian(Data[Position..]) & 0x7FFFFFFF;
-                flexIntLength += 4;
-            }
-            else
-            {
-                arrayLength = (uint) (BinaryPrimitives.ReadUInt16BigEndian(Data[Position..]) & 0x3FFF);
-                flexIntLength += 4;
-            }
-        }
-        else
-        {
-            flexIntLength++;
-        }
-
-        Position += flexIntLength;
-        return Data[Position..(int) (Position + arrayLength)].ToArray();
+        var length = ReadFlexInt();
+        var array = Data[Position..(int) (Position + length)].ToArray();
+        Position += (int) length;
+        return array;
     }
 
     /// <summary>
