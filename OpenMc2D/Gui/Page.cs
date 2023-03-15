@@ -3,6 +3,9 @@ using SFML.Window;
 
 namespace OpenMc2D.Gui;
 
+/// <summary>
+/// A generic control that has the ability to group a number of controls via it's Children.
+/// </summary>
 public class Page : Control
 {
     public List<Control> Children;
@@ -24,13 +27,13 @@ public class Page : Control
         return false;
     }
 
-    public override void Render(RenderWindow window)
+    public override void Render(RenderWindow window, View view)
     {
         window.Clear(Color.Black);
 
         foreach (var child in Children)
         {
-            child.Render(window);
+            child.Render(window, view);
         }
     }
 }

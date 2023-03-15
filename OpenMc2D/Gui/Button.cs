@@ -32,7 +32,7 @@ public class Button : Control
         };
     }
 
-    public override void Render(RenderWindow window)
+    public override void Render(RenderWindow window, View view)
     {
         var background = new RectangleShape
         {

@@ -1,4 +1,6 @@
 using System.Buffers.Binary;
+using System.Collections;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Unicode;
@@ -12,13 +14,14 @@ public ref struct ReadablePacket
 {
     public Span<byte> Data;
     public int Position;
+    public int Left => Data.Length - Position;
 
     public ReadablePacket(byte[] data)
     {
         Data = data;
     }
     
-    public T Read<T>()
+    public T Read<T>(ref T? target) where T : new()
     {
         if (typeof(T) == typeof(byte) || typeof(T) == typeof(sbyte)) return (T) (object) ReadByte();
         if (typeof(T) == typeof(short)) return (T) (object) ReadShort();
@@ -30,19 +33,40 @@ public ref struct ReadablePacket
         if (typeof(T) == typeof(bool)) return (T) (object) ReadBool();
         if (typeof(T) == typeof(string)) return (T) (object) ReadString();
         if (typeof(T) == typeof(byte[])) return (T) (object) ReadByteArray();
-        /* TODO: This
-        if (typeof(T) == typeof(Item))
-        {
-            return ReadItem(target)
-        }
 
+        // TODO: Implement array reading
         if (typeof(T).IsArray)
         {
             
         }
-        */
         
-        throw new NotImplementedException();
+        // If T is a class, or some other kind of struct or object we use reflection to get the type of each of its
+        // properties, and read into that, this is recursive, so regardless how deep the object is, we can keep reading
+        // into it until we have populated the entire object with the correct data.
+        if (target is null)
+        {
+            var newInstance = new T();
+            var readMethod = ((object) this).GetType().GetMethod(nameof(Read))!;
+            
+            foreach (var property in typeof(T).GetProperties())
+            {
+                var readConstructed = readMethod.MakeGenericMethod(property.GetType());
+                var propertyValue = readConstructed.Invoke(this, new[] { property.GetValue(newInstance) });
+                newInstance.GetType().GetProperty(property.Name)!.SetValue(newInstance, propertyValue);
+            }
+        }
+        else
+        {
+            var readMethod = ((object) this).GetType().GetMethod(nameof(Read))!;
+            foreach (var property in typeof(T).GetProperties())
+            {
+                var readConstructed = readMethod.MakeGenericMethod(property.GetType());
+                var propertyValue = readConstructed.Invoke(this, new[] { property.GetValue(target) });
+                target.GetType().GetProperty(property.Name)!.SetValue(target, propertyValue);
+            }
+        }
+        
+        throw new InvalidOperationException();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -68,18 +92,71 @@ public ref struct ReadablePacket
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     bool ReadBool() => Data[Position++] != 0;
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    string ReadString() => Encoding.UTF8.GetString(Data);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    byte[] ReadByteArray() => Data.ToArray();
-
-
-    /*Item ReadItem()
+    /// <summary>
+    /// A variable length integer. Similar to VarInt, made up of UInt6, UInt14 or Uint31, allows range 0-2147483647.
+    /// </summary>
+    uint ReadFlexInt()
     {
-        
-    }*/
+        var value = (uint) Data[Position];
+        if (value >= 64)
+        {
+            if (value >= 128)
+            {
+                value = BinaryPrimitives.ReadUInt32BigEndian(Data[Position..]) & 0x7FFFFFFF;
+                Position += 4;
+            }
+            else
+            {
+                value = (uint) (BinaryPrimitives.ReadUInt16BigEndian(Data[Position..]) & 0x3FFF);
+                Position += 4;
+            }
+        }
+        else
+        {
+            Position++;
+        }
+
+        return value;
+    }
+
+    /// <summary>
+    /// Variable length byte array, the first value will represent a FlexInt of the array length.
+    /// </summary>
+    byte[] ReadByteArray()
+    {
+        var flexIntLength = 0;
+        var arrayLength = (uint) Data[Position];
+        if (arrayLength >= 64)
+        {
+            if (arrayLength >= 128)
+            {
+                arrayLength = BinaryPrimitives.ReadUInt32BigEndian(Data[Position..]) & 0x7FFFFFFF;
+                flexIntLength += 4;
+            }
+            else
+            {
+                arrayLength = (uint) (BinaryPrimitives.ReadUInt16BigEndian(Data[Position..]) & 0x3FFF);
+                flexIntLength += 4;
+            }
+        }
+        else
+        {
+            flexIntLength++;
+        }
+
+        Position += flexIntLength;
+        return Data[Position..(int) (Position + arrayLength)].ToArray();
+    }
+
+    /// <summary>
+    /// Variable length string, the first value will represent a FlexInt of the array length.
+    /// </summary>
+    string ReadString()
+    {
+        var subArray = ReadByteArray();
+        return Encoding.UTF8.GetString(subArray);
+    }
     
     public static implicit operator ReadablePacket(byte[] data)
     {
@@ -101,5 +178,4 @@ public ref struct ReadablePacket
         get => Data[index];
         set => Data[index] = value;
     }
-    
 }

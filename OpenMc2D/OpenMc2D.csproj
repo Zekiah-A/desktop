@@ -7,8 +7,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="NetCoreServer" Version="7.0.0" />
         <PackageReference Include="SFML.Net" Version="2.5.0" />
+        <ProjectReference Include="..\WatsonWebsocketPlus\src\WatsonWebsocket\WatsonWebsocket.csproj" />
     </ItemGroup>
 
     <ItemGroup>

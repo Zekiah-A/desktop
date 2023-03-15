@@ -14,7 +14,7 @@ public class TextureRect : Control
         SubRect = Bounds.Default;
     }
 
-    public override void Render(RenderWindow window)
+    public override void Render(RenderWindow window, View view)
     {
         var rect = new RectangleShape
         {

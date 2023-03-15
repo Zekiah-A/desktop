@@ -25,7 +25,7 @@ public class Label : Control
         Bounds.StartY = y;
     }
 
-    public override void Render(RenderWindow window)
+    public override void Render(RenderWindow window, View view)
     {
         var font = new Font(@"Resources/Fonts/mojangles.ttf");
         var text = new Text(Text, font)

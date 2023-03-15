@@ -67,5 +67,5 @@ public abstract class Control
         return false;
     }
 
-    public virtual void Render(RenderWindow window) { }
+    public virtual void Render(RenderWindow window, View view) { }
 }
