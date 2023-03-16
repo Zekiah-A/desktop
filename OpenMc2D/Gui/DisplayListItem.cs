@@ -11,7 +11,8 @@ public class DisplayListItem : Control
     public string Description { get; set; }
     public int Height { get; set; } = 128;
     public Color BorderColour { get; set; } = new(255, 255, 255, 128);
-
+    public Color DescriptionColour { get; set; } = new(255, 255, 255, 200);
+    
     public DisplayListItem(Texture texture, string name, string description)
     {
         Texture = texture;
@@ -54,7 +55,7 @@ public class DisplayListItem : Control
         var descriptionText = new Text(Description, font)
         {
             CharacterSize = 24,
-            FillColor = Color.White,
+            FillColor = DescriptionColour,
             Position = new Vector2f(Bounds.StartX() + image.Size.X + 24, Bounds.StartY() + Height / 2)
         };
         window.Draw(descriptionText);

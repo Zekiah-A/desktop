@@ -38,6 +38,18 @@ public class Page : Control
 
         return false;
     }
+    
+    public override bool TextTest(string unicode)
+    {
+        for (var i = Children.Count - 1; i >= 0; i--) {
+            if (Children[i].TextTest(unicode))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     public override void Render(RenderWindow window, View view)
     {

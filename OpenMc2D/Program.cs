@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Runtime.InteropServices.ComTypes;
 using OpenMc2D;
 using OpenMc2D.Gui;
 using OpenMc2D.Networking;
@@ -66,6 +67,13 @@ void PropagateKeyTest(KeyEventArgs args, TestType type)
 }
 window.KeyPressed += (_, args) => PropagateKeyTest(args, TestType.KeyDown);
 window.KeyReleased += (_, args) => PropagateKeyTest(args, TestType.KeyUp);
+window.TextEntered += (_, args) =>
+{
+    if (currentPage is null || !currentPage.TextTest(args.Unicode))
+    {
+        // If not blocked by the UI, then we propagate the text test to the main game
+    }
+};
 
 var dirtBackgroundRect = new TextureRect(new Texture(@"Resources/Brand/dirt_background.png") { Repeated = true },
     () => 0,
@@ -121,6 +129,14 @@ Task.Run(async () =>
 });
 serversPage.Children.Add(serverList);
 
+// Options page UI
+var optionsPage = new Page();
+optionsPage.Children.Add(dirtBackgroundRect);
+
+// Options page UI
+var accountsPage = new Page();
+accountsPage.Children.Add(dirtBackgroundRect);
+
 // Main page game UI
 var mainPage = new Page();
 var backgroundTexture = new Texture(@"Resources/Textures/Background/panorama_2.png");
@@ -161,6 +177,10 @@ var accountButton = new Button("Account & Profile",
     () => playButton.Bounds.EndY() + 16,
     () => (int) (0.5 * window.GetView().Size.X), 
     () => (int) (0.05 * window.GetView().Size.X));
+accountButton.OnMouseUp += (_, _) =>
+{
+    currentPage = accountsPage;
+};
 mainPage.Children.Add(accountButton);
 
 var optionsButton = new Button("Options", 
@@ -168,6 +188,10 @@ var optionsButton = new Button("Options",
     () => accountButton.Bounds.EndY() + 48,
     () => (int) (0.25 * window.GetView().Size.X - 8), 
     () => (int) (0.05 * window.GetView().Size.X));
+optionsButton.OnMouseUp += (_, _) =>
+{
+    currentPage = optionsPage;
+};
 mainPage.Children.Add(optionsButton);
 
 var quitButton = new Button("Quit", 

@@ -1,8 +1,4 @@
 using WatsonWebsocket;
-using System.Net;
-using System.Net.WebSockets;
-using System.Text;
-using System.Threading;
 using SFML.Graphics;
 
 namespace OpenMc2D.Networking;
@@ -29,7 +25,9 @@ public class Connections
             $@"/{NetworkingHelpers.EncodeURIComponent(gameData.AuthSignature)}"));
 	    var name = ip;
 	    var motd = "Failed to connect";
+	    var image = new Image(@"Resources/Brand/grass_icon.png");
 	    var imageTask = new TaskCompletionSource<Image>();
+	    var descriptionColour = new Color(255, 255, 255, 200);
 	    var timeout = new Timer(_ =>
 	    {
 		    if (server.Connected)
@@ -39,7 +37,8 @@ public class Connections
 		    }
 		    else
 		    {
-			    motd = "Failed to connect";
+			    descriptionColour = new Color(255, 0, 0, 200);
+			    motd = "Failed to connect (server timeout)";
 		    }
 		    imageTask.SetCanceled();
 	    }, null, 5000, Timeout.Infinite);
@@ -58,26 +57,37 @@ public class Connections
 		    
 		    Task.Run(async () => 
 		    {
-			    imageTask.SetResult(await FetchImage(imageUri));
+			    try
+			    {
+				    imageTask.SetResult(await FetchImage(imageUri));
+			    }
+			    catch (Exception)
+			    {
+				    imageTask.SetCanceled();
+			    }
 		    });
 	    };
 
 	    server.ServerDisconnected += (sender, args) =>
 	    {
+		    descriptionColour = new Color(255, 0, 0, 200);
 		    motd = "Server disconnected";
 		    imageTask.SetCanceled();
 	    };
 	    
 	    await server.StartAsync();
-	    Image image;
 	    try
 	    {
 		    image = await imageTask.Task;
 	    }
 	    catch (Exception)
 	    {
-		    image = new Image(@"Resources/Brand/grass_icon.png");
+		    // Image will use default value
 	    }
-	    return new DisplayListItem(new Texture(image), name, motd);
+
+	    return new DisplayListItem(new Texture(image), name, motd)
+	    {
+		    DescriptionColour = descriptionColour
+	    };
     }
 }

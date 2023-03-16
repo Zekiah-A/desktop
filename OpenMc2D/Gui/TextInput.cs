@@ -22,40 +22,25 @@ public class TextInput : Control
         font = new Font(@"Resources/Fonts/mojangles.ttf");
     }
 
-    public override bool KeyboardTest(Keyboard.Key key, int modifiers, TestType type)
+    public override bool TextTest(string unicode)
     {
-        if (!Focused || type != TestType.KeyDown)
+        if (!Focused)
         {
             return false;
         }
-        
-        switch (key)
+
+        if (Text.Length == 0 && unicode[0] == (char) 8)
         {
-            case Keyboard.Key.Backspace when Text.Length > 0:
-                Text = Text[..^1];
-                break;
-            case Keyboard.Key.Backspace or Keyboard.Key.LShift or Keyboard.Key.RShift or Keyboard.Key.Enter
-                or Keyboard.Key.LControl or Keyboard.Key.RControl or Keyboard.Key.LSystem or Keyboard.Key.RSystem
-                or Keyboard.Key.Delete or Keyboard.Key.Menu or Keyboard.Key.Home:
-                break;
-            default:
-                Text += key switch
-                {
-                    Keyboard.Key.Semicolon => ";",
-                    Keyboard.Key.Backslash => "\\",
-                    Keyboard.Key.Comma => ",",
-                    Keyboard.Key.Divide => "/",
-                    Keyboard.Key.Equal => "=",
-                    Keyboard.Key.Hyphen => "-",
-                    Keyboard.Key.Quote => "\"",
-                    Keyboard.Key.RBracket => ")",
-                    Keyboard.Key.LBracket => "(",
-                    Keyboard.Key.Space => " ",
-                    _ => (modifiers & (int) ModifierFlags.Shift) == (int) ModifierFlags.Shift
-                        ? key.ToString()
-                        : key.ToString().ToLower()
-                };
-                break;
+            return true;
+        }
+
+        if (unicode[0] == (char) 8)
+        {
+            Text = Text[..^1];
+        }
+        else
+        {
+            Text += unicode;
         }
 
         return true;
@@ -73,7 +58,7 @@ public class TextInput : Control
         };
         window.Draw(backgroundRect);
 
-        var text = new Text(string.IsNullOrEmpty(Text) ? Placeholder : Text, font);
+        var text = new Text(string.IsNullOrEmpty(Text) && !Focused ? Placeholder : Text, font);
         text.CharacterSize = (uint) ((Bounds.EndY() - Bounds.StartY()) / 1.4f);
         text.Position = new Vector2f(Bounds.StartX() + 8, Bounds.StartY() + 2);
         text.FillColor = string.IsNullOrEmpty(Text) ? BorderColour : Color.White;
@@ -83,8 +68,8 @@ public class TextInput : Control
         {
             var cursorRect = new RectangleShape
             {
-                Position = new Vector2f(Bounds.StartX(), Bounds.StartY()),
-                Size = new Vector2f(8, 4),
+                Position = new Vector2f(Bounds.StartX() + text.GetGlobalBounds().Width + 12, Bounds.EndY() - 12),
+                Size = new Vector2f(24, 4),
                 OutlineColor = BorderColour
             };
             cursorRect.FillColor = BorderColour;

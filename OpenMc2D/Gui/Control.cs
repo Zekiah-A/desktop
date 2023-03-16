@@ -85,5 +85,10 @@ public abstract class Control
         return false;
     }
 
+    public virtual bool TextTest(string unicode)
+    {
+        return false;
+    }
+
     public virtual void Render(RenderWindow window, View view) { }
 }
