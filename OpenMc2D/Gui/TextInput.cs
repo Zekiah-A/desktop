@@ -35,7 +35,8 @@ public class TextInput : Control
                 Text = Text[..^1];
                 break;
             case Keyboard.Key.Backspace or Keyboard.Key.LShift or Keyboard.Key.RShift or Keyboard.Key.Enter
-                or Keyboard.Key.LControl or Keyboard.Key.RControl or Keyboard.Key.LSystem or Keyboard.Key.RSystem:
+                or Keyboard.Key.LControl or Keyboard.Key.RControl or Keyboard.Key.LSystem or Keyboard.Key.RSystem
+                or Keyboard.Key.Delete or Keyboard.Key.Menu or Keyboard.Key.Home:
                 break;
             default:
                 Text += key switch
@@ -49,6 +50,7 @@ public class TextInput : Control
                     Keyboard.Key.Quote => "\"",
                     Keyboard.Key.RBracket => ")",
                     Keyboard.Key.LBracket => "(",
+                    Keyboard.Key.Space => " ",
                     _ => (modifiers & (int) ModifierFlags.Shift) == (int) ModifierFlags.Shift
                         ? key.ToString()
                         : key.ToString().ToLower()
