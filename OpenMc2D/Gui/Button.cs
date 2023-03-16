@@ -8,11 +8,11 @@ public class Button : Control
 {
     public string Text;
 
-    private Texture guiTexture;
-    private IntRect normalCrop;
-    private IntRect hoveredCrop;
-    private IntRect pressedCrop;
-    private Font font;
+    private readonly Texture guiTexture;
+    private readonly IntRect normalCrop;
+    private readonly IntRect hoveredCrop;
+    private readonly IntRect pressedCrop;
+    private readonly Font font;
 
     public Button(string text, Func<int> x, Func<int> y, Func<int> width, Func<int> height) : base(x, y, width, height)
     {

@@ -12,16 +12,11 @@ public class GameData
     public WatsonWsClient CurrentServer { get; set; }
     
     // Account and authorisation
-    [JsonInclude]
     public string PublicKey { get; set; }
-    [JsonInclude]
     public string PrivateKey { get; set; }
-    [JsonInclude]
     public string AuthSignature { get; set; }
-    [JsonInclude]
     public string Name { get; set; }
     
     // Game options
-    [JsonInclude]
     public int FrameSleepMs { get; set; } = 16;
 }

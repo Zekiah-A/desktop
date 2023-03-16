@@ -27,6 +27,18 @@ public class Page : Control
         return false;
     }
 
+    public override bool KeyboardTest(Keyboard.Key key, int modifiers, TestType type)
+    {
+        for (var i = Children.Count - 1; i >= 0; i--) {
+            if (Children[i].KeyboardTest(key, modifiers, type))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public override void Render(RenderWindow window, View view)
     {
         window.Clear(Color.Black);

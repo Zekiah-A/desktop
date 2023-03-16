@@ -1,4 +1,5 @@
 using SFML.Graphics;
+using SFML.Window;
 
 namespace OpenMc2D.Gui;
 
@@ -6,10 +7,13 @@ public abstract class Control
 {
     public State State = State.Default;
     public Bounds Bounds = Bounds.Default;
+    public bool Focused = false;
     public event EventHandler<EventArgs>? OnHover;
     public event EventHandler<EventArgs>? OnLeave;
     public event EventHandler<EventArgs>? OnMouseDown;
     public event EventHandler<EventArgs>? OnMouseUp;
+    public event EventHandler<EventArgs>? OnFocus; 
+    public event EventHandler<EventArgs>? OnBlur;
 
     protected Control(Func<int> x, Func<int> y, Func<int>? width = null, Func<int>? height = null)
     {
@@ -29,7 +33,7 @@ public abstract class Control
 
     public virtual bool HitTest(int x, int y, TestType type)
     {
-        if (type == TestType.Up && State == State.Pressed)
+        if (type == TestType.MouseUp && State == State.Pressed)
         {
             State = State.Default;
             OnMouseUp?.Invoke(this, EventArgs.Empty);
@@ -43,27 +47,41 @@ public abstract class Control
                 return false;
             }
             
-            if (type == TestType.Hover && State != State.Hover)
+            if (type == TestType.MouseHover && State != State.Hover)
             {
                 State = State.Hover;
                 OnHover?.Invoke(this, EventArgs.Empty);
             }
-            else if (type == TestType.Down)
+            else if (type == TestType.MouseDown)
             {
                 State = State.Pressed;
                 OnMouseDown?.Invoke(this, EventArgs.Empty);
+                
+                Focused = true;
+                OnFocus?.Invoke(this, EventArgs.Empty);
             }
 
             return true;
         }
+
+        if (type == TestType.MouseDown)
+        {
+            Focused = false;
+            OnBlur?.Invoke(this, EventArgs.Empty);
+        }
         
-        if (type == TestType.Hover && State == State.Hover || State == State.Pressed)
+        if (type == TestType.MouseHover && State == State.Hover || State == State.Pressed)
         {
             State = State.Default;
             OnLeave?.Invoke(this, EventArgs.Empty);
             return false;
         }
 
+        return false;
+    }
+
+    public virtual bool KeyboardTest(Keyboard.Key key, int modifiers, TestType type)
+    {
         return false;
     }
 

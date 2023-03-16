@@ -1,5 +1,7 @@
 using WatsonWebsocket;
 using System.Net;
+using System.Net.WebSockets;
+using System.Text;
 using System.Threading;
 using SFML.Graphics;
 

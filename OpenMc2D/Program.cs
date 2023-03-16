@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.Metrics;
-using System.Net;
-using System.Xml.Linq;
+﻿using System.Net;
 using OpenMc2D;
 using OpenMc2D.Gui;
 using OpenMc2D.Networking;
@@ -32,25 +30,42 @@ window.Resized += (_, args) =>
 };
 window.MouseButtonPressed += (_, args) =>
 {
-    if (currentPage is null || !currentPage.HitTest(args.X, args.Y, TestType.Down))
+    if (currentPage is null || !currentPage.HitTest(args.X, args.Y, TestType.MouseDown))
     {
         // If not blocked by the UI, then we propagate the hit test to the main game
     }
 };
 window.MouseButtonReleased += (_, args) =>
 {
-    if (currentPage is null || !currentPage.HitTest(args.X, args.Y, TestType.Up))
+    if (currentPage is null || !currentPage.HitTest(args.X, args.Y, TestType.MouseUp))
     {
         // If not blocked by the UI, then we propagate the hit test to the main game
     }
 };
 window.MouseMoved += (_, args) =>
 {
-    if (currentPage is null || !currentPage.HitTest(args.X, args.Y, TestType.Hover))
+    if (currentPage is null || !currentPage.HitTest(args.X, args.Y, TestType.MouseHover))
     {
         // If not blocked by the UI, then we propagate the hit test to the main game
     }
 };
+
+void PropagateKeyTest(KeyEventArgs args, TestType type)
+{
+    var modifiers = 0;
+    modifiers |= args.Alt ? (int) ModifierFlags.Alt : 0;
+    modifiers |= args.Control ? (int) ModifierFlags.Control : 0;
+    modifiers |= args.Shift ? (int) ModifierFlags.Shift : 0;
+    modifiers |= args.System ? (int) ModifierFlags.System : 0;
+    
+    
+    if (currentPage is null || !currentPage.KeyboardTest(args.Code, modifiers, type))
+    {
+        // If not blocked by the UI, then we propagate the keyboard test to the main game
+    }
+}
+window.KeyPressed += (_, args) => PropagateKeyTest(args, TestType.KeyDown);
+window.KeyReleased += (_, args) => PropagateKeyTest(args, TestType.KeyUp);
 
 var dirtBackgroundRect = new TextureRect(new Texture(@"Resources/Brand/dirt_background.png") { Repeated = true },
     () => 0,
@@ -82,6 +97,12 @@ var deleteServerButton = new Button("Refresh",
     () => (int) (0.2 * window.GetView().Size.X), 
     () => (int) (0.05 * window.GetView().Size.X));
 serversPage.Children.Add(deleteServerButton);
+var serverInput = new TextInput("server ip", 
+    () => (int) (0.4 * window.GetView().Size.X + 52),
+    () => (int) (window.GetView().Size.Y - 0.05 * window.GetView().Size.X - 16),
+    () => (int) (0.3 * window.GetView().Size.X),
+    () => (int) (0.05 * window.GetView().Size.X));
+serversPage.Children.Add(serverInput);
 var serversLabel = new Label("Connect to a server:", 28, Color.White)
 {
     Bounds = new Bounds(() => (int) (window.GetView().Size.X / 2) - 156, () => 128, () => 0, () => 0)
@@ -94,7 +115,8 @@ Task.Run(async () =>
 {
     serverList.Children = new List<DisplayListItem>
     {
-        await connections.PreConnect("ws://localhost:27277")
+        await connections.PreConnect("ws://localhost:27277"),
+        await connections.PreConnect("wss://blobk.at:27277")
     };
 });
 serversPage.Children.Add(serverList);
