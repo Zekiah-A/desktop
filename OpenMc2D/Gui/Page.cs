@@ -17,7 +17,8 @@ public class Page : Control
 
     public override bool HitTest(int x, int y, TestType type)
     {
-        for (var i = Children.Count - 1; i >= 0; i--) {
+        for (var i = Children.Count - 1; i >= 0; i--)
+        {
             if (Children[i].HitTest(x, y, type))
             {
                 return true;
@@ -29,7 +30,8 @@ public class Page : Control
 
     public override bool KeyboardTest(Keyboard.Key key, int modifiers, TestType type)
     {
-        for (var i = Children.Count - 1; i >= 0; i--) {
+        for (var i = Children.Count - 1; i >= 0; i--)
+        {
             if (Children[i].KeyboardTest(key, modifiers, type))
             {
                 return true;
@@ -41,7 +43,8 @@ public class Page : Control
     
     public override bool TextTest(string unicode)
     {
-        for (var i = Children.Count - 1; i >= 0; i--) {
+        for (var i = Children.Count - 1; i >= 0; i--)
+        {
             if (Children[i].TextTest(unicode))
             {
                 return true;

@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using System.Runtime.InteropServices.ComTypes;
 using OpenMc2D;
 using OpenMc2D.Gui;
 using OpenMc2D.Networking;
@@ -7,15 +6,16 @@ using SFML.Graphics;
 using SFML.Window;
 
 Page? currentPage = null;
-var client = new HttpClient();
 var gameData = new GameData
 {
     Name = Storage.Get<string>(nameof(GameData.Name)) ?? "",
     PublicKey = Storage.Get<string>(nameof(GameData.PublicKey)) ?? "",
     PrivateKey = Storage.Get<string>(nameof(GameData.PrivateKey)) ?? "",
-    AuthSignature = Storage.Get<string>(nameof(GameData.AuthSignature)) ?? ""
+    AuthSignature = Storage.Get<string>(nameof(GameData.AuthSignature)) ?? "",
+    KnownServers = Storage.Get<List<string>>(nameof(GameData.KnownServers)) ?? new List<string> { "localhost" }
 };
 var connections = new Connections(gameData);
+var preConnectionDatas = new List<PreConnectData>();
 
 // Window event listeners and input
 var window = new RenderWindow(new VideoMode(1540, 1080), "OpenMc2d");
@@ -84,6 +84,19 @@ var dirtBackgroundRect = new TextureRect(new Texture(@"Resources/Brand/dirt_back
     SubRect = new Bounds(() => 0, () => 0, () => (int) window.GetView().Size.X / 2, () => (int) window.GetView().Size.Y / 2)
 };
 
+var gamePage = new Page();
+
+async Task PlayServer(PreConnectData serverData)
+{
+    foreach (var data in preConnectionDatas.Where(data => data.Socket != serverData.Socket))
+    {
+        await data.Socket.StopAsync();
+    }
+    
+    currentPage = gamePage;
+    await connections.Connect(serverData);
+}
+
 // Servers page UI
 var serversPage = new Page();
 serversPage.Children.Add(dirtBackgroundRect);
@@ -119,19 +132,36 @@ serversPage.Children.Add(serversLabel);
 var serverList = new DisplayList(() => 64, () => 192,
     () => (int) (window.GetView().Size.X - 128),
     () => (int) (window.GetView().Size.X * 0.8));
+
 Task.Run(async () =>
 {
-    serverList.Children = new List<DisplayListItem>
+    foreach (var serverIp in gameData.KnownServers)
     {
-        await connections.PreConnect("ws://localhost:27277"),
-        await connections.PreConnect("wss://blobk.at:27277")
-    };
+        var connectionData = await connections.PreConnect(serverIp);
+        preConnectionDatas.Add(connectionData);
+        connectionData.Item.OnMouseUp += async (_, _) => await PlayServer(connectionData);
+        serverList.Children.Add(connectionData.Item);
+    }
 });
 serversPage.Children.Add(serverList);
 
 // Options page UI
 var optionsPage = new Page();
 optionsPage.Children.Add(dirtBackgroundRect);
+var grid = new Grid(1, 6, () => (int) (window.GetView().Size.X / 4), () => (int) (window.GetView().Size.Y / 4),
+    () => (int) (window.GetView().Size.X / 2), () => (int) (window.GetView().Size.Y / 2))
+{
+    Children =
+    {
+        [0, 0] = new Button("Hello world", () => 0, () => 0, () => 0, () => 0),
+        [0, 1] = new Button("Hello world", () => 0, () => 0, () => 0, () => 0),
+        [0, 2] = new Button("Hello world", () => 0, () => 0, () => 0, () => 0),
+        [0, 3] = new Button("Hello world", () => 0, () => 0, () => 0, () => 0),
+        [0, 5] = new Button("Hello world", () => 0, () => 0, () => 0, () => 0),
+    },
+    RowGap = 8
+};
+optionsPage.Children.Add(grid);
 
 // Options page UI
 var accountsPage = new Page();
@@ -154,7 +184,6 @@ var backgroundRect = new TextureRect(backgroundTexture,
     }, () => (int) (backgroundTexture.Size.Y / fitFactor))
 };
 mainPage.Children.Add(backgroundRect);
-
 var logoRect = new TextureRect(new Texture(@"Resources/Brand/logo.png"),
     () => (int) ((int) window.GetView().Center.X - (window.GetView().Size.X * 0.4f) / 2),
     () => (int) (window.GetView().Size.Y * 0.1f), () => (int) (window.GetView().Size.X * 0.4f),
@@ -209,12 +238,18 @@ mainPage.Children.Add(quitButton);
 var authPage = new Page();
 authPage.Children.Add(dirtBackgroundRect);
 authPage.Children.Add(dirtBackgroundRect);
-var authLabel = new Label("Game invite code:", 28, Color.Yellow)
+var authLabel = new Label("Please enter your game invite code:", 28, Color.Yellow)
 {
-    Bounds = new Bounds(() => (int) (window.GetView().Size.X / 2) - 128,
-        () => (int) ((int) window.GetView().Size.Y * 0.1), () => 0, () => 0)
+    Bounds = new Bounds(() => (int) (window.GetView().Size.X / 2) - 256,
+        () => (int) ((int) window.GetView().Size.Y * 0.4), () => 0, () => 0)
 };
 authPage.Children.Add(authLabel);
+var authInput = new TextInput("invite code",
+    () => (int) (window.GetView().Center.X - 256),
+    () => (int) window.GetView().Center.Y,
+    () => 512,
+    () => 64);
+authPage.Children.Add(authInput);
 var authButton = new Button("Continue",
     () => (int) (window.GetView().Size.X - 0.2 * window.GetView().Size.X - 16),
     () =>  (int) (window.GetView().Size.Y - 0.05 * window.GetView().Size.X - 16), 
@@ -222,7 +257,7 @@ var authButton = new Button("Continue",
     () => (int) (0.05 * window.GetView().Size.X));
 authButton.OnMouseUp += async (_, _) =>
 {
-    if (await Authorise("00000000000000000000000000000000"))
+    if (await Authorise(authInput.Text))
     {
         currentPage = mainPage;
     }
@@ -237,7 +272,7 @@ async Task<bool> Authorise(string? key = null)
     }
     
     // Check key validity
-    var response = await client.GetAsync("https://blobk.at:1024/" + key);
+    var response = await gameData.HttpClient.GetAsync("https://blobk.at:1024/" + key);
     var lines = (await response.Content.ReadAsStringAsync()).Split("\n");
     if (lines.Length != 4 || response.StatusCode != HttpStatusCode.OK)
     {

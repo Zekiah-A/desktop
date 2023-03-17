@@ -9,6 +9,8 @@ public class TextInput : Control
     public string Text { get; set; } = "";
     public string Placeholder { get; set; }
     public Color BorderColour { get; set; } = new(255, 255, 255, 128);
+    
+    public EventHandler<EventArgs>? OnSubmit;
 
     private Texture guiTexture;
     private IntRect normalCrop;
@@ -22,27 +24,30 @@ public class TextInput : Control
         font = new Font(@"Resources/Fonts/mojangles.ttf");
     }
 
+    public override bool KeyboardTest(Keyboard.Key key, int modifiers, TestType type)
+    {
+        switch (key)
+        {
+            case Keyboard.Key.Enter:
+                OnSubmit?.Invoke(this, EventArgs.Empty);
+                return true;
+            case Keyboard.Key.Backspace when Text.Length > 0 && type == TestType.KeyDown:
+                Text = Text[..^1];
+                return true;
+            default:
+                return false;
+        }
+    }
+
     public override bool TextTest(string unicode)
     {
-        if (!Focused)
+        // Ignore all control characters, will be handled by keyboard test instead
+        if (!Focused || unicode[0] < 32 || (int) unicode[0] is > 126 and < 160)
         {
             return false;
         }
-
-        if (Text.Length == 0 && unicode[0] == (char) 8)
-        {
-            return true;
-        }
-
-        if (unicode[0] == (char) 8)
-        {
-            Text = Text[..^1];
-        }
-        else
-        {
-            Text += unicode;
-        }
-
+        
+        Text += unicode;
         return true;
     }
 

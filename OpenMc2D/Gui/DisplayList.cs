@@ -18,7 +18,8 @@ public class DisplayList : Control
     
     public override bool HitTest(int x, int y, TestType type)
     {
-        for (var i = Children.Count - 1; i >= 0; i--) {
+        for (var i = Children.Count - 1; i >= 0; i--)
+        {
             if (Children[i].HitTest(x, y, type))
             {
                 return true;
@@ -30,9 +31,6 @@ public class DisplayList : Control
 
     public override void Render(RenderWindow window, View view)
     {
-        //view.Size = (Vector2f) window.Size;
-        //view.Move(new Vector2f(0, Scroll));
-        //window.SetView(view);
         for (var i = 0; i < Children.Count; i++)
         {
             var childIndex = i;
@@ -42,6 +40,5 @@ public class DisplayList : Control
             Children[i].Bounds.EndY = () => Children[childIndex].Bounds.StartY() + Children[childIndex].Height;
             Children[i].Render(window, view);
         }
-        //window.SetView(window.DefaultView);
     }
 }

@@ -16,8 +16,9 @@ public class GameData
     public string PrivateKey { get; set; }
     public string AuthSignature { get; set; }
     public string Name { get; set; }
-
+    
     // Game options
     public int FrameSleepMs { get; set; } = 16;
-    public byte[] Skin { get; set; }
+    public List<string> KnownServers { get; set; } = new();
+    public byte[] Skin { get; set; } = new byte[1008];
 }
