@@ -1,4 +1,5 @@
-using OpenMc2D.Types;
+using OpenMc2D.Game.Definitions;
+using SFML.Graphics;
 
 namespace OpenMc2D.Game;
 
@@ -6,26 +7,34 @@ namespace OpenMc2D.Game;
 /// Contains helper methods for interacting with game world, similar to client file
 /// https://github.com/open-mc/client/blob/preview/iframe/world.js.
 /// </summary>
-public class World
+public static class World
 {
-    const int SoundSpeed = 340;
-    
-    void GetBlock(int x, int y, Block block)
+    public static GameData GameData; // Injected by Program.cs
+    public static Texture TerrainAtlas; // Used by Block definitions
+    public static Texture ItemsAtlas; // Used by Items definitions
+
+    static World()
+    {
+        TerrainAtlas = new Texture("Resources/Textures/terrain.png");
+        ItemsAtlas = new Texture("Resources/Textures/items.png");
+    }
+
+    public static Block GetBlock(int x, int y)
+    {
+        return new Block();
+    }
+
+    public static void SetBlock(int x, int y)
     {
         
     }
 
-    void SetBlock(int x, int y)
+    public static void AddEntity(Entity entity)
     {
         
     }
 
-    void AddEntity(Entity entity)
-    {
-        
-    }
-
-    void RemoveEntity(Entity entity)
+    public static void RemoveEntity(Entity entity)
     {
         
     }

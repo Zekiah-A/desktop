@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using OpenMc2D;
+using OpenMc2D.Game;
 using OpenMc2D.Gui;
 using OpenMc2D.Networking;
 using SFML.Graphics;
@@ -14,8 +15,9 @@ var gameData = new GameData
     AuthSignature = Storage.Get<string>(nameof(GameData.AuthSignature)) ?? "",
     KnownServers = Storage.Get<List<string>>(nameof(GameData.KnownServers)) ?? new List<string> { "localhost" }
 };
+World.GameData = gameData;
 var connections = new Connections(gameData);
-var preConnectionDatas = new List<PreConnectData>();
+var preConnectionsDatas = new List<PreConnectData>();
 
 // Window event listeners and input
 var window = new RenderWindow(new VideoMode(1540, 1080), "OpenMc2d");
@@ -88,7 +90,7 @@ var gamePage = new Page();
 
 async Task PlayServer(PreConnectData serverData)
 {
-    foreach (var data in preConnectionDatas.Where(data => data.Socket != serverData.Socket))
+    foreach (var data in preConnectionsDatas.Where(data => data.Socket != serverData.Socket))
     {
         await data.Socket.StopAsync();
     }
@@ -117,7 +119,7 @@ async Task UpdateServerList()
     foreach (var serverIp in gameData.KnownServers)
     {
         var connectionData = await connections.PreConnect(serverIp);
-        preConnectionDatas.Add(connectionData);
+        preConnectionsDatas.Add(connectionData);
         connectionData.Item.OnMouseUp += async (_, _) => await PlayServer(connectionData);
         serverList.Children.Add(connectionData.Item);
     }
@@ -338,5 +340,6 @@ while (window.IsOpen)
     window.Clear(Color.Black);
     currentPage?.Render(window, uiView);
     window.Display();
+    
     Thread.Sleep(gameData.FrameSleepMs);
 }

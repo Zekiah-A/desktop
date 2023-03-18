@@ -40,9 +40,9 @@ public class Button : Control
             Size = new Vector2f(Bounds.EndX() - Bounds.StartX(), Bounds.EndY() - Bounds.StartY()),
             TextureRect = State switch
             {
-                State.Default => normalCrop,
-                State.Hover => hoveredCrop,
-                _ => pressedCrop
+                State.Default => normalCrop with { Left = 2, Width = 196 },
+                State.Hover => hoveredCrop with { Left = 2, Width = 196 },
+                _ => pressedCrop with { Left = 2, Width = 196 }
             },
             Texture = guiTexture
         };

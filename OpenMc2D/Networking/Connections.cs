@@ -1,12 +1,12 @@
-using System.IO.Compression;
 using System.Net.WebSockets;
-using System.Reflection.Metadata;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
-using OpenMc2D.Types;
+using OpenMc2D.Game;
+using OpenMc2D.Gui;
 using WatsonWebsocket;
 using SFML.Graphics;
 
@@ -15,9 +15,10 @@ namespace OpenMc2D.Networking;
 public class Connections
 {
 	public delegate void PacketHandler(ReadablePacket data);
-	public static Dictionary<int, PacketHandler> PacketHandlers;
+	public readonly Dictionary<int, PacketHandler> PacketHandlers;
 
-	private GameData gameData;
+	private readonly GameData gameData;
+	
 	public Connections(GameData data)
     {
 	    gameData = data;
@@ -32,8 +33,8 @@ public class Connections
 		    { 20, EntityPacket }
 	    };
     }
-
-    private static string GetWebsocketUri(string ip)
+	
+	private static string GetWebsocketUri(string ip)
     {
 	    if (!Regex.IsMatch(ip, @"\w+:\/\/"))
 	    {
@@ -162,6 +163,48 @@ public class Connections
 	    var signature = rsa.SignData(challenge, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 	    return signature;
     }
+    
+    /// <summary>
+    /// Creates a GameData *Definitions array of types from the server's initial connection packs packet containing block IDs/definitions.
+    /// </summary>
+    /// <param name="definitions"></param>
+    /// <returns></returns>
+    private Type[] DecodePacksDefinition(IEnumerable<string> definitions)
+    {
+	    var types = new List<Type>();
+	    foreach (var type in definitions)
+	    {
+		    var members = type.Split(" ");
+		    var typeName = "OpenMc2D.Game.Definitions." +  members[0].ToPascalCase();
+
+		    if (members.Length == 1)
+		    {
+			    var instance = Type.GetType(typeName);
+			    if (instance != null)
+			    {
+				    types.Add(instance);
+			    }
+		    }
+/*
+			// TODO: Unfortunately we can not work with modified / custom definitions as of yet.
+		    for (var i = 1; i < members.Length; i++)
+		    {
+			    var attempt = JsonSerializer.Deserialize<T>(members[i].Trim());
+
+			    if (attempt is null)
+			    {
+				    types.Add(instance);
+			    }
+			    else
+			    {
+				    types.Add(attempt);
+			    }
+		    }
+*/
+	    }
+
+	    return types.ToArray();
+    }
 
     /// <summary>
     /// Actual connection to game server in order for us to start playing, will assign this server as the current server
@@ -175,71 +218,13 @@ public class Connections
 	    
 	    // Apply data sent to us by server from packs to current client
 	    var blockDefinitions = serverData.DataPacks[0].Split("\n");
-	    var blocks = new List<Block>();
-	    foreach (var blockType in blockDefinitions)
-	    {
-		    var members = blockType.Split(" ");
-		    var typeName = members[0];
-
-		    if (members.Length == 1)
-		    {
-			    blocks.Add(new Block(typeName));
-			    continue;
-		    }
-
-		    for (var i = 1; i < members.Length; i++)
-		    {
-			    var attempt = JsonSerializer.Deserialize<Block>(members[i].Trim());
-
-			    if (attempt is null)
-			    {
-				    blocks.Add(new Block(typeName));
-			    }
-			    else
-			    {
-				    attempt.Type = typeName;
-				    blocks.Add(attempt);
-			    }
-		    }
-	    }
-	    gameData.Blocks = blocks.ToArray();
+	    gameData.BlocksDefinitions = DecodePacksDefinition(blockDefinitions);
 	    
 	    var itemDefinitions = serverData.DataPacks[1].Split("\n");
-	    gameData.Items = new Item[itemDefinitions.Length];
-	    for (var i = 0; i < itemDefinitions.Length; i++)
-	    {
-		    gameData.Items[i] = new Item(itemDefinitions[i]);
-	    }
+	    gameData.ItemDefinitions = DecodePacksDefinition(itemDefinitions);
 
 	    var entityDefinitions = serverData.DataPacks[2].Split("\n");
-	    var entities = new List<Entity>();
-	    foreach (var entityType in entityDefinitions)
-	    {
-		    var members = entityType.Split(" ");
-		    var typeName = members[0];
-
-		    if (members.Length == 1)
-		    {
-			    entities.Add(new Entity(typeName));
-			    continue;
-		    }
-		    
-		    for (var i = 1; i < members.Length; i++)
-		    {
-			    var attempt = JsonSerializer.Deserialize<Entity>(members[i].Trim());
-
-			    if (attempt is null)
-			    {
-				    entities.Add(new Entity(typeName));
-			    }
-			    else
-			    {
-				    attempt.Type = typeName;
-				    entities.Add(attempt);
-			    }
-		    }
-	    }
-	    gameData.Entities = entities.ToArray();
+	    gameData.EntityDefinitions = DecodePacksDefinition(entityDefinitions);
 	    
 	    // Authenticate client fully with challenge & accept messages
 	    var signature = ProcessChallenge(serverData.Challenge);
@@ -249,15 +234,32 @@ public class Connections
 	    signature.CopyTo(packet, gameData.Skin.Length);
 	    await gameData.CurrentServer.SendAsync(packet);
 	    
-	    void OnMessageReceived(object? sender, EventArgs args)
+	    void OnMessageReceived(object? sender, MessageReceivedEventArgs args)
 	    {
-		    
+		    Console.WriteLine("Packet: ");
+		    foreach (var @byte in args.Data) Console.Write(@byte + " ");
+		    Console.WriteLine("");
+
+		    if (args.MessageType == WebSocketMessageType.Text)
+		    {
+			    ChatPacket(Encoding.UTF8.GetString(args.Data.ToArray()));
+		    }
+		    else
+		    {
+			    PacketHandlers.GetValueOrDefault(args.Data[0])?.Invoke((ReadablePacket) args.Data[1..].ToArray());
+		    }
 	    }
 
 	    void OnSocketDisconnected(object? sender, EventArgs args)
 	    {
 		    
 	    }
+    }
+    
+    private void ChatPacket(string message)
+    {
+	    Console.WriteLine(message);
+	    
     }
 
     private void RubberPacket(ReadablePacket data)
@@ -267,12 +269,17 @@ public class Connections
 
     private void DimPacket(ReadablePacket data)
     {
-	    
+	    var world = data.ReadString();
+	    var globalX = data.ReadFloat();
+	    var globalY = data.ReadFloat();
+	    var ticks = data.ReadDouble();
+
+	    Console.WriteLine($"{world}, {globalX}, {globalY}, {ticks}");
     }
 
     private void ClockPacket(ReadablePacket data)
     {
-	    gameData.Ticks = data.ReadDouble();
+	    gameData.TickCount = data.ReadDouble();
     }
 
     private void ChunkPacket(ReadablePacket data)

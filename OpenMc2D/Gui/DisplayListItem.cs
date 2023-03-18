@@ -1,8 +1,7 @@
-using OpenMc2D.Gui;
 using SFML.Graphics;
 using SFML.System;
 
-namespace OpenMc2D.Networking;
+namespace OpenMc2D.Gui;
 
 public class DisplayListItem : Control
 {

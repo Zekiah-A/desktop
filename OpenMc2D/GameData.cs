@@ -1,20 +1,26 @@
 using System.Text.Json.Serialization;
+using OpenMc2D.Game;
+using OpenMc2D.Game.Definitions;
 using OpenMc2D.Networking;
-using OpenMc2D.Types;
 using WatsonWebsocket;
 
 namespace OpenMc2D;
 
 public class GameData
 {
-    // Game runtime objects
+    // Game runtime objects and definitions
     public HttpClient HttpClient { get; init; } = new();
     public WatsonWsClient CurrentServer { get; set; }
-    public Block[] Blocks { get; set; }
-    public Item[] Items { get; set; }
-    public Entity[] Entities { get; set; }
-    public double Ticks { get; set; }
-     
+    public Type[] BlocksDefinitions { get; set; } // We can use Activator.CreateInstance() to create instances from these block types
+    public Type[] ItemDefinitions { get; set; } // We can use Activator.CreateInstance() to create instances from these block types
+    public Type[] EntityDefinitions { get; set; } // We can use Activator.CreateInstance() to create instances from these block types
+    
+    // Game world components
+    public Dictionary<int, Chunk> Map { get; set; }
+    public Dictionary<int, Entity> Entities { get; set; }
+    public double TickCount { get; set; }
+    public float TicksPerSecond { get; set;  }
+
     // Account and authorisation
     public string PublicKey { get; set; }
     public string PrivateKey { get; set; }
