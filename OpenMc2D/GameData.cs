@@ -12,8 +12,8 @@ public class GameData
     public HttpClient HttpClient { get; init; } = new();
     public WatsonWsClient CurrentServer { get; set; }
     public Type[] BlocksDefinitions { get; set; } // We can use Activator.CreateInstance() to create instances from these block types
-    public Type[] ItemDefinitions { get; set; } // We can use Activator.CreateInstance() to create instances from these block types
-    public Type[] EntityDefinitions { get; set; } // We can use Activator.CreateInstance() to create instances from these block types
+    public Type[] ItemDefinitions { get; set; } // We can use Activator.CreateInstance() to create instances from these item types
+    public Type[] EntityDefinitions { get; set; } // We can use Activator.CreateInstance() to create instances from these entity types
     
     // Game world components
     public Dictionary<int, Chunk> Map { get; set; }

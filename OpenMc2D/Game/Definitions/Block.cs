@@ -2,7 +2,7 @@ using SFML.Graphics;
 
 namespace OpenMc2D.Game.Definitions;
 
-public class Block
+public abstract class Block
 {
 	// Get-only as all instances of a block type have to have the same values for these properties
 	public virtual bool Solid => true;
@@ -10,6 +10,7 @@ public class Block
 	public virtual bool Climbable => false;
 	public virtual float Viscosity => 0.0f;
 	public virtual float BreakTime => 0.0f;
+	public virtual Tool Tool => Tool.None;
 	
 	/// <summary>
 	/// Called to allow the block to implement it's own functionality upon being placed, such as custom place sounds.

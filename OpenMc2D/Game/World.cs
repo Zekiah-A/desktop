@@ -21,7 +21,7 @@ public static class World
 
     public static Block GetBlock(int x, int y)
     {
-        return new Block();
+        return null;
     }
 
     public static void SetBlock(int x, int y)

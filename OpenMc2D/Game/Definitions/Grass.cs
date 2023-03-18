@@ -8,3 +8,8 @@ public class Grass : Block
     public override Texture Texture => World.TerrainAtlas.AtBlock(3, 0);
     public override float BreakTime => 1.5f;
 }
+
+public class SnowyGrass : Grass
+{
+    public override Texture Texture => World.TerrainAtlas.AtBlock(4, 4);
+}

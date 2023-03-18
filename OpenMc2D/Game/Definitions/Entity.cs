@@ -2,7 +2,7 @@ using System.Numerics;
 
 namespace OpenMc2D.Game.Definitions;
 
-public class Entity
+public abstract class Entity
 {
 	// Get only, as they are comm,on across all entities of an entity type
 	private float Width => 0.5f;

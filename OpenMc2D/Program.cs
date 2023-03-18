@@ -200,7 +200,7 @@ accountsPage.Children.Add(dirtBackgroundRect);
 
 // Main page game UI
 var mainPage = new Page();
-var backgroundTexture = new Texture(@"Resources/Textures/Background/panorama_2.png");
+var backgroundTexture = new Texture(@"Resources/Textures/Background/panorama_0.png");
 var fitFactor = 0.0f;
 var backgroundRect = new TextureRect(backgroundTexture,
     () => 0,
@@ -212,7 +212,7 @@ var backgroundRect = new TextureRect(backgroundTexture,
     {
         fitFactor = window.GetView().Size.X / backgroundTexture.Size.X;
         return (int) backgroundTexture.Size.X;
-    }, () => (int) (backgroundTexture.Size.Y / fitFactor))
+    }, () => (int) Math.Min(window.GetView().Size.Y, backgroundTexture.Size.Y / fitFactor))
 };
 mainPage.Children.Add(backgroundRect);
 var logoRect = new TextureRect(new Texture(@"Resources/Brand/logo.png"),
