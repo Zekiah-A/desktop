@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using OpenMc2D.Networking;
+using OpenMc2D.Types;
 using WatsonWebsocket;
 
 namespace OpenMc2D;
@@ -8,9 +9,11 @@ public class GameData
 {
     // Game runtime objects
     public HttpClient HttpClient { get; init; } = new();
-    public Item[] ItemIds { get; init; }
     public WatsonWsClient CurrentServer { get; set; }
-    
+    public Block[] Blocks { get; set; }
+    public Item[] Items { get; set; }
+    public Entity[] Entities { get; set; }
+     
     // Account and authorisation
     public string PublicKey { get; set; }
     public string PrivateKey { get; set; }

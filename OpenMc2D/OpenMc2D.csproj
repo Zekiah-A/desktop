@@ -8,6 +8,7 @@
 
     <ItemGroup>
         <PackageReference Include="SFML.Net" Version="2.5.0" />
+        <PackageReference Include="SharpZipLib" Version="1.4.2" />
         <ProjectReference Include="..\WatsonWebsocketPlus\src\WatsonWebsocket\WatsonWebsocket.csproj" />
     </ItemGroup>
 

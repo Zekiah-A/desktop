@@ -3,7 +3,11 @@ using System.Net.WebSockets;
 using System.Reflection.Metadata;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
+using OpenMc2D.Types;
 using WatsonWebsocket;
 using SFML.Graphics;
 
@@ -82,16 +86,16 @@ public class Connections
 		    motd = packet.ReadString();
 		    var imageUri = packet.ReadString();
 		    var packsStream = new MemoryStream(packet.ReadByteArray());
-		    using var deflate = new DeflateStream(packsStream, CompressionMode.Decompress);
 		    challenge = packet.ReadByteArray();
 
-		    Task.Run(async () => 
+		    Task.Run(async () =>
 		    {
-			    await packsStream.FlushAsync();
-			    var decompressedPacks = packsStream.ToArray();
-			    packs = Encoding.UTF8.GetString(decompressedPacks).Split('\0');
+			    await using var inflater = new InflaterInputStream(packsStream);
+			    using var uncompressed = new MemoryStream();
+			    await inflater.CopyToAsync(uncompressed);
+			    packs = Encoding.UTF8.GetString(uncompressed.ToArray()).Split('\0');
 			    await packsStream.DisposeAsync();
-
+			    
 			    try
 			    {
 				    imageTask.SetResult(await FetchImage(imageUri));
@@ -154,10 +158,78 @@ public class Connections
     public async Task Connect(PreConnectData serverData)
     {
 	    gameData.CurrentServer = serverData.Socket;
-
 	    gameData.CurrentServer.MessageReceived += OnMessageReceived;
 	    gameData.CurrentServer.MessageReceived += OnSocketDisconnected;
+	    
+	    // Apply data sent to us by server from packs to current client
+	    var blockDefinitions = serverData.DataPacks[0].Split("\n");
+	    var blocks = new List<Block>();
+	    foreach (var blockType in blockDefinitions)
+	    {
+		    var members = blockType.Split(" ");
+		    var typeName = members[0];
 
+		    if (members.Length == 1)
+		    {
+			    blocks.Add(new Block(typeName));
+			    continue;
+		    }
+
+		    for (var i = 1; i < members.Length; i++)
+		    {
+			    var attempt = JsonSerializer.Deserialize<Block>(members[i].Trim());
+
+			    if (attempt is null)
+			    {
+				    blocks.Add(new Block(typeName));
+			    }
+			    else
+			    {
+				    attempt.Type = typeName;
+				    blocks.Add(attempt);
+			    }
+		    }
+	    }
+	    gameData.Blocks = blocks.ToArray();
+	    
+	    var itemDefinitions = serverData.DataPacks[1].Split("\n");
+	    gameData.Items = new Item[itemDefinitions.Length];
+	    for (var i = 0; i < itemDefinitions.Length; i++)
+	    {
+		    gameData.Items[i] = new Item(itemDefinitions[i]);
+	    }
+
+	    var entityDefinitions = serverData.DataPacks[2].Split("\n");
+	    var entities = new List<Entity>();
+	    foreach (var entityType in entityDefinitions)
+	    {
+		    var members = entityType.Split(" ");
+		    var typeName = members[0];
+
+		    if (members.Length == 1)
+		    {
+			    entities.Add(new Entity(typeName));
+			    continue;
+		    }
+		    
+		    for (var i = 1; i < members.Length; i++)
+		    {
+			    var attempt = JsonSerializer.Deserialize<Entity>(members[i].Trim());
+
+			    if (attempt is null)
+			    {
+				    entities.Add(new Entity(typeName));
+			    }
+			    else
+			    {
+				    attempt.Type = typeName;
+				    entities.Add(attempt);
+			    }
+		    }
+	    }
+	    gameData.Entities = entities.ToArray();
+	    
+	    // Authenticate client fully with challenge & accept messages
 	    var signature = ProcessChallenge(serverData.Challenge);
 	    var packet = new byte[signature.Length + gameData.Skin.Length];
 	    

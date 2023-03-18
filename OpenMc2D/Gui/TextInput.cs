@@ -26,12 +26,17 @@ public class TextInput : Control
 
     public override bool KeyboardTest(Keyboard.Key key, int modifiers, TestType type)
     {
+        if (type != TestType.KeyDown)
+        {
+            return false;
+        }
+        
         switch (key)
         {
             case Keyboard.Key.Enter:
                 OnSubmit?.Invoke(this, EventArgs.Empty);
                 return true;
-            case Keyboard.Key.Backspace when Text.Length > 0 && type == TestType.KeyDown:
+            case Keyboard.Key.Backspace when Text.Length > 0:
                 Text = Text[..^1];
                 return true;
             default:

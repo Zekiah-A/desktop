@@ -97,33 +97,11 @@ async Task PlayServer(PreConnectData serverData)
     await connections.Connect(serverData);
 }
 
+
+
 // Servers page UI
 var serversPage = new Page();
 serversPage.Children.Add(dirtBackgroundRect);
-var connectButton = new Button("Connect",
-    () => (int) (window.GetView().Size.X - 0.2 * window.GetView().Size.X - 16),
-    () =>  (int) (window.GetView().Size.Y - 0.05 * window.GetView().Size.X - 16), 
-    () => (int) (0.2 * window.GetView().Size.X), 
-    () => (int) (0.05 * window.GetView().Size.X));
-serversPage.Children.Add(connectButton);
-var addNewButton = new Button("Add new",
-    () => 16,
-    () =>  (int) (window.GetView().Size.Y - 0.05 * window.GetView().Size.X - 16), 
-    () => (int) (0.2 * window.GetView().Size.X), 
-    () => (int) (0.05 * window.GetView().Size.X));
-serversPage.Children.Add(addNewButton);
-var deleteServerButton = new Button("Refresh",
-    () => (int) (0.2 * window.GetView().Size.X + 32),
-    () =>  (int) (window.GetView().Size.Y - 0.05 * window.GetView().Size.X - 16), 
-    () => (int) (0.2 * window.GetView().Size.X), 
-    () => (int) (0.05 * window.GetView().Size.X));
-serversPage.Children.Add(deleteServerButton);
-var serverInput = new TextInput("server ip", 
-    () => (int) (0.4 * window.GetView().Size.X + 52),
-    () => (int) (window.GetView().Size.Y - 0.05 * window.GetView().Size.X - 16),
-    () => (int) (0.3 * window.GetView().Size.X),
-    () => (int) (0.05 * window.GetView().Size.X));
-serversPage.Children.Add(serverInput);
 var serversLabel = new Label("Connect to a server:", 28, Color.White)
 {
     Bounds = new Bounds(() => (int) (window.GetView().Size.X / 2) - 156, () => 128, () => 0, () => 0)
@@ -132,9 +110,10 @@ serversPage.Children.Add(serversLabel);
 var serverList = new DisplayList(() => 64, () => 192,
     () => (int) (window.GetView().Size.X - 128),
     () => (int) (window.GetView().Size.X * 0.8));
-
-Task.Run(async () =>
+async Task UpdateServerList()
 {
+    serverList.Children.Clear();
+    
     foreach (var serverIp in gameData.KnownServers)
     {
         var connectionData = await connections.PreConnect(serverIp);
@@ -142,8 +121,58 @@ Task.Run(async () =>
         connectionData.Item.OnMouseUp += async (_, _) => await PlayServer(connectionData);
         serverList.Children.Add(connectionData.Item);
     }
-});
+}
+Task.Run(UpdateServerList);
+var serverDeleteButton = new Button("Delete",
+    () => 16,
+    () =>  (int) (window.GetView().Size.Y - 0.05 * window.GetView().Size.X - 16), 
+    () => (int) (0.2 * window.GetView().Size.X), 
+    () => (int) (0.05 * window.GetView().Size.X));
+serverDeleteButton.OnMouseUp += (_, _) =>
+{
+    gameData.KnownServers.RemoveAt(gameData.KnownServers.Count - 1);
+    Storage.Save(nameof(GameData.KnownServers), gameData.KnownServers);
+    Task.Run(UpdateServerList);
+};
+serversPage.Children.Add(serverDeleteButton);
 serversPage.Children.Add(serverList);
+var serverRefreshButton = new Button("Refresh",
+    () => (int) (0.2 * window.GetView().Size.X + 32),
+    () =>  (int) (window.GetView().Size.Y - 0.05 * window.GetView().Size.X - 16), 
+    () => (int) (0.2 * window.GetView().Size.X), 
+    () => (int) (0.05 * window.GetView().Size.X));
+serverRefreshButton.OnMouseUp += (_, _) =>
+{
+    Task.Run(UpdateServerList);
+};
+serversPage.Children.Add(serverRefreshButton);
+var serverInput = new TextInput("server ip", 
+    () => (int) (0.4 * window.GetView().Size.X + 52),
+    () => (int) (window.GetView().Size.Y - 0.05 * window.GetView().Size.X - 16),
+    () => (int) (0.3 * window.GetView().Size.X),
+    () => (int) (0.05 * window.GetView().Size.X));
+serverInput.OnSubmit += (_, _) =>
+{
+    gameData.KnownServers.Add(serverInput.Text);
+    Storage.Save(nameof(GameData.KnownServers), gameData.KnownServers);
+    serverInput.Text = "";
+    Task.Run(UpdateServerList);
+};
+serversPage.Children.Add(serverInput);
+var connectButton = new Button("Connect",
+    () => (int) (window.GetView().Size.X - 0.2 * window.GetView().Size.X - 16),
+    () =>  (int) (window.GetView().Size.Y - 0.05 * window.GetView().Size.X - 16), 
+    () => (int) (0.2 * window.GetView().Size.X), 
+    () => (int) (0.05 * window.GetView().Size.X));
+connectButton.OnMouseUp += (_, _) =>
+{
+    gameData.KnownServers.Add(serverInput.Text);
+    Storage.Save(nameof(GameData.KnownServers), gameData.KnownServers);
+    serverInput.Text = "";
+    Task.Run(UpdateServerList);
+};
+serversPage.Children.Add(connectButton);
+
 
 // Options page UI
 var optionsPage = new Page();
@@ -153,11 +182,11 @@ var grid = new Grid(1, 6, () => (int) (window.GetView().Size.X / 4), () => (int)
 {
     Children =
     {
-        [0, 0] = new Button("Hello world", () => 0, () => 0, () => 0, () => 0),
-        [0, 1] = new Button("Hello world", () => 0, () => 0, () => 0, () => 0),
-        [0, 2] = new Button("Hello world", () => 0, () => 0, () => 0, () => 0),
-        [0, 3] = new Button("Hello world", () => 0, () => 0, () => 0, () => 0),
-        [0, 5] = new Button("Hello world", () => 0, () => 0, () => 0, () => 0),
+        [0, 0] = new Button("Camera: Follow player", () => 0, () => 0, () => 0, () => 0),
+        [0, 1] = new Button("Framerate: 60FPS", () => 0, () => 0, () => 0, () => 0),
+        [0, 2] = new Button("Sound: 75%", () => 0, () => 0, () => 0, () => 0),
+        [0, 3] = new Button("Music: 75%", () => 0, () => 0, () => 0, () => 0),
+        [0, 5] = new Button("Back", () => 0, () => 0, () => 0, () => 0),
     },
     RowGap = 8
 };

@@ -79,10 +79,10 @@ public class Grid : Control
 
                 var childColumn = column;
                 var childRow = row;
-                Children[column, row]!.Bounds.StartX = () => Bounds.StartX() + (columnWidth + ColumnGap / 2) * childColumn;
-                Children[column, row]!.Bounds.StartY = () => Bounds.StartY() + (rowHeight + RowGap / 2) * childRow;
-                Children[column, row]!.Bounds.EndX = () => Bounds.StartX() + (columnWidth - ColumnGap / 2) * (childColumn + 1);
-                Children[column, row]!.Bounds.EndY = () => Bounds.StartY() + (rowHeight - RowGap / 2) * (childRow + 1);
+                Children[column, row]!.Bounds.StartX = () => Bounds.StartX() + columnWidth * childColumn + ColumnGap / 2;
+                Children[column, row]!.Bounds.StartY = () => Bounds.StartY() + (rowHeight) * childRow + RowGap / 2;
+                Children[column, row]!.Bounds.EndX = () => Bounds.StartX() + (columnWidth) * (childColumn + 1) - ColumnGap / 2;
+                Children[column, row]!.Bounds.EndY = () => Bounds.StartY() + (rowHeight) * (childRow + 1) - RowGap / 2;
                 Children[column, row]!.Render(window, view);
             }
         }
