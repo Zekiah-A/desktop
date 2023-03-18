@@ -13,6 +13,7 @@ public class GameData
     public Block[] Blocks { get; set; }
     public Item[] Items { get; set; }
     public Entity[] Entities { get; set; }
+    public double Ticks { get; set; }
      
     // Account and authorisation
     public string PublicKey { get; set; }

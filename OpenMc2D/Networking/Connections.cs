@@ -4,7 +4,6 @@ using System.Reflection.Metadata;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 using OpenMc2D.Types;
@@ -15,10 +14,23 @@ namespace OpenMc2D.Networking;
 
 public class Connections
 {
+	public delegate void PacketHandler(ReadablePacket data);
+	public static Dictionary<int, PacketHandler> PacketHandlers;
+
 	private GameData gameData;
-    public Connections(GameData data)
+	public Connections(GameData data)
     {
 	    gameData = data;
+	    PacketHandlers = new Dictionary<int, PacketHandler>
+	    {
+		    { 1, RubberPacket },
+		    { 2, DimPacket },
+		    { 3, ClockPacket },
+		    { 8, BlockSetPacket },
+		    { 16, ChunkPacket },
+		    { 17, ChunkDeletePacket },
+		    { 20, EntityPacket }
+	    };
     }
 
     private static string GetWebsocketUri(string ip)
@@ -246,5 +258,40 @@ public class Connections
 	    {
 		    
 	    }
+    }
+
+    private void RubberPacket(ReadablePacket data)
+    {
+	    
+    }
+
+    private void DimPacket(ReadablePacket data)
+    {
+	    
+    }
+
+    private void ClockPacket(ReadablePacket data)
+    {
+	    gameData.Ticks = data.ReadDouble();
+    }
+
+    private void ChunkPacket(ReadablePacket data)
+    {
+	    
+    }
+
+    private void ChunkDeletePacket(ReadablePacket data)
+    {
+	    
+    }
+
+    private void BlockSetPacket(ReadablePacket data)
+    {
+	    
+    }
+
+    private void EntityPacket(ReadablePacket data)
+    {
+	    
     }
 }
