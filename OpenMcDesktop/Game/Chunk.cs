@@ -8,17 +8,69 @@ public class Chunk
 {
 	public int X;
 	public int Y;
-	public int[] Tiles;
-	public List<Entity> entities;
+	// The blocks present within this chunk
+	public List<int> Tiles;
+	// A palette of all block types that are used in this chunk
+	public List<Type> Palette;
+	// A list of all entities belonging/within this chunk
+	public List<Entity> Entities;
+	public byte[] Biomes;
 
-	public Chunk(ReadablePacket data, Window window)
+	public Chunk(ReadablePacket data, GameData gameData)
 	{
 		var x = data.ReadInt();
 		var y = data.ReadInt();
 
 		X = x << 6 >> 6;
 		Y = y << 6 >> 6;
-		Tiles = Array.Empty<int>();
+		Tiles = new List<int>();
+		Entities = new List<Entity>();
+		Palette = new List<Type>();
+
+		// Read buffer palette
+		var paletteLength = (x >>> 26) + (y >>> 26) * 64 + 1;
+		
+		// Read and add all entities belonging to this chunk
+		var entityId = data.ReadShort();
+		while (entityId != 0) // ()
+		{
+			var entity = Activator.CreateInstance(gameData.EntityDefinitions[entityId],
+				new[] {data.ReadShort() / 1024 + (x << 6), data.ReadShort() / 1024 + (y << 6)}) as Entity;
+
+			if (entity is null)
+			{
+				continue;
+			}
+
+			entity.Id = data.ReadUInt() + data.ReadUShort() * int.MaxValue;
+			entity.Name = data.ReadString();
+			entity.State = data.ReadShort();
+			entity.Displacement.X = data.ReadFloat();
+			entity.Displacement.Y = data.ReadFloat();
+			entity.Facing = data.ReadDouble();
+			entity.Age = data.ReadDouble();
+			entity.Chunk = this;
+			
+			// We add all entities back to the global world
+			World.AddEntity(entity);
+			Entities.Add(entity);
+			entityId = data.ReadShort();
+		}
+
+		Biomes = new[]
+		{
+			data.ReadByte(), data.ReadByte(), data.ReadByte(), data.ReadByte(), data.ReadByte(), data.ReadByte(),
+			data.ReadByte(), data.ReadByte(), data.ReadByte(), data.ReadByte()
+		};
+
+		for (var i = 0; i < paletteLength; i++)
+		{
+			Palette.Add(gameData.BlocksDefinitions[data.ReadShort()]);
+		}
+	}
+
+	public void Render(Window window)
+	{
 		
 	}
 }
@@ -52,7 +104,7 @@ export class Chunk{
 			if(e.placed)e.placed()
 			id = buf.short()
 		}
-		this.biomes = [buf.byte(), buf.byte(), buf.byte(), buf.byte(), buf.byte(), buf.byte(), buf.byte(), buf.byte(), buf.byte(), buf.byte()]
+		this.biomes = [data.ReadByte(), data.ReadByte(), data.ReadByte(), data.ReadByte(), data.ReadByte(), data.ReadByte(), data.ReadByte(), data.ReadByte(), data.ReadByte(), data.ReadByte()]
 		let palette = []
 		let i = 0
 		for(;i<palettelen;i++){
@@ -63,7 +115,7 @@ export class Chunk{
 			for(;j<4096;j++)this.tiles.push(palette[0])
 		}else if(palettelen == 2){
 			for(;j<512;j++){
-				const byte = buf.byte()
+				const byte = data.ReadByte()
 				this.tiles.push(palette[byte&1])
 				this.tiles.push(palette[(byte>>1)&1])
 				this.tiles.push(palette[(byte>>2)&1])
@@ -75,7 +127,7 @@ export class Chunk{
 			}
 		}else if(palettelen <= 4){
 			for(;j<1024;j++){
-				const byte = buf.byte()
+				const byte = data.ReadByte()
 				this.tiles.push(palette[byte&3])
 				this.tiles.push(palette[(byte>>2)&3])
 				this.tiles.push(palette[(byte>>4)&3])
@@ -83,19 +135,19 @@ export class Chunk{
 			}
 		}else if(palettelen <= 16){
 			for(;j<2048;j++){
-				const byte = buf.byte()
+				const byte = data.ReadByte()
 				this.tiles.push(palette[byte&15])
 				this.tiles.push(palette[(byte>>4)])
 			}
 		}else if(palettelen <= 256){
 			for(;j<4096;j++){
-				this.tiles.push(palette[buf.byte()])
+				this.tiles.push(palette[data.ReadByte()])
 			}
 		}else{
 			for(;j<6144;j+=3){
 				let byte2
-				this.tiles.push(palette[buf.byte() + (((byte2 = buf.byte())&0x0F)<<8)])
-				this.tiles.push(palette[buf.byte() + ((byte2&0xF0)<<4)])
+				this.tiles.push(palette[data.ReadByte() + (((byte2 = data.ReadByte())&0x0F)<<8)])
+				this.tiles.push(palette[data.ReadByte() + ((byte2&0xF0)<<4)])
 			}
 		}
 		//parse block entities

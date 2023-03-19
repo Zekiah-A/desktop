@@ -330,7 +330,6 @@ async Task<bool> Authorise(string? key = null)
 }
 
 currentPage = mainPage;
-// We must use Task.Run, because SFML hates async being used on the same thread as it's onw drawing code
 Task.Run(async () =>
 {
     if (currentPage != authPage && !await Authorise(Storage.Get<string>("AuthKey")))

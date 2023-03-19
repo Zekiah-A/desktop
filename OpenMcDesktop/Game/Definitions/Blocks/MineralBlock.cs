@@ -1,4 +1,4 @@
-namespace OpenMcDesktop.Game.Definitions;
+namespace OpenMcDesktop.Game.Definitions.Blocks;
 
 // TODO: Everything in this file is an annoying inconsistency in the naming scheme, must wait for the server
 // TODO: and main client to update their naming before we can change this to something better.

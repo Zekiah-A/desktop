@@ -1,12 +1,11 @@
 using System.Net.WebSockets;
-using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 using OpenMcDesktop.Gui;
 using OpenMcDesktop.Game;
+using OpenMcDesktop.Game.Definitions;
 using WatsonWebsocket;
 using SFML.Graphics;
 
@@ -167,15 +166,13 @@ public class Connections
     /// <summary>
     /// Creates a GameData *Definitions array of types from the server's initial connection packs packet containing block IDs/definitions.
     /// </summary>
-    /// <param name="definitions"></param>
-    /// <returns></returns>
-    private Type[] DecodePacksDefinition(IEnumerable<string> definitions)
+    private Type[] DecodePacksDefinition(IEnumerable<string> definitions, string typeNamespace)
     {
 	    var types = new List<Type>();
 	    foreach (var type in definitions)
 	    {
 		    var members = type.Split(" ");
-		    var typeName = "OpenMcDesktop.Game.Definitions." +  members[0].ToPascalCase();
+		    var typeName = "OpenMcDesktop.Game.Definitions." + typeNamespace + "." +  members[0].ToPascalCase();
 
 		    if (members.Length == 1)
 		    {
@@ -218,13 +215,13 @@ public class Connections
 	    
 	    // Apply data sent to us by server from packs to current client
 	    var blockDefinitions = serverData.DataPacks[0].Split("\n");
-	    gameData.BlocksDefinitions = DecodePacksDefinition(blockDefinitions);
+	    gameData.BlocksDefinitions = DecodePacksDefinition(blockDefinitions, "Blocks");
 	    
 	    var itemDefinitions = serverData.DataPacks[1].Split("\n");
-	    gameData.ItemDefinitions = DecodePacksDefinition(itemDefinitions);
+	    gameData.ItemDefinitions = DecodePacksDefinition(itemDefinitions, "Items");
 
 	    var entityDefinitions = serverData.DataPacks[2].Split("\n");
-	    gameData.EntityDefinitions = DecodePacksDefinition(entityDefinitions);
+	    gameData.EntityDefinitions = DecodePacksDefinition(entityDefinitions, "Entities");
 	    
 	    // Authenticate client fully with challenge & accept messages
 	    var signature = ProcessChallenge(serverData.Challenge);
@@ -267,6 +264,9 @@ public class Connections
 	    
     }
 
+    /// <summary>
+    /// A packet containing information about the current world and position that the player is located within
+    /// </summary>
     private void DimPacket(ReadablePacket data)
     {
 	    var world = data.ReadString();
@@ -282,9 +282,13 @@ public class Connections
 	    gameData.TickCount = data.ReadDouble();
     }
 
+    /// <summary>
+    /// A packet containing chunk data, from which a chunk object can be constructed
+    /// </summary>
     private void ChunkPacket(ReadablePacket data)
     {
-	    
+	    var chunk = new Chunk(data, gameData);
+	    Console.WriteLine(chunk);
     }
 
     private void ChunkDeletePacket(ReadablePacket data)

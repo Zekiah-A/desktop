@@ -6,7 +6,7 @@ public abstract class Block
 {
 	// Get-only as all instances of a block type have to have the same values for these properties
 	public virtual bool Solid => true;
-	public virtual Texture Texture => new Texture(0, 0);
+	public static Texture Texture => new Texture(0, 0);
 	public virtual bool Climbable => false;
 	public virtual float Viscosity => 0.0f;
 	public virtual float BreakTime => 0.0f;

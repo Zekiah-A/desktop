@@ -9,12 +9,15 @@ public abstract class Entity
 	private float Height => 1.0f;
 	private float HeadHeight => 0.5f;
 	
-	public Vector2 Position = Vector2.Zero;
-	public Vector2 ChunkPosition = Vector2.Zero;
-	public Vector2 Displacement = Vector2.Zero;
-	public bool Alive = false;
+	public long Id = 0;
+	public string Name = "";
 	public int State = 0;
-	public int Facing = 0;
+	public Vector2 Displacement = Vector2.Zero;
+	public double Facing = 0;
+	public double Age = 0;
+	public Chunk? Chunk = null;
+
+	public Vector2 Position = Vector2.Zero;
+	public bool Alive = false;
 	public int BlocksWalked = 0;
-	public int Age = 0;
 }
