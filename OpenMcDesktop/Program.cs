@@ -112,19 +112,25 @@ serversPage.Children.Add(serversLabel);
 var serverList = new DisplayList(() => 64, () => 192,
     () => (int) (window.GetView().Size.X - 128),
     () => (int) (window.GetView().Size.X * 0.8));
-async Task UpdateServerList()
+
+void UpdateServerList()
 {
     serverList.Children.Clear();
+    preConnectionsDatas.Clear();
     
     foreach (var serverIp in gameData.KnownServers)
     {
-        var connectionData = await connections.PreConnect(serverIp);
-        preConnectionsDatas.Add(connectionData);
-        connectionData.Item.OnMouseUp += async (_, _) => await PlayServer(connectionData);
-        serverList.Children.Add(connectionData.Item);
+        _ = Task.Run(async () =>
+        {
+            var connectionData = await connections.PreConnect(serverIp);
+            preConnectionsDatas.Add(connectionData);
+            connectionData.Item.OnMouseUp += async (_, _) => await PlayServer(connectionData);
+            serverList.Children.Add(connectionData.Item);
+        });
     }
 }
-Task.Run(UpdateServerList);
+
+UpdateServerList();
 var serverDeleteButton = new Button("Delete",
     () => 16,
     () =>  (int) (window.GetView().Size.Y - 0.05 * window.GetView().Size.X - 16), 
@@ -134,7 +140,7 @@ serverDeleteButton.OnMouseUp += (_, _) =>
 {
     gameData.KnownServers.RemoveAt(gameData.KnownServers.Count - 1);
     Storage.Save(nameof(GameData.KnownServers), gameData.KnownServers);
-    Task.Run(UpdateServerList);
+    UpdateServerList();
 };
 serversPage.Children.Add(serverDeleteButton);
 serversPage.Children.Add(serverList);
@@ -161,19 +167,19 @@ serverInput.OnSubmit += (_, _) =>
     Task.Run(UpdateServerList);
 };
 serversPage.Children.Add(serverInput);
-var connectButton = new Button("Connect",
-    () => (int) (window.GetView().Size.X - 0.2 * window.GetView().Size.X - 16),
-    () =>  (int) (window.GetView().Size.Y - 0.05 * window.GetView().Size.X - 16), 
-    () => (int) (0.2 * window.GetView().Size.X), 
+var serverAddButton = new Button("Add server",
+    () => (int) (0.7 * window.GetView().Size.X + 72),
+    () => (int) (window.GetView().Size.Y - 0.05 * window.GetView().Size.X - 16),
+    () => (int) (0.25 * window.GetView().Size.X),
     () => (int) (0.05 * window.GetView().Size.X));
-connectButton.OnMouseUp += (_, _) =>
+serverAddButton.OnMouseUp += (_, _) =>
 {
     gameData.KnownServers.Add(serverInput.Text);
     Storage.Save(nameof(GameData.KnownServers), gameData.KnownServers);
     serverInput.Text = "";
     Task.Run(UpdateServerList);
 };
-serversPage.Children.Add(connectButton);
+serversPage.Children.Add(serverAddButton);
 
 
 // Options page UI
