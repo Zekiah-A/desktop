@@ -221,7 +221,7 @@ skinButton.OnMouseUp += async (_, _) =>
     {
         return;
     }
-    
+
     var skinData = await File.ReadAllBytesAsync(file.Path);
     if (skinData.Length == 1008)
     {
@@ -372,7 +372,7 @@ Task.Run(async () =>
 {
     if (currentPage != authPage && !await Authorise(Storage.Get<string>("AuthKey")))
     {
-    //    currentPage = authPage;
+        currentPage = authPage;
     }
 });
 
