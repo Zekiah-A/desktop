@@ -1,5 +1,7 @@
 using OpenMcDesktop.Game.Definitions;
 using OpenMcDesktop.Networking;
+using SFML.Graphics;
+using SFML.System;
 using SFML.Window;
 
 namespace OpenMcDesktop.Game;
@@ -9,9 +11,9 @@ public class Chunk
 	public int X;
 	public int Y;
 	// The blocks present within this chunk
-	public List<int> Tiles;
+	public Block[] Tiles;
 	// A palette of all block types that are used in this chunk
-	public List<Type> Palette;
+	public List<Block> Palette;
 	// A list of all entities belonging/within this chunk
 	public List<Entity> Entities;
 	public byte[] Biomes;
@@ -23,21 +25,22 @@ public class Chunk
 
 		X = x << 6 >> 6;
 		Y = y << 6 >> 6;
-		Tiles = new List<int>();
+		Tiles = new Block[4096]; // Chunk size is 64x64
 		Entities = new List<Entity>();
-		Palette = new List<Type>();
+		Palette = new List<Block>();
 
-		// Read buffer palette
+		// Chunks are 64x64, while chunk position is a 32 bit integer, therefore highest possible chunk position is
+		// 67108863. That leads to 6 wasted bits in the x and y component of the chunk position (12 bits total). These
+		// bits are then used for space saving to encode the palette length for this chunk, it also means that a palette
+		// can not be above 2^12 in length as a chunk only has 4096 blocks.
 		var paletteLength = (x >>> 26) + (y >>> 26) * 64 + 1;
 		
 		// Read and add all entities belonging to this chunk
 		var entityId = data.ReadShort();
 		while (entityId != 0) // ()
 		{
-			var entity = Activator.CreateInstance(gameData.EntityDefinitions[entityId],
-				new[] {data.ReadShort() / 1024 + (x << 6), data.ReadShort() / 1024 + (y << 6)}) as Entity;
-
-			if (entity is null)
+			if (Activator.CreateInstance(gameData.EntityDefinitions[entityId],
+				    new[] { data.ReadShort() / 1024 + (x << 6), data.ReadShort() / 1024 + (y << 6)} ) is not Entity entity)
 			{
 				continue;
 			}
@@ -63,15 +66,61 @@ public class Chunk
 			data.ReadByte(), data.ReadByte(), data.ReadByte(), data.ReadByte()
 		};
 
-		for (var i = 0; i < paletteLength; i++)
+		var i = 0;
+		for (i = 0; i < paletteLength; i++)
 		{
-			Palette.Add(gameData.BlocksDefinitions[data.ReadShort()]);
+			Palette.Add(gameData.Blocks[data.ReadShort()]);
+		}
+		
+		// Decode the blocks in this chunk using palette and place into tiles - the format of the tile data depends on
+		// the number of things in the pal
+		i = 11 + i * 2;
+		var j = 0;
+		var tilesI = 0;
+		var block = data.ReadByte(); // Index of block in palette
+		if (paletteLength == 2)
+		{
+			for (; j < 512; j++)
+			{
+				Tiles[tilesI] = Palette[block & 1];
+				Tiles[tilesI + 1] = Palette[(block >> 1) & 1];
+				Tiles[tilesI + 2] = Palette[(block >> 2) & 1];
+				Tiles[tilesI + 3] = Palette[(block >> 3) & 1];
+				Tiles[tilesI + 4] = Palette[(block >> 4) & 1];
+				Tiles[tilesI + 5] = Palette[(block >> 5) & 1];
+				Tiles[tilesI + 5] = Palette[(block >> 6) & 1];
+				Tiles[tilesI + 6] = Palette[(block >> 7) & 1];
+				tilesI += 7;
+			}
+		}
+		else if (paletteLength == 2)
+		{
+			for (; j < 512; j++)
+			{
+				Tiles[tilesI] = Palette[block & 3];
+				Tiles[tilesI + 1] = Palette[(block >> 2) & 3];
+				Tiles[tilesI + 2] = Palette[(block >> 4) & 3];
+				Tiles[tilesI + 2] = Palette[(block >> 6) & 3];
+				tilesI += 4;
+			}
 		}
 	}
 
-	public void Render(Window window)
+	// TODO: Implement our own sprite batching algorithm to try and optimise drawing performance to the maximum
+	public void Render(RenderWindow window)
 	{
+		using var blockSprite = new Sprite();
 		
+		for (var x = 0; x < 64; x++)
+		{
+			for (var y = 0; y < 64; y++)
+			{
+				var tileTexture = Tiles[x | (y << 6)].InstanceTexture;
+				blockSprite.Texture = tileTexture;
+				blockSprite.Position = new Vector2f(x * World.BlockTextureSize, y * World.BlockTextureSize);
+				blockSprite.Draw(window, RenderStates.Default);
+			}
+		}
 	}
 }
 /*

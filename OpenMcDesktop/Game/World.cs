@@ -12,7 +12,8 @@ public static class World
     public static GameData GameData; // Injected by Program.cs
     public static Texture TerrainAtlas; // Used by Block definitions
     public static Texture ItemsAtlas; // Used by Items definitions
-
+    public const int BlockTextureSize = 64;
+    
     static World()
     {
         TerrainAtlas = new Texture("Resources/Textures/terrain.png");

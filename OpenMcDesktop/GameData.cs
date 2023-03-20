@@ -14,7 +14,9 @@ public class GameData
     public Type[] BlocksDefinitions { get; set; } // We can use Activator.CreateInstance() to create instances from these block types
     public Type[] ItemDefinitions { get; set; } // We can use Activator.CreateInstance() to create instances from these item types
     public Type[] EntityDefinitions { get; set; } // We can use Activator.CreateInstance() to create instances from these entity types
-    
+    public Block[] Blocks { get; set; } // Shared objects for all block types that can be used to avoid creating thousands of identical block instances for blocks that have no variation (like grass, unlike chests)
+    public Item[] Items { get; set; }  // Shared objects for all item types that can be used to avoid creating thousands of identical item instances for items that have no variation, like unstackable items with no unique qualities
+        
     // Game world components
     public Dictionary<int, Chunk> Map { get; set; }
     public Dictionary<int, Entity> Entities { get; set; }
