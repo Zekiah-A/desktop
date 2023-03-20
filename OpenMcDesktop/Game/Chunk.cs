@@ -1,8 +1,8 @@
+using OpenMcDesktop.Game.Definitions.Blocks;
 using OpenMcDesktop.Game.Definitions;
 using OpenMcDesktop.Networking;
 using SFML.Graphics;
 using SFML.System;
-using SFML.Window;
 
 namespace OpenMcDesktop.Game;
 
@@ -77,32 +77,79 @@ public class Chunk
 		i = 11 + i * 2;
 		var j = 0;
 		var tilesI = 0;
-		var block = data.ReadByte(); // Index of block in palette
-		if (paletteLength == 2)
+		switch (paletteLength)
 		{
-			for (; j < 512; j++)
-			{
-				Tiles[tilesI] = Palette[block & 1];
-				Tiles[tilesI + 1] = Palette[(block >> 1) & 1];
-				Tiles[tilesI + 2] = Palette[(block >> 2) & 1];
-				Tiles[tilesI + 3] = Palette[(block >> 3) & 1];
-				Tiles[tilesI + 4] = Palette[(block >> 4) & 1];
-				Tiles[tilesI + 5] = Palette[(block >> 5) & 1];
-				Tiles[tilesI + 5] = Palette[(block >> 6) & 1];
-				Tiles[tilesI + 6] = Palette[(block >> 7) & 1];
-				tilesI += 7;
-			}
+			case < 2:
+				for (; j < 4096; j++)
+				{
+					Tiles[tilesI] = Palette[0];
+					tilesI++;
+				}
+				break;
+			case 2:
+				for (; j < 512; j++)
+				{
+					var block = data.ReadByte(); // Index of block in palette
+					Tiles[tilesI] = Palette[block & 1];
+					Tiles[tilesI + 1] = Palette[(block >> 1) & 1];
+					Tiles[tilesI + 2] = Palette[(block >> 2) & 1];
+					Tiles[tilesI + 3] = Palette[(block >> 3) & 1];
+					Tiles[tilesI + 4] = Palette[(block >> 4) & 1];
+					Tiles[tilesI + 5] = Palette[(block >> 5) & 1];
+					Tiles[tilesI + 5] = Palette[(block >> 6) & 1];
+					Tiles[tilesI + 6] = Palette[(block >> 7) & 1];
+					tilesI += 7;
+				}
+				break;
+			case <= 4:
+				for (; j < 1024; j++)
+				{
+					var block = data.ReadByte(); // Index of block in palette
+					Tiles[tilesI] = Palette[block & 3];
+					Tiles[tilesI + 1] = Palette[(block >> 2) & 3];
+					Tiles[tilesI + 2] = Palette[(block >> 4) & 3];
+					Tiles[tilesI + 2] = Palette[(block >> 6) & 3];
+					tilesI += 4;
+				}
+				break;
+			case <= 16:
+				for (; j < 2048; j++)
+				{
+					var block = data.ReadByte(); // Index of block in palette
+					Tiles[tilesI] = Palette[block & 15];
+					Tiles[tilesI] = Palette[block >> 4];
+				}
+				break;
+			case <=256:
+				for (; j < 4096; j++)
+				{
+					Tiles[tilesI] = Palette[data.ReadByte()];
+					tilesI++;
+				}
+				break;
+			default:
+				for (; j < 6144; i++)
+				{
+					var block2 = 0;
+					Tiles[tilesI] = Palette[data.ReadByte() + (((block2 = data.ReadByte()) & 0x0F ) << 8)];
+					Tiles[tilesI] = Palette[data.ReadByte() + ((block2 & 0xF0) << 4)];
+					tilesI++;
+				}
+				break;
 		}
-		else if (paletteLength == 2)
-		{
-			for (; j < 512; j++)
+
+		// Parse block entities and fill in array holes
+		for (j = 0; j < 4096; j++) {
+			var block = Tiles[j];
+			var airIndex = gameData.BlockIndex[typeof(Air)];
+
+			if (block is null)
 			{
-				Tiles[tilesI] = Palette[block & 3];
-				Tiles[tilesI + 1] = Palette[(block >> 2) & 3];
-				Tiles[tilesI + 2] = Palette[(block >> 4) & 3];
-				Tiles[tilesI + 2] = Palette[(block >> 6) & 3];
-				tilesI += 4;
+				Tiles[j] = gameData.Blocks[airIndex];
+				continue;
 			}
+			
+			// TODO: Reimplement whatever savedatahistory was
 		}
 	}
 

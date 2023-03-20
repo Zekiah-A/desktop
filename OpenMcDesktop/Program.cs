@@ -3,6 +3,7 @@ using OpenMcDesktop;
 using OpenMcDesktop.Game;
 using OpenMcDesktop.Gui;
 using OpenMcDesktop.Networking;
+using NativeFileDialogSharp;
 using SFML.Graphics;
 using SFML.Window;
 
@@ -20,7 +21,7 @@ var connections = new Connections(gameData);
 var preConnectionsDatas = new List<PreConnectData>();
 
 // Window event listeners and input
-var window = new RenderWindow(new VideoMode(1540, 1080), "OpenMc2d");
+var window = new RenderWindow(new VideoMode(1540, 1080), "OpenMc");
 var uiView = new View();
 window.Closed += (_, _) =>
 {
@@ -77,6 +78,15 @@ window.TextEntered += (_, args) =>
     }
 };
 
+// Main page game UI
+var mainPage = new Page();
+var gamePage = new Page();
+var serversPage = new Page();
+var optionsPage = new Page();
+var accountsPage = new Page();
+var authPage = new Page();
+
+
 var dirtBackgroundRect = new TextureRect(new Texture(@"Resources/Brand/dirt_background.png") { Repeated = true },
     () => 0,
     () => 0,
@@ -86,7 +96,6 @@ var dirtBackgroundRect = new TextureRect(new Texture(@"Resources/Brand/dirt_back
     SubRect = new Bounds(() => 0, () => 0, () => (int) window.GetView().Size.X / 2, () => (int) window.GetView().Size.Y / 2)
 };
 
-var gamePage = new Page();
 
 async Task PlayServer(PreConnectData serverData)
 {
@@ -102,7 +111,6 @@ async Task PlayServer(PreConnectData serverData)
 
 
 // Servers page UI
-var serversPage = new Page();
 serversPage.Children.Add(dirtBackgroundRect);
 var serversLabel = new Label("Connect to a server:", 28, Color.White)
 {
@@ -181,11 +189,14 @@ serverAddButton.OnMouseUp += (_, _) =>
 };
 serversPage.Children.Add(serverAddButton);
 
-
 // Options page UI
-var optionsPage = new Page();
 optionsPage.Children.Add(dirtBackgroundRect);
-var grid = new Grid(1, 6, () => (int) (window.GetView().Size.X / 4), () => (int) (window.GetView().Size.Y / 4),
+var optionsBackButton = new Button("Back", () => 0, () => 0, () => 0, () => 0);
+optionsBackButton.OnMouseUp += (_, _) =>
+{
+    currentPage = mainPage;
+};
+var optionsGrid = new Grid(1, 6, () => (int) (window.GetView().Size.X / 4), () => (int) (window.GetView().Size.Y / 4),
     () => (int) (window.GetView().Size.X / 2), () => (int) (window.GetView().Size.Y / 2))
 {
     Children =
@@ -194,18 +205,46 @@ var grid = new Grid(1, 6, () => (int) (window.GetView().Size.X / 4), () => (int)
         [0, 1] = new Button("Framerate: 60FPS", () => 0, () => 0, () => 0, () => 0),
         [0, 2] = new Button("Sound: 75%", () => 0, () => 0, () => 0, () => 0),
         [0, 3] = new Button("Music: 75%", () => 0, () => 0, () => 0, () => 0),
-        [0, 5] = new Button("Back", () => 0, () => 0, () => 0, () => 0),
+        [0, 5] = optionsBackButton
     },
     RowGap = 8
 };
-optionsPage.Children.Add(grid);
+optionsPage.Children.Add(optionsGrid);
 
 // Options page UI
-var accountsPage = new Page();
 accountsPage.Children.Add(dirtBackgroundRect);
+var skinButton = new Button("Change skin", () => 0, () => 0, () => 0, () => 0);
+skinButton.OnMouseUp += async (_, _) =>
+{
+    var file = Dialog.FileOpen("png", Directory.GetCurrentDirectory());
+    if (file?.Path is null)
+    {
+        return;
+    }
+    
+    var skinData = await File.ReadAllBytesAsync(file.Path);
+    if (skinData.Length == 1008)
+    {
+        gameData.Skin = skinData;
+    }
+};
+var accountsBackButton = new Button("Back", () => 0, () => 0, () => 0, () => 0);
+accountsBackButton.OnMouseUp += (_, _) => 
+{
+    currentPage = mainPage;
+};
+var accountsGrid = new Grid(1, 6, () => (int) (window.GetView().Size.X / 4), () => (int) (window.GetView().Size.Y / 4),
+    () => (int) (window.GetView().Size.X / 2), () => (int) (window.GetView().Size.Y / 2))
+{
+    Children =
+    {
+        [0, 3] = skinButton,
+        [0, 5] = accountsBackButton,
+    },
+    RowGap = 8
+};
+accountsPage.Children.Add(accountsGrid);
 
-// Main page game UI
-var mainPage = new Page();
 var backgroundTexture = new Texture(@"Resources/Textures/Background/panorama_0.png");
 var fitFactor = 0.0f;
 var backgroundRect = new TextureRect(backgroundTexture,
@@ -272,7 +311,6 @@ quitButton.OnMouseUp += (_, _) =>
 mainPage.Children.Add(quitButton);
 
 // Central server auth key page
-var authPage = new Page();
 authPage.Children.Add(dirtBackgroundRect);
 authPage.Children.Add(dirtBackgroundRect);
 var authLabel = new Label("Please enter your game invite code:", 28, Color.Yellow)
@@ -334,7 +372,7 @@ Task.Run(async () =>
 {
     if (currentPage != authPage && !await Authorise(Storage.Get<string>("AuthKey")))
     {
-        currentPage = authPage;
+    //    currentPage = authPage;
     }
 });
 

@@ -11,9 +11,11 @@ public class GameData
     // Game runtime objects and definitions
     public HttpClient HttpClient { get; init; } = new();
     public WatsonWsClient CurrentServer { get; set; }
-    public Type[] BlocksDefinitions { get; set; } // We can use Activator.CreateInstance() to create instances from these block types
+    public Type[] BlockDefinitions { get; set; } // We can use Activator.CreateInstance() to create instances from these block types
     public Type[] ItemDefinitions { get; set; } // We can use Activator.CreateInstance() to create instances from these item types
     public Type[] EntityDefinitions { get; set; } // We can use Activator.CreateInstance() to create instances from these entity types
+    public Dictionary<Type, int> BlockIndex { get; set; } // Maps the type of block to the index of block in blocks
+    public Dictionary<Type, int> ItemIndex { get; set; } // Maps the type of item to the index of item in items
     public Block[] Blocks { get; set; } // Shared objects for all block types that can be used to avoid creating thousands of identical block instances for blocks that have no variation (like grass, unlike chests)
     public Item[] Items { get; set; }  // Shared objects for all item types that can be used to avoid creating thousands of identical item instances for items that have no variation, like unstackable items with no unique qualities
         
@@ -32,5 +34,5 @@ public class GameData
     // Game options
     public int FrameSleepMs { get; set; } = 16;
     public List<string> KnownServers { get; set; } = new();
-    public byte[] Skin { get; set; } = new byte[1008];
+    public byte[] Skin { get; set; } = new byte[1008]; // 28*12*3
 }

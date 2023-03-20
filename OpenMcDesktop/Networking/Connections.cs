@@ -166,11 +166,13 @@ public class Connections
     /// <summary>
     /// Creates a GameData *Definitions array of types from the server's initial connection packs packet containing block IDs/definitions.
     /// </summary>
-    private Type[] DecodePacksDefinition(IEnumerable<string> definitions, string typeNamespace)
+    private (Type[], Dictionary<Type, int>) DecodePacksDefinition(string[] definitions, string typeNamespace)
     {
 	    var types = new List<Type>();
-	    foreach (var type in definitions)
-	    {
+		var indexes = new Dictionary<Type, int>();
+	    for (var i = 0; i < definitions.Length; i++)
+		{
+			var type = definitions[i];
 		    var members = type.Split(" ");
 		    var typeName = "OpenMcDesktop.Game.Definitions." + typeNamespace + "." +  members[0].ToPascalCase();
 
@@ -180,11 +182,12 @@ public class Connections
 			    if (instance != null)
 			    {
 				    types.Add(instance);
+					indexes.Add(instance, i);
 			    }
 		    }
-/*
+
 			// TODO: Unfortunately we can not work with modified / custom definitions as of yet.
-		    for (var i = 1; i < members.Length; i++)
+		    /*for (var i = 1; i < members.Length; i++)
 		    {
 			    var attempt = JsonSerializer.Deserialize<T>(members[i].Trim());
 
@@ -196,12 +199,11 @@ public class Connections
 			    {
 				    types.Add(attempt);
 			    }
-		    }
-*/
-	    }
+		    }*/
+		}
 
-	    return types.ToArray();
-    }
+		return (types.ToArray(), indexes);
+	}
 
     /// <summary>
     /// Actual connection to game server in order for us to start playing, will assign this server as the current server
@@ -215,13 +217,13 @@ public class Connections
 	    
 	    // Apply data sent to us by server from packs to current client
 	    var blockDefinitions = serverData.DataPacks[0].Split("\n");
-	    gameData.BlocksDefinitions = DecodePacksDefinition(blockDefinitions, "Blocks");
+	    (gameData.BlockDefinitions, gameData.BlockIndex) = DecodePacksDefinition(blockDefinitions, "Blocks");
 	    
 	    var itemDefinitions = serverData.DataPacks[1].Split("\n");
-	    gameData.ItemDefinitions = DecodePacksDefinition(itemDefinitions, "Items");
+	    (gameData.ItemDefinitions, gameData.ItemIndex) = DecodePacksDefinition(itemDefinitions, "Items");
 
 	    var entityDefinitions = serverData.DataPacks[2].Split("\n");
-	    gameData.EntityDefinitions = DecodePacksDefinition(entityDefinitions, "Entities");
+	    (gameData.EntityDefinitions, _) = DecodePacksDefinition(entityDefinitions, "Entities");
 	    
 	    // Authenticate client fully with challenge & accept messages
 	    var signature = ProcessChallenge(serverData.Challenge);
