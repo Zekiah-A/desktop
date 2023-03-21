@@ -8,6 +8,7 @@ using OpenMcDesktop.Game;
 using OpenMcDesktop.Game.Definitions;
 using WatsonWebsocket;
 using SFML.Graphics;
+using SFML.Window;
 
 namespace OpenMcDesktop.Networking;
 
@@ -17,6 +18,7 @@ public class Connections
 	public readonly Dictionary<int, PacketHandler> PacketHandlers;
 
 	private readonly GameData gameData;
+	private readonly RenderWindow renderWindow;
 	
 	public Connections(GameData data)
     {
@@ -166,23 +168,30 @@ public class Connections
     /// <summary>
     /// Creates a GameData *Definitions array of types from the server's initial connection packs packet containing block IDs/definitions.
     /// </summary>
-    private (Type[], Dictionary<Type, int>) DecodePacksDefinition(string[] definitions, string typeNamespace)
+    private (Type[], Dictionary<Type, int>, T[]) DecodePacksDefinition<T>(string[] definitions, string typeNamespace)
     {
 	    var types = new List<Type>();
 		var indexes = new Dictionary<Type, int>();
+		var sharedInstances = new List<T>();
+		
 	    for (var i = 0; i < definitions.Length; i++)
 		{
-			var type = definitions[i];
-		    var members = type.Split(" ");
+		    var members = definitions[i].Split(" ");
 		    var typeName = "OpenMcDesktop.Game.Definitions." + typeNamespace + "." +  members[0].ToPascalCase();
 
 		    if (members.Length == 1)
 		    {
-			    var instance = Type.GetType(typeName);
-			    if (instance != null)
+			    var type = Type.GetType(typeName);
+			    if (type != null)
 			    {
-				    types.Add(instance);
-					indexes.Add(instance, i);
+				    var instance = (T) Activator.CreateInstance(type)!;
+
+				    types.Add(type);
+				    if (!indexes.Keys.Contains(type))
+				    {
+					    indexes.Add(type, i);
+					    sharedInstances.Add(instance);
+				    }
 			    }
 		    }
 
@@ -202,7 +211,7 @@ public class Connections
 		    }*/
 		}
 
-		return (types.ToArray(), indexes);
+		return (types.ToArray(), indexes, sharedInstances.ToArray());
 	}
 
     /// <summary>
@@ -217,13 +226,13 @@ public class Connections
 	    
 	    // Apply data sent to us by server from packs to current client
 	    var blockDefinitions = serverData.DataPacks[0].Split("\n");
-	    (gameData.BlockDefinitions, gameData.BlockIndex) = DecodePacksDefinition(blockDefinitions, "Blocks");
+	    (gameData.BlockDefinitions, gameData.BlockIndex, gameData.Blocks) = DecodePacksDefinition<Block>(blockDefinitions, "Blocks");
 	    
 	    var itemDefinitions = serverData.DataPacks[1].Split("\n");
-	    (gameData.ItemDefinitions, gameData.ItemIndex) = DecodePacksDefinition(itemDefinitions, "Items");
+	    (gameData.ItemDefinitions, gameData.ItemIndex, gameData.Items) = DecodePacksDefinition<Item>(itemDefinitions, "Items");
 
 	    var entityDefinitions = serverData.DataPacks[2].Split("\n");
-	    (gameData.EntityDefinitions, _) = DecodePacksDefinition(entityDefinitions, "Entities");
+	    (gameData.EntityDefinitions, _, _) = DecodePacksDefinition<Entity>(entityDefinitions, "Entities");
 	    
 	    // Authenticate client fully with challenge & accept messages
 	    var signature = ProcessChallenge(serverData.Challenge);
@@ -290,7 +299,7 @@ public class Connections
     private void ChunkPacket(ReadablePacket data)
     {
 	    var chunk = new Chunk(data, gameData);
-	    Console.WriteLine(chunk);
+	    chunk.Render(renderWindow);
     }
 
     private void ChunkDeletePacket(ReadablePacket data)

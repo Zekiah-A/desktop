@@ -7,7 +7,7 @@ using NativeFileDialogSharp;
 using SFML.Graphics;
 using SFML.Window;
 
-Page? currentPage = null;
+var currentPage = (Page?) null;
 var gameData = new GameData
 {
     Name = Storage.Get<string>(nameof(GameData.Name)) ?? "",
@@ -18,11 +18,12 @@ var gameData = new GameData
 };
 World.GameData = gameData;
 var connections = new Connections(gameData);
-var preConnectionsDatas = new List<PreConnectData>();
+var preConnections = new List<PreConnectData>();
 
 // Window event listeners and input
 var window = new RenderWindow(new VideoMode(1540, 1080), "OpenMc");
 var uiView = new View();
+    gameData.Window = window; // TESTING
 window.Closed += (_, _) =>
 {
     window.Close();
@@ -78,7 +79,6 @@ window.TextEntered += (_, args) =>
     }
 };
 
-// Main page game UI
 var mainPage = new Page();
 var gamePage = new Page();
 var serversPage = new Page();
@@ -99,7 +99,7 @@ var dirtBackgroundRect = new TextureRect(new Texture(@"Resources/Brand/dirt_back
 
 async Task PlayServer(PreConnectData serverData)
 {
-    foreach (var data in preConnectionsDatas.Where(data => data.Socket != serverData.Socket))
+    foreach (var data in preConnections.Where(data => data.Socket != serverData.Socket))
     {
         await data.Socket.StopAsync();
     }
@@ -124,14 +124,14 @@ var serverList = new DisplayList(() => 64, () => 192,
 void UpdateServerList()
 {
     serverList.Children.Clear();
-    preConnectionsDatas.Clear();
+    preConnections.Clear();
     
     foreach (var serverIp in gameData.KnownServers)
     {
         _ = Task.Run(async () =>
         {
             var connectionData = await connections.PreConnect(serverIp);
-            preConnectionsDatas.Add(connectionData);
+            preConnections.Add(connectionData);
             connectionData.Item.OnMouseUp += async (_, _) => await PlayServer(connectionData);
             serverList.Children.Add(connectionData.Item);
         });

@@ -2,15 +2,19 @@ using System.Text.Json.Serialization;
 using OpenMcDesktop.Game;
 using OpenMcDesktop.Game.Definitions;
 using OpenMcDesktop.Networking;
+using SFML.Graphics;
 using WatsonWebsocket;
 
 namespace OpenMcDesktop;
 
 public class GameData
 {
-    // Game runtime objects and definitions
-    public HttpClient HttpClient { get; init; } = new();
+    // Global program objects
+    public RenderWindow Window { get; set; }
+    public HttpClient HttpClient { get; } = new();
     public WatsonWsClient CurrentServer { get; set; }
+    
+    // Game runtime objects and definitions
     public Type[] BlockDefinitions { get; set; } // We can use Activator.CreateInstance() to create instances from these block types
     public Type[] ItemDefinitions { get; set; } // We can use Activator.CreateInstance() to create instances from these item types
     public Type[] EntityDefinitions { get; set; } // We can use Activator.CreateInstance() to create instances from these entity types
@@ -18,7 +22,7 @@ public class GameData
     public Dictionary<Type, int> ItemIndex { get; set; } // Maps the type of item to the index of item in items
     public Block[] Blocks { get; set; } // Shared objects for all block types that can be used to avoid creating thousands of identical block instances for blocks that have no variation (like grass, unlike chests)
     public Item[] Items { get; set; }  // Shared objects for all item types that can be used to avoid creating thousands of identical item instances for items that have no variation, like unstackable items with no unique qualities
-        
+    
     // Game world components
     public Dictionary<int, Chunk> Map { get; set; }
     public Dictionary<int, Entity> Entities { get; set; }

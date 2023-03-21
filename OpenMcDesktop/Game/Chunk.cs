@@ -66,28 +66,25 @@ public class Chunk
 			data.ReadByte(), data.ReadByte(), data.ReadByte(), data.ReadByte()
 		};
 
-		var i = 0;
-		for (i = 0; i < paletteLength; i++)
+		for (var i = 0; i < paletteLength; i++)
 		{
 			Palette.Add(gameData.Blocks[data.ReadShort()]);
 		}
 		
 		// Decode the blocks in this chunk using palette and place into tiles - the format of the tile data depends on
 		// the number of things in the pal
-		i = 11 + i * 2;
-		var j = 0;
 		var tilesI = 0;
 		switch (paletteLength)
 		{
 			case < 2:
-				for (; j < 4096; j++)
+				// Basically an Array.Fill except based
+				for (var i = 0; i < 4096; i++)
 				{
-					Tiles[tilesI] = Palette[0];
-					tilesI++;
+					Tiles[i] = Palette[0];
 				}
 				break;
 			case 2:
-				for (; j < 512; j++)
+				for (var j = 0; j < 512; j++)
 				{
 					var block = data.ReadByte(); // Index of block in palette
 					Tiles[tilesI] = Palette[block & 1];
@@ -102,7 +99,7 @@ public class Chunk
 				}
 				break;
 			case <= 4:
-				for (; j < 1024; j++)
+				for (var i = 0; i < 1024; i++)
 				{
 					var block = data.ReadByte(); // Index of block in palette
 					Tiles[tilesI] = Palette[block & 3];
@@ -113,22 +110,21 @@ public class Chunk
 				}
 				break;
 			case <= 16:
-				for (; j < 2048; j++)
+				for (var i = 0; i < 2048; i++)
 				{
 					var block = data.ReadByte(); // Index of block in palette
 					Tiles[tilesI] = Palette[block & 15];
 					Tiles[tilesI] = Palette[block >> 4];
 				}
 				break;
-			case <=256:
-				for (; j < 4096; j++)
+			case <= 256:
+				for (var i = 0; i < 4096; i++)
 				{
-					Tiles[tilesI] = Palette[data.ReadByte()];
-					tilesI++;
+					Tiles[i] = Palette[data.ReadByte()];
 				}
 				break;
 			default:
-				for (; j < 6144; i++)
+				for (var j = 0; j < 6144; j++)
 				{
 					var block2 = 0;
 					Tiles[tilesI] = Palette[data.ReadByte() + (((block2 = data.ReadByte()) & 0x0F ) << 8)];
@@ -139,13 +135,13 @@ public class Chunk
 		}
 
 		// Parse block entities and fill in array holes
-		for (j = 0; j < 4096; j++) {
-			var block = Tiles[j];
+		for (var i = 0; i < 4096; i++) {
+			var block = Tiles[i];
 			var airIndex = gameData.BlockIndex[typeof(Air)];
 
 			if (block is null)
 			{
-				Tiles[j] = gameData.Blocks[airIndex];
+				Tiles[i] = gameData.Blocks[airIndex];
 				continue;
 			}
 			
