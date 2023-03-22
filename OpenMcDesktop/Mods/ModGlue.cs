@@ -6,6 +6,11 @@ public class ModGlue
 {
     private GameData gameData;
 
+    public ModGlue(GameData data)
+    {
+        gameData = data;
+    }
+    
     public void GetPaused()
     {
         
@@ -14,11 +19,6 @@ public class ModGlue
     public void SetPaused()
     {
         
-    }
-    
-    public ModGlue(GameData data)
-    {
-        gameData = data;
     }
     
     Block[] GetBlockDefinitions()

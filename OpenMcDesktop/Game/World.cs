@@ -1,3 +1,4 @@
+using OpenMcDesktop.Game.Definitions.Blocks;
 using OpenMcDesktop.Game.Definitions;
 using SFML.Graphics;
 
@@ -26,15 +27,24 @@ public class World
         gameData = data;
     }
 
-    public static Block GetBlock(int x, int y)
+    public Block GetBlock(int x, int y)
     {
-        return null;
+        var chunkKey = (x >>> 6) + (y >>> 6) * 67108864;
+        var chunk = gameData.Map.GetValueOrDefault(chunkKey);
+        return chunk?.Tiles[(x & 63) + ((y & 63) << 6)] ?? gameData.Blocks[gameData.BlockIndex[typeof(OpenMcDesktop.Game.Definitions.Blocks.Air)]];
     }
 
-    public static void SetBlock(int x, int y)
+    public void SetBlock(int x, int y)
     {
+        var chunkKey = (x >>> 6) + (y >>> 6) * 67108864;
+        var chunk = gameData.Map.GetValueOrDefault(chunkKey);
+        if (chunk is null)
+        {
+            return;
+        }
+
         
-    }
+	}
 
     public static void AddEntity(Entity entity)
     {

@@ -1,7 +1,27 @@
+export function setPaused(value) {
+    glue.SetPaused(value)
+}
 
-export let W2 = 0, H2 = 0, W = 0, H = 0, SCALE = 1
+export function getPaused() {
+    return glue.GetPaused()
+}
 
-export let paused = () => glue.GetPaused()
-export let pause = () => glue.setPaused(true)
-export function _setPaused(value) { glue.setPaused(value) }
+export function createMenu(menuId) {
+    return glue.CreateMenu(menuId)
+}
 
+export function addTitle(ttle) {
+    return glue.AddTitle(ttle)
+}
+
+export function addButton(menuId, text) {
+    return glue.AddButton(menuId, text)
+}
+
+export function addLabel(menuID, text, colour = "#FFFFFF", fontSize = 24) {
+    return glue.AddLabel(menuID, text, colour, fontSize)
+}
+
+export function deleteMenu(menuId) {
+    return glue.DeleteMenu(menuId)
+}
