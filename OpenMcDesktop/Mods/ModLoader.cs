@@ -10,10 +10,17 @@ public class ModLoader
     private const string DefaultUrl = "https://openmc.pages.dev";
     private GameData gameData;
     private ModGlue glue;
+    private string apiScript;
+    private string definitionsScript;
+    private string worldScript;
+    
     public ModLoader(GameData data)
     {
         gameData = data;
         glue = new ModGlue(gameData);
+        apiScript = File.ReadAllText("Resources/ModBindings/api.js");
+        definitionsScript = File.ReadAllText("Resources/ModBindings/definitions.js");
+        worldScript = File.ReadAllText("Resources/ModBindings/world.js");
     }
     
     public async Task ExecutePack(string url)
@@ -29,9 +36,9 @@ public class ModLoader
         };
         
         engine.AddHostObject("glue", glue);
-        engine.DocumentSettings.AddSystemDocument("api", ModuleCategory.Standard, @"");
-        engine.DocumentSettings.AddSystemDocument("world", ModuleCategory.Standard, @"");
-        engine.DocumentSettings.AddSystemDocument("definitions", ModuleCategory.Standard, @"");
+        engine.DocumentSettings.AddSystemDocument("api", ModuleCategory.Standard, apiScript);
+        engine.DocumentSettings.AddSystemDocument("world", ModuleCategory.Standard, definitionsScript);
+        engine.DocumentSettings.AddSystemDocument("definitions", ModuleCategory.Standard, worldScript);
 
         engine.Execute(new DocumentInfo(uri) { Category = ModuleCategory.Standard }, initialScript);
     }

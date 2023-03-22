@@ -5,6 +5,16 @@ namespace OpenMcDesktop.Mods;
 public class ModGlue
 {
     private GameData gameData;
+
+    public void GetPaused()
+    {
+        
+    }
+
+    public void SetPaused()
+    {
+        
+    }
     
     public ModGlue(GameData data)
     {
@@ -32,6 +42,16 @@ public class ModGlue
     }
 
     void DefineEntity()
+    {
+        
+    }
+    
+    void GetBlock()
+    {
+        
+    }
+
+    void SetBlock()
     {
         
     }
