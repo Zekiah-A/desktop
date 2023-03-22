@@ -7,6 +7,7 @@ public class Grass : Block
 {
     public new static Texture Texture => World.TerrainAtlas.AtBlock(3, 0);
     public override float BreakTime => 1.5f;
+    public override Tool Tool => Tool.Shovel;
 }
 
 public class SnowyGrass : Grass

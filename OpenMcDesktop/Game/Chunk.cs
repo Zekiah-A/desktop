@@ -133,7 +133,7 @@ public class Chunk
 				}
 				break;
 		}
-
+		
 		// Parse block entities and fill in array holes
 		for (var i = 0; i < 4096; i++) {
 			var block = Tiles[i];
@@ -142,7 +142,6 @@ public class Chunk
 			if (block is null)
 			{
 				Tiles[i] = gameData.Blocks[airIndex];
-				continue;
 			}
 			
 			// TODO: Reimplement whatever savedatahistory was
@@ -158,7 +157,8 @@ public class Chunk
 		{
 			for (var y = 0; y < 64; y++)
 			{
-				var tileTexture = Tiles[x | (y << 6)].InstanceTexture;
+				//var tileTexture = Tiles[x | (y << 6)].InstanceTexture;
+				Texture tileTexture = World.TerrainAtlas.AtBlock(0, 0);
 				blockSprite.Texture = tileTexture;
 				blockSprite.Position = new Vector2f(x * World.BlockTextureSize, y * World.BlockTextureSize);
 				blockSprite.Draw(window, RenderStates.Default);

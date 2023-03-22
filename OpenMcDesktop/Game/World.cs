@@ -7,17 +7,23 @@ namespace OpenMcDesktop.Game;
 /// Contains helper methods for interacting with game world, similar to client file
 /// https://github.com/open-mc/client/blob/preview/iframe/world.js.
 /// </summary>
-public static class World
+public class World
 {
-    public static GameData GameData; // Injected by Program.cs
     public static Texture TerrainAtlas; // Used by Block definitions
     public static Texture ItemsAtlas; // Used by Items definitions
     public const int BlockTextureSize = 64;
+
+    private GameData gameData;
     
     static World()
     {
         TerrainAtlas = new Texture("Resources/Textures/terrain.png");
         ItemsAtlas = new Texture("Resources/Textures/items.png");
+    }
+
+    public World(GameData data)
+    {
+        gameData = data;
     }
 
     public static Block GetBlock(int x, int y)

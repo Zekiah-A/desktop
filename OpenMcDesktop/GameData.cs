@@ -13,6 +13,7 @@ public class GameData
     public RenderWindow Window { get; set; }
     public HttpClient HttpClient { get; } = new();
     public WatsonWsClient CurrentServer { get; set; }
+    public Storage Storage { get; set; }
     
     // Game runtime objects and definitions
     public Type[] BlockDefinitions { get; set; } // We can use Activator.CreateInstance() to create instances from these block types

@@ -6,6 +6,7 @@ using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 using OpenMcDesktop.Gui;
 using OpenMcDesktop.Game;
 using OpenMcDesktop.Game.Definitions;
+using OpenMcDesktop.Mods;
 using WatsonWebsocket;
 using SFML.Graphics;
 using SFML.Window;
@@ -16,13 +17,15 @@ public class Connections
 {
 	public delegate void PacketHandler(ReadablePacket data);
 	public readonly Dictionary<int, PacketHandler> PacketHandlers;
-
 	private readonly GameData gameData;
-	private readonly RenderWindow renderWindow;
-	
+	private readonly World world;
+	private readonly ModLoader loader;
+
 	public Connections(GameData data)
     {
 	    gameData = data;
+	    world = new World(gameData);
+	    loader = new ModLoader(gameData);
 	    PacketHandlers = new Dictionary<int, PacketHandler>
 	    {
 		    { 1, RubberPacket },
@@ -233,6 +236,8 @@ public class Connections
 
 	    var entityDefinitions = serverData.DataPacks[2].Split("\n");
 	    (gameData.EntityDefinitions, _, _) = DecodePacksDefinition<Entity>(entityDefinitions, "Entities");
+
+	    await loader.ExecutePack(serverData.DataPacks[3]);
 	    
 	    // Authenticate client fully with challenge & accept messages
 	    var signature = ProcessChallenge(serverData.Challenge);
@@ -299,7 +304,7 @@ public class Connections
     private void ChunkPacket(ReadablePacket data)
     {
 	    var chunk = new Chunk(data, gameData);
-	    chunk.Render(renderWindow);
+	    chunk.Render(gameData.Window);
     }
 
     private void ChunkDeletePacket(ReadablePacket data)

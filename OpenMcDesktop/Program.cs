@@ -1,6 +1,5 @@
 ﻿using System.Net;
 using OpenMcDesktop;
-using OpenMcDesktop.Game;
 using OpenMcDesktop.Gui;
 using OpenMcDesktop.Networking;
 using NativeFileDialogSharp;
@@ -8,22 +7,16 @@ using SFML.Graphics;
 using SFML.Window;
 
 var currentPage = (Page?) null;
-var gameData = new GameData
-{
-    Name = Storage.Get<string>(nameof(GameData.Name)) ?? "",
-    PublicKey = Storage.Get<string>(nameof(GameData.PublicKey)) ?? "",
-    PrivateKey = Storage.Get<string>(nameof(GameData.PrivateKey)) ?? "",
-    AuthSignature = Storage.Get<string>(nameof(GameData.AuthSignature)) ?? "",
-    KnownServers = Storage.Get<List<string>>(nameof(GameData.KnownServers)) ?? new List<string> { "localhost" }
-};
-World.GameData = gameData;
-var connections = new Connections(gameData);
-var preConnections = new List<PreConnectData>();
+var mainPage = new Page();
+var gamePage = new Page();
+var serversPage = new Page();
+var optionsPage = new Page();
+var accountsPage = new Page();
+var authPage = new Page();
 
 // Window event listeners and input
 var window = new RenderWindow(new VideoMode(1540, 1080), "OpenMc");
 var uiView = new View();
-    gameData.Window = window; // TESTING
 window.Closed += (_, _) =>
 {
     window.Close();
@@ -35,21 +28,24 @@ window.Resized += (_, args) =>
 };
 window.MouseButtonPressed += (_, args) =>
 {
-    if (currentPage is null || !currentPage.HitTest(args.X, args.Y, TestType.MouseDown))
+    // ReSharper disable once AccessToModifiedClosure
+    if (currentPage?.HitTest(args.X, args.Y, TestType.MouseDown) is false)
     {
         // If not blocked by the UI, then we propagate the hit test to the main game
     }
 };
 window.MouseButtonReleased += (_, args) =>
 {
-    if (currentPage is null || !currentPage.HitTest(args.X, args.Y, TestType.MouseUp))
+    // ReSharper disable once AccessToModifiedClosure
+    if (currentPage?.HitTest(args.X, args.Y, TestType.MouseUp) is false)
     {
         // If not blocked by the UI, then we propagate the hit test to the main game
     }
 };
 window.MouseMoved += (_, args) =>
 {
-    if (currentPage is null || !currentPage.HitTest(args.X, args.Y, TestType.MouseHover))
+    // ReSharper disable once AccessToModifiedClosure
+    if (currentPage?.HitTest(args.X, args.Y, TestType.MouseHover) is false)
     {
         // If not blocked by the UI, then we propagate the hit test to the main game
     }
@@ -62,30 +58,38 @@ void PropagateKeyTest(KeyEventArgs args, TestType type)
     modifiers |= args.Control ? (int) ModifierFlags.Control : 0;
     modifiers |= args.Shift ? (int) ModifierFlags.Shift : 0;
     modifiers |= args.System ? (int) ModifierFlags.System : 0;
-    
-    
-    if (currentPage is null || !currentPage.KeyboardTest(args.Code, modifiers, type))
+
+    // ReSharper disable once AccessToModifiedClosure
+    if (currentPage?.KeyboardTest(args.Code, modifiers, type) is false)
     {
         // If not blocked by the UI, then we propagate the keyboard test to the main game
     }
 }
+
 window.KeyPressed += (_, args) => PropagateKeyTest(args, TestType.KeyDown);
 window.KeyReleased += (_, args) => PropagateKeyTest(args, TestType.KeyUp);
 window.TextEntered += (_, args) =>
 {
-    if (currentPage is null || !currentPage.TextTest(args.Unicode))
+    // ReSharper disable once AccessToModifiedClosure
+    if (currentPage?.TextTest(args.Unicode) is false)
     {
         // If not blocked by the UI, then we propagate the text test to the main game
     }
 };
 
-var mainPage = new Page();
-var gamePage = new Page();
-var serversPage = new Page();
-var optionsPage = new Page();
-var accountsPage = new Page();
-var authPage = new Page();
-
+var storage = new Storage(Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "OpenMcDesktop"));
+var gameData = new GameData
+{
+    Name = storage.Get<string>(nameof(GameData.Name)) ?? "",
+    PublicKey = storage.Get<string>(nameof(GameData.PublicKey)) ?? "",
+    PrivateKey = storage.Get<string>(nameof(GameData.PrivateKey)) ?? "",
+    AuthSignature = storage.Get<string>(nameof(GameData.AuthSignature)) ?? "",
+    KnownServers = storage.Get<List<string>>(nameof(GameData.KnownServers)) ?? new List<string> { "localhost" },
+    Storage = storage,
+    Window = window
+};
+var connections = new Connections(gameData);
+var preConnections = new List<PreConnectData>();
 
 var dirtBackgroundRect = new TextureRect(new Texture(@"Resources/Brand/dirt_background.png") { Repeated = true },
     () => 0,
@@ -107,8 +111,6 @@ async Task PlayServer(PreConnectData serverData)
     currentPage = gamePage;
     await connections.Connect(serverData);
 }
-
-
 
 // Servers page UI
 serversPage.Children.Add(dirtBackgroundRect);
@@ -147,7 +149,7 @@ var serverDeleteButton = new Button("Delete",
 serverDeleteButton.OnMouseUp += (_, _) =>
 {
     gameData.KnownServers.RemoveAt(gameData.KnownServers.Count - 1);
-    Storage.Save(nameof(GameData.KnownServers), gameData.KnownServers);
+    storage.Save(nameof(GameData.KnownServers), gameData.KnownServers);
     UpdateServerList();
 };
 serversPage.Children.Add(serverDeleteButton);
@@ -170,7 +172,7 @@ var serverInput = new TextInput("server ip",
 serverInput.OnSubmit += (_, _) =>
 {
     gameData.KnownServers.Add(serverInput.Text);
-    Storage.Save(nameof(GameData.KnownServers), gameData.KnownServers);
+    storage.Save(nameof(GameData.KnownServers), gameData.KnownServers);
     serverInput.Text = "";
     Task.Run(UpdateServerList);
 };
@@ -183,7 +185,7 @@ var serverAddButton = new Button("Add server",
 serverAddButton.OnMouseUp += (_, _) =>
 {
     gameData.KnownServers.Add(serverInput.Text);
-    Storage.Save(nameof(GameData.KnownServers), gameData.KnownServers);
+    storage.Save(nameof(GameData.KnownServers), gameData.KnownServers);
     serverInput.Text = "";
     Task.Run(UpdateServerList);
 };
@@ -359,18 +361,18 @@ async Task<bool> Authorise(string? key = null)
     gameData.PrivateKey = lines[2];
     gameData.AuthSignature = lines[3];
     
-    Storage.Save("AuthKey", key);
-    Storage.Save(nameof(gameData.Name), gameData.Name);
-    Storage.Save(nameof(GameData.PublicKey), gameData.PublicKey);
-    Storage.Save(nameof(gameData.PrivateKey), gameData.PrivateKey);
-    Storage.Save(nameof(gameData.AuthSignature), gameData.AuthSignature);
+    storage.Save("AuthKey", key);
+    storage.Save(nameof(gameData.Name), gameData.Name);
+    storage.Save(nameof(GameData.PublicKey), gameData.PublicKey);
+    storage.Save(nameof(gameData.PrivateKey), gameData.PrivateKey);
+    storage.Save(nameof(gameData.AuthSignature), gameData.AuthSignature);
     return true;
 }
 
 currentPage = mainPage;
 Task.Run(async () =>
 {
-    if (currentPage != authPage && !await Authorise(Storage.Get<string>("AuthKey")))
+    if (currentPage != authPage && !await Authorise(storage.Get<string>("AuthKey")))
     {
         currentPage = authPage;
     }
