@@ -384,7 +384,7 @@ Task.Run(async () =>
 {
     if (currentPage != authPage && !await Authorise(storage.Get<string>("AuthKey")))
     {
-        //currentPage = authPage;
+        currentPage = authPage;
     }
 });
 
