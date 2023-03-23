@@ -79,7 +79,7 @@ window.TextEntered += (_, args) =>
     }
 };
 
-AppDomain.CurrentDomain.UnhandledException += async (sender, exceptionEventArgs) =>
+AppDomain.CurrentDomain.UnhandledException += (sender, exceptionEventArgs) =>
 {
     Console.WriteLine("Critical game error!  " + exceptionEventArgs.ExceptionObject);
     Environment.Exit(0);
@@ -384,7 +384,7 @@ Task.Run(async () =>
 {
     if (currentPage != authPage && !await Authorise(storage.Get<string>("AuthKey")))
     {
-        currentPage = authPage;
+        //currentPage = authPage;
     }
 });
 

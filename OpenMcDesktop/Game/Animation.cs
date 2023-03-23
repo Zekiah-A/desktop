@@ -4,22 +4,28 @@ public class Animation
 {
     public List<Keyframe> Keyframes;
     public int LengthMilliseconds;
+    private DateTimeOffset animationStart;
 
     public Animation()
     {
         Keyframes = new List<Keyframe>();
     }
 
-    public Animation AddKeyFrame(DateTimeOffset time, Dictionary<string, float> values, KeyframeEase ease)
+    public Animation AddKeyFrame(int timeMilliseconds, Dictionary<string, float> values, KeyframeEase ease)
     {
-        Keyframes.Add(new Keyframe(time.Millisecond, values, ease));
-        LengthMilliseconds = time.Millisecond > LengthMilliseconds ? time.Millisecond : LengthMilliseconds;
+        Keyframes.Add(new Keyframe(timeMilliseconds, values, ease));
+        LengthMilliseconds = timeMilliseconds > LengthMilliseconds ? timeMilliseconds : LengthMilliseconds;
         return this;
+    }
+
+    public void Start()
+    {
+        animationStart = DateTime.Now;
     }
 
     public float GetAnimationState(DateTimeOffset currentTime, string componentName)
     {
-        var time = (currentTime.Millisecond % LengthMilliseconds); // Time relative to animation
+        var time = ((currentTime - animationStart).Milliseconds % LengthMilliseconds); // Time relative to animation
         // First figure out what two keyframes we are supposedly between
         var previousFrame = Keyframes[0];
         var nextFrame = Keyframes[1];
@@ -34,7 +40,7 @@ public class Animation
             {
                 previousFrame = Keyframes[i];
             }
-            else if (Keyframes[i].timeMilliseconds > time )
+            else if (Keyframes[i].timeMilliseconds > time)
             {
                 nextFrame = Keyframes[i];
                 previousFrame = Keyframes[i - 1];
@@ -52,6 +58,12 @@ public class Animation
         {
             case KeyframeEase.Linear:
                 return (frameTime / timeDiff) * valueDiff + previousValue;
+            case KeyframeEase.SineIn:
+                return (float) (1 - Math.Cos(((frameTime / timeDiff) * Math.PI) / 2)) * valueDiff + previousValue;
+            case KeyframeEase.SineInOut:
+                return (float) (-(Math.Cos(Math.PI * (frameTime / timeDiff)) - 1) / 2) * valueDiff + previousValue;
+            case KeyframeEase.SineOut:
+                return (float) (Math.Sin(((frameTime / timeDiff) * Math.PI) / 2)) * valueDiff + previousValue;
             default:
                 throw new NotImplementedException();
         }

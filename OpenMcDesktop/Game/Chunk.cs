@@ -151,7 +151,7 @@ public class Chunk
 	{
 		using var blockSprite = new Sprite();
 
-		for (var x = 0; x < 64; x++) // 10 for political reasons
+		for (var x = 0; x < 64; x++)
 		{
 			for (var y = 0; y < 64; y++)
 			{

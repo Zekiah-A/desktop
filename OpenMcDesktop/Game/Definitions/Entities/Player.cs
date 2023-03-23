@@ -11,6 +11,39 @@ public class Player : Entity
     public Item?[] Inventory = new Item[32];
     public Item?[] items = new Item?[] { null, null, null, null, null, null };
     public int Selected = 0;
-    public byte[]? Skin = null;
+    public Texture? Skin = null;
     public Texture[]? Textures = null;
+
+    public Animation WalkAnimation = new Animation()
+        .AddKeyFrame
+        (
+            0,
+            new Dictionary<string, float>()
+            {
+                { "left_arm_rotation", -45 },
+                { "right_arm_rotation", 45 },
+                { "left_leg_rotation", 45 },
+                { "right_leg_rotation", -45 }
+            },
+            KeyframeEase.SineInOut
+        )
+        .AddKeyFrame
+        (
+            500,
+            new Dictionary<string, float>()
+            {
+                { "left_arm_rotation", 45 },
+                { "right_arm_rotation", -45 },
+                { "left_leg_rotation", -45 },
+                { "right_leg_rotation", 45 }
+            },
+            KeyframeEase.SineInOut
+        );
+    public Animation CrouchAnimation;
+    public Animation PlaceAnimation;
+
+    public override void Render(RenderWindow window)
+    {
+        
+    }
 }
