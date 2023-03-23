@@ -51,19 +51,24 @@ public class Animation
         // Now find out what the value should be at the current time given the ease function
         var frameTime = time - previousFrame.timeMilliseconds; // Time relative to previous keyframe
         var timeDiff = nextFrame.timeMilliseconds - previousFrame.timeMilliseconds;
-        var valueDiff = nextFrame.Components[componentName] - previousFrame.Components[componentName];
         var previousValue = previousFrame.Components[componentName];
+        var valueDiff = nextFrame.Components[componentName] - previousValue;
 
         switch (previousFrame.ease)
         {
             case KeyframeEase.Linear:
-                return (frameTime / timeDiff) * valueDiff + previousValue;
+                return ((float) frameTime / timeDiff) * valueDiff + previousValue;
             case KeyframeEase.SineIn:
-                return (float) (1 - Math.Cos(((frameTime / timeDiff) * Math.PI) / 2)) * valueDiff + previousValue;
+                return (float) (1 - Math.Cos((((float) frameTime / timeDiff) * Math.PI) / 2)) * valueDiff + previousValue;
             case KeyframeEase.SineInOut:
-                return (float) (-(Math.Cos(Math.PI * (frameTime / timeDiff)) - 1) / 2) * valueDiff + previousValue;
+                return (float) (-(Math.Cos(Math.PI * ((float) frameTime / timeDiff)) - 1) / 2) * valueDiff + previousValue;
             case KeyframeEase.SineOut:
-                return (float) (Math.Sin(((frameTime / timeDiff) * Math.PI) / 2)) * valueDiff + previousValue;
+                return (float) (Math.Sin((((float) frameTime / timeDiff) * Math.PI) / 2)) * valueDiff + previousValue;
+            case KeyframeEase.BounceZeroIn:
+                var progress = ((float) frameTime / timeDiff);
+                var a = Math.Pow(2, Math.Floor(Math.Log2(1 - progress)));
+                var b = progress / a % 1;
+                return (float)(((float) 2 * (-4 * Math.Pow(b - 0.5, 2) + 1)) * valueDiff + previousValue);
             default:
                 throw new NotImplementedException();
         }

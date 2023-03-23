@@ -9,5 +9,6 @@ public enum KeyframeEase
     BackInOut,
     BounceIn,
     BounceOut,
-    BounceInOut
+    BounceInOut,
+    BounceZeroIn
 }
