@@ -1,3 +1,4 @@
+using System.Numerics;
 using OpenMcDesktop.Game.Definitions.Blocks;
 using OpenMcDesktop.Game.Definitions;
 using OpenMcDesktop.Networking;
@@ -11,7 +12,7 @@ public class Chunk
 	public int X;
 	public int Y;
 	// The blocks present within this chunk
-	public Block[] Tiles;
+	public Block?[] Tiles;
 	// A palette of all block types that are used in this chunk
 	public List<Block> Palette;
 	// A list of all entities belonging/within this chunk
@@ -48,14 +49,13 @@ public class Chunk
 			entity.Id = data.ReadUInt() + data.ReadUShort() * int.MaxValue;
 			entity.Name = data.ReadString();
 			entity.State = data.ReadShort();
-			entity.Displacement.X = data.ReadFloat();
-			entity.Displacement.Y = data.ReadFloat();
-			entity.Facing = data.ReadDouble();
+			entity.Velocity = new Vector2(data.ReadFloat(), data.ReadFloat());
+			entity.Facing = data.ReadFloat();
 			entity.Age = data.ReadDouble();
 			entity.Chunk = this;
 			
 			// We add all entities back to the global world
-			World.AddEntity(entity);
+			gameData.World.AddEntity(entity);
 			Entities.Add(entity);
 			entityId = data.ReadShort();
 		}
@@ -137,10 +137,9 @@ public class Chunk
 		// Parse block entities and fill in array holes
 		for (var i = 0; i < 4096; i++) {
 			var block = Tiles[i];
-			var airIndex = gameData.BlockIndex[typeof(Air)];
-
 			if (block is null)
 			{
+				var airIndex = gameData.BlockIndex[typeof(Air)];
 				Tiles[i] = gameData.Blocks[airIndex];
 			}
 			
@@ -148,18 +147,24 @@ public class Chunk
 		}
 	}
 
-	// TODO: Implement our own sprite batching algorithm to try and optimise drawing performance to the maximum
+	// TODO: Implement our own sprite batching algorithm using vertex array to try and optimise drawing performance to the maximum
 	public void Render(RenderWindow window)
-	{
+	{	
 		using var blockSprite = new Sprite();
-		
+
 		for (var x = 0; x < 64; x++)
 		{
 			for (var y = 0; y < 64; y++)
 			{
-				var tileTexture = Tiles[x | (y << 6)].InstanceTexture;
+				var block = Tiles[x | (y << 6)];
+				if (block?.GetType() == typeof(Air))
+				{
+					continue;
+				}
+
+				var tileTexture = block!.InstanceTexture;
 				blockSprite.Texture = tileTexture;
-				blockSprite.Position = new Vector2f(x * World.BlockTextureSize, y * World.BlockTextureSize);
+				blockSprite.Position = new Vector2f(x * World.BlockTextureWidth, y * World.BlockTextureHeight);
 				blockSprite.Draw(window, RenderStates.Default);
 			}
 		}

@@ -25,21 +25,28 @@ public class ModLoader
     
     public async Task ExecutePack(string url)
     {
-        var uri = new Uri(string.Concat(url.StartsWith("http") ? "" : DefaultUrl, url));
-        var initialScript = await gameData.HttpClient.GetStringAsync(uri);
-
-        using var engine = new V8ScriptEngine();
-        engine.DocumentSettings = new DocumentSettings
+        try
         {
-            SearchPath =  uri.ToString(),
-            AccessFlags = DocumentAccessFlags.EnableAllLoading
-        };
-        
-        engine.AddHostObject("glue", glue);
-        engine.DocumentSettings.AddSystemDocument("api", ModuleCategory.Standard, apiScript);
-        engine.DocumentSettings.AddSystemDocument("world", ModuleCategory.Standard, definitionsScript);
-        engine.DocumentSettings.AddSystemDocument("definitions", ModuleCategory.Standard, worldScript);
+            var uri = new Uri(string.Concat(url.StartsWith("http") ? "" : DefaultUrl, url));
+            var initialScript = await gameData.HttpClient.GetStringAsync(uri);
 
-        engine.Execute(new DocumentInfo(uri) { Category = ModuleCategory.Standard }, initialScript);
+            using var engine = new V8ScriptEngine();
+            engine.DocumentSettings = new DocumentSettings
+            {
+                SearchPath =  uri.ToString(),
+                AccessFlags = DocumentAccessFlags.EnableAllLoading
+            };
+            
+            engine.AddHostObject("glue", glue);
+            engine.DocumentSettings.AddSystemDocument("api", ModuleCategory.Standard, apiScript);
+            engine.DocumentSettings.AddSystemDocument("world", ModuleCategory.Standard, definitionsScript);
+            engine.DocumentSettings.AddSystemDocument("definitions", ModuleCategory.Standard, worldScript);
+
+            engine.Execute(new DocumentInfo(uri) { Category = ModuleCategory.Standard }, initialScript);
+        }
+        catch(Exception exception)
+        {
+            Console.WriteLine($"Failed to execute mod pack {url}, {exception}");
+        }
     }
 }

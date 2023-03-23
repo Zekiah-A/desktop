@@ -3,6 +3,8 @@ using OpenMcDesktop;
 using OpenMcDesktop.Gui;
 using OpenMcDesktop.Networking;
 using NativeFileDialogSharp;
+using OpenMcDesktop.Game;
+using OpenMcDesktop.Mods;
 using SFML.Graphics;
 using SFML.Window;
 
@@ -77,6 +79,12 @@ window.TextEntered += (_, args) =>
     }
 };
 
+AppDomain.CurrentDomain.UnhandledException += async (sender, exceptionEventArgs) =>
+{
+    Console.WriteLine("Critical game error!  " + exceptionEventArgs.ExceptionObject);
+    Environment.Exit(0);
+};
+
 var storage = new Storage(Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "OpenMcDesktop"));
 var gameData = new GameData
 {
@@ -86,8 +94,10 @@ var gameData = new GameData
     AuthSignature = storage.Get<string>(nameof(GameData.AuthSignature)) ?? "",
     KnownServers = storage.Get<List<string>>(nameof(GameData.KnownServers)) ?? new List<string> { "localhost" },
     Storage = storage,
-    Window = window
 };
+gameData.ModLoader = new ModLoader(gameData);
+gameData.World = new World(gameData);
+
 var connections = new Connections(gameData);
 var preConnections = new List<PreConnectData>();
 
@@ -384,6 +394,7 @@ while (window.IsOpen)
     window.DispatchEvents();
     window.Clear(Color.Black);
     currentPage?.Render(window, uiView);
+    gameData.World.Render(window);
     window.Display();
     
     Thread.Sleep(gameData.FrameSleepMs);

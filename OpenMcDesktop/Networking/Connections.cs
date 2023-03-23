@@ -1,4 +1,5 @@
 using System.Net.WebSockets;
+using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -6,26 +7,26 @@ using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 using OpenMcDesktop.Gui;
 using OpenMcDesktop.Game;
 using OpenMcDesktop.Game.Definitions;
-using OpenMcDesktop.Mods;
+using OpenMcDesktop.Game.Definitions.Entities;
 using WatsonWebsocket;
 using SFML.Graphics;
-using SFML.Window;
+using Item = OpenMcDesktop.Game.Definitions.Item;
 
 namespace OpenMcDesktop.Networking;
 
+/// <summary>
+/// This class handles all networking within the game, a mix between https://github.com/open-mc/client/blob/main/iframe/ipc.js
+/// and https://github.com/open-mc/client/blob/main/iframe/incomingPacket.js.
+/// </summary>
 public class Connections
 {
 	public delegate void PacketHandler(ReadablePacket data);
 	public readonly Dictionary<int, PacketHandler> PacketHandlers;
 	private readonly GameData gameData;
-	private readonly World world;
-	private readonly ModLoader loader;
 
 	public Connections(GameData data)
     {
 	    gameData = data;
-	    world = new World(gameData);
-	    loader = new ModLoader(gameData);
 	    PacketHandlers = new Dictionary<int, PacketHandler>
 	    {
 		    { 1, RubberPacket },
@@ -237,7 +238,7 @@ public class Connections
 	    var entityDefinitions = serverData.DataPacks[2].Split("\n");
 	    (gameData.EntityDefinitions, _, _) = DecodePacksDefinition<Entity>(entityDefinitions, "Entities");
 
-	    await loader.ExecutePack(serverData.DataPacks[3]);
+	    await gameData.ModLoader.ExecutePack(serverData.DataPacks[3]);
 	    
 	    // Authenticate client fully with challenge & accept messages
 	    var signature = ProcessChallenge(serverData.Challenge);
@@ -295,7 +296,7 @@ public class Connections
 
     private void ClockPacket(ReadablePacket data)
     {
-	    gameData.TickCount = data.ReadDouble();
+	    gameData.World.TickCount = data.ReadDouble();
     }
 
     /// <summary>
@@ -304,12 +305,35 @@ public class Connections
     private void ChunkPacket(ReadablePacket data)
     {
 	    var chunk = new Chunk(data, gameData);
-	    chunk.Render(gameData.Window);
+	    var chunkKey = (chunk.X & 67108863) + (chunk.Y & 67108863) * 67108864;
+	    gameData.World.Map.Add(chunkKey, chunk);
+
+	    // Read chunk entities
+	    while (data.Left > 0)
+	    {
+		    var playerEntity = (Entity) Activator.CreateInstance(typeof(Player))!;
+		    playerEntity.X = data.ReadDouble();
+			playerEntity.Y = data.ReadDouble();
+			playerEntity.Id = data.ReadUInt() + data.ReadShort() * 4294967296;
+			playerEntity.Name = data.ReadString();
+			playerEntity.Velocity = new Vector2(data.ReadFloat(), data.ReadFloat());
+			playerEntity.Facing = data.ReadFloat();
+			playerEntity.Age = data.ReadDouble();
+			playerEntity.Chunk = chunk;
+			_ = data.ReadFlexInt(); // We can't reimplement savedatahistory as of yet.
+			chunk.Entities.Add(playerEntity);
+	    }
     }
 
     private void ChunkDeletePacket(ReadablePacket data)
     {
-	    
+	    while (data.Left > 0)
+	    {
+		    var chunkX = data.ReadInt();
+		    var chunkY = data.ReadInt();
+		    var chunkKey = (chunkX & 67108863) + (chunkY & 67108863) * 67108864;
+		    gameData.World.Map.Remove(chunkKey);
+	    }
     }
 
     private void BlockSetPacket(ReadablePacket data)

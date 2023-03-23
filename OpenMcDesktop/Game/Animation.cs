@@ -19,10 +19,10 @@ public class Animation
 
     public float GetAnimationState(DateTimeOffset currentTime, string componentName)
     {
-        var time = (currentTime.Millisecond % LengthMilliseconds); // Time realtive to animation
+        var time = (currentTime.Millisecond % LengthMilliseconds); // Time relative to animation
         // First figure out what two keyframes we are supposedly between
-        Keyframe previousFrame = Keyframes[0];
-        Keyframe nextFrame = Keyframes[1];
+        var previousFrame = Keyframes[0];
+        var nextFrame = Keyframes[1];
         for (var i = 0; i < Keyframes.Count; i++)
         {
             if (!Keyframes[i].Components.ContainsKey(componentName))
