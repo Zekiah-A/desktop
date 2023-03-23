@@ -6,7 +6,7 @@ public abstract class Block
 {
 	// Static properties - All instances of, for example, block type grass will have the same texture, so only one needs
 	// to ever exist for all instances of this type. However, an instance copy is needed because this can only be accessed at compiletime.
-	public static Texture Texture => World.TerrainAtlas.AtBlock(0, 11);
+	public static Texture Texture => World.TerrainAtlas.AtBlock(0, 0);
 	public static int TextureWidth => 16;
 	public static int TextureHeight => 16;
 		
@@ -14,12 +14,18 @@ public abstract class Block
 	// the static Texture property belonging to any block derived type, HOWEVER, it is completely safe against upcasting due to
 	// being a common property that is simply overridden. So we do not need to worry about making multiple, i.e, render methods for different
 	// block types.
-	public virtual Texture InstanceTexture => Texture;
+	public Texture InstanceTexture { get; }
+
 	public virtual bool Solid => true;
 	public virtual bool Climbable => false;
 	public virtual float Viscosity => 0.0f;
 	public virtual float BreakTime => 0.0f;
 	public virtual Tool Tool => Tool.None;
+
+	protected Block()
+	{
+		InstanceTexture = Texture;
+	}
 	
 	/// <summary>
 	/// Called to allow the block to implement it's own functionality upon being placed, such as custom place sounds.

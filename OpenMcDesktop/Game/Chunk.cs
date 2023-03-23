@@ -95,26 +95,25 @@ public class Chunk
 					Tiles[tilesI + 5] = Palette[(block >> 5) & 1];
 					Tiles[tilesI + 5] = Palette[(block >> 6) & 1];
 					Tiles[tilesI + 6] = Palette[(block >> 7) & 1];
-					tilesI += 7;
+					tilesI += 8;
 				}
 				break;
 			case <= 4:
 				for (var i = 0; i < 1024; i++)
 				{
 					var block = data.ReadByte(); // Index of block in palette
-					Tiles[tilesI] = Palette[block & 3];
-					Tiles[tilesI + 1] = Palette[(block >> 2) & 3];
-					Tiles[tilesI + 2] = Palette[(block >> 4) & 3];
-					Tiles[tilesI + 2] = Palette[(block >> 6) & 3];
-					tilesI += 4;
+					Tiles[tilesI++] = Palette[block & 3];
+					Tiles[tilesI++] = Palette[(block >> 2) & 3];
+					Tiles[tilesI++] = Palette[(block >> 4) & 3];
+					Tiles[tilesI++] = Palette[(block >> 6) & 3];
 				}
 				break;
 			case <= 16:
 				for (var i = 0; i < 2048; i++)
 				{
 					var block = data.ReadByte(); // Index of block in palette
-					Tiles[tilesI] = Palette[block & 15];
-					Tiles[tilesI] = Palette[block >> 4];
+					Tiles[tilesI++] = Palette[block & 15];
+					Tiles[tilesI++] = Palette[block >> 4];
 				}
 				break;
 			case <= 256:
@@ -149,10 +148,10 @@ public class Chunk
 
 	// TODO: Implement our own sprite batching algorithm using vertex array to try and optimise drawing performance to the maximum
 	public void Render(RenderWindow window)
-	{	
+	{
 		using var blockSprite = new Sprite();
 
-		for (var x = 0; x < 64; x++)
+		for (var x = 0; x < 64; x++) // 10 for political reasons
 		{
 			for (var y = 0; y < 64; y++)
 			{
@@ -161,9 +160,8 @@ public class Chunk
 				{
 					continue;
 				}
-
-				var tileTexture = block!.InstanceTexture;
-				blockSprite.Texture = tileTexture;
+				
+				blockSprite.Texture =  block!.InstanceTexture;
 				blockSprite.Position = new Vector2f(x * World.BlockTextureWidth, y * World.BlockTextureHeight);
 				blockSprite.Draw(window, RenderStates.Default);
 			}
