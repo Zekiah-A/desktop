@@ -1,10 +1,8 @@
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using OpenMcDesktop.Game.Definitions.Blocks;
 using OpenMcDesktop.Game.Definitions;
 using SFML.Graphics;
 using SFML.System;
-using SFML.Window;
 
 namespace OpenMcDesktop.Game;
 
@@ -23,16 +21,17 @@ public class World
     // Game world components
     public string Dimension = "overworld";
     public Dictionary<int, Chunk> Map { get; set; }
-    public Dictionary<int, Entity> Entities { get; set; }
+    public Dictionary<long, Entity> Entities { get; set; }
     public double TickCount { get; set; } = 0;
     public float TicksPerSecond { get; set; } = 0;
 
     // These are in world units
+    public Vector2f CameraCentre { get => CameraPosition + CameraSize / 2; set => CameraPosition = value + CameraSize / 2; }
     public Vector2f CameraPosition { get; set; } = new Vector2f(0, 16); // Where the camera is in the world
     public Vector2f CameraSize { get; set; } = new Vector2f(28, 16); // How many (blocks) across and up/down camera can see
     public int CameraZoomLevel { get; set; } = 1;
     public int[] CameraZoomRealBlockSizes { get; set; }  = { 32, 64, 128,256 };
-
+    
     private GameData gameData;
 
     static World()
@@ -46,7 +45,7 @@ public class World
         Dimension = dimension;
         gameData = data;
         Map = new Dictionary<int, Chunk>();
-        Entities = new Dictionary<int, Entity>();
+        Entities = new Dictionary<long, Entity>();
     }
 
     public Block GetBlock(int x, int y)
@@ -68,12 +67,35 @@ public class World
 
     public void AddEntity(Entity entity)
     {
-        
+        Entities.Add(entity.Id, entity);
+        if (entity.Id == gameData.MyPlayerId)
+        {
+            gameData.MyPlayer = entity;
+            CameraCentre = new Vector2f((float) gameData.MyPlayer.X, (float) gameData.MyPlayer.Y);
+        }
+    }
+
+    public void MoveEntity(Entity entity)
+    {
+        // Chunk that the entity now is in
+        var newChunk = Map.GetValueOrDefault((((int) Math.Floor(entity.X)) >>> 6) + (((int) Math.Floor(entity.Y)) >>> 6) * 67108864);
+        if (newChunk != entity.Chunk)
+        {
+            entity.Chunk?.Entities.Remove(entity);
+            entity.Chunk = newChunk;
+            entity.Chunk?.Entities.Add(entity);
+        }
     }
 
     public void RemoveEntity(Entity entity)
     {
+        Entities.Remove(entity.Id);
+        if (entity == gameData.MyPlayer)
+        {
+            gameData.MyPlayerId = -1;
+        }
         
+        entity.Chunk?.Entities.Remove(entity);
     }
 
     /// <summary>

@@ -39,8 +39,8 @@ public class Player : Entity
             },
             KeyframeEase.SineInOut
         );
-    public Animation CrouchAnimation;
-    public Animation PlaceAnimation;
+    public Animation CrouchAnimation = new Animation();
+    public Animation PlaceAnimation = new Animation();
 
     public override void Render(RenderWindow window)
     {

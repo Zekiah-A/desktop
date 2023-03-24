@@ -273,12 +273,22 @@ public class Connections
     private void ChatPacket(string message)
     {
 	    Console.WriteLine(message);
-	    
     }
 
     private void RubberPacket(ReadablePacket data)
     {
-	    
+		gameData.MyPlayerId = data.ReadUInt() + data.ReadUShort() * 4294967296;
+		var playerEntity = gameData.World?.Entities.GetValueOrDefault(gameData.MyPlayerId);
+		if (playerEntity is not null && playerEntity != gameData.MyPlayer)
+		{
+			gameData.World?.AddEntity(playerEntity);
+		}
+
+		gameData.MyPlayerKey = data.ReadByte();
+		if (gameData.World is not null)
+		{
+			gameData.World.TicksPerSecond = data.ReadFloat();
+		}
     }
 
     /// <summary>
@@ -357,23 +367,125 @@ public class Connections
     {
 	    while (data.Left > 0)
 	    {
-		    var blockType = (sbyte) data.ReadByte();
-		    var x = data.ReadInt();
-		    var y = data.ReadInt();
-		    var blockId = data.ReadShort();
+		    var type = data.ReadByte();
 
-		    if (blockType > 0)
+			if (type == 255)
+			{
+
+			}
+			// It is a block event, such as a door being opened
+		    else if (type > 0)
 		    {
-				// TODO: Finish packet implementation
+				var x = data.ReadInt();
+				var y = data.ReadInt();
+				var id = data.ReadUInt();
+				// TODO: Handle this block event
 		    }
 		    else
 		    {
+				var x = data.ReadInt();
+				var y = data.ReadInt();
+				var blockId = data.ReadShort();
 			    gameData.World?.SetBlock(x, y, blockId);
 		    }
 	    }
     }
 
+	/// <summary>
+	/// This packet handles anything to do with entities, for instance an entity movement,
+	/// change in state, or other such data will be distributed to the client via this packet.
+	/// </summary>
     private void EntityPacket(ReadablePacket data)
     {
+		while (data.Left > 0)
+		{
+			var action = data.ReadByte();
+			if (action == 0)
+			{
+				var type = data.ReadByte();
+				if (type == 0)
+				{
+					var target = gameData.World?.Entities.GetValueOrDefault(data.ReadUInt() + data.ReadUShort() * 4294967296);
+					if (target is not null)
+					{
+						gameData.World?.RemoveEntity(target);
+					}
+				}
+				else
+				{
+					var target = gameData.World?.Entities.GetValueOrDefault(data.ReadUInt() + data.ReadUShort() * 4294967296);
+					// entity?.TriggerEvent(type)
+				}
+				continue;
+			}
+
+			var entityId = data.ReadUInt() + data.ReadUShort() * 4294967296;
+			var entity = gameData.World?.Entities.GetValueOrDefault(entityId);
+			if (entity is null)
+			{
+				// We create a new entity, it does not yet have a chunk or position
+				if ((action & 128) != 0)
+				{
+					var entityType = gameData.EntityDefinitions[data.ReadShort()];
+					entity = (Entity?) Activator.CreateInstance(entityType);
+					if (entity is not null)
+					{
+						entity.Id = entityId;
+						entity.X = 1e100;
+						entity.Y = 1e100;
+					}
+					else
+					{
+						continue;
+					}
+				}
+				else
+				{
+					continue;
+				}
+			}
+
+			if ((action & 1) != 0)
+			{
+				entity.X = data.ReadDouble();
+				gameData.World?.MoveEntity(entity);
+			}
+			else if((action & 2) != 0)
+			{
+				entity.Y = data.ReadDouble();
+				gameData.World?.MoveEntity(entity);
+			}	
+			else if ((action & 4) != 0)
+			{
+				entity.Name = data.ReadString();
+			}
+			else if ((action & 8) != 0)
+			{
+				entity.State = data.ReadShort();
+			}
+			else if ((action & 16) != 0)
+			{
+				entity.Velocity = new Vector2(data.ReadFloat(), entity.Velocity.Y);
+				gameData.World?.MoveEntity(entity);
+			}
+			else if ((action & 32) != 0)
+			{
+				entity.Velocity = new Vector2(entity.Velocity.X, data.ReadFloat());
+				gameData.World?.MoveEntity(entity);
+			}
+			else if ((action & 64) != 0)
+			{
+				entity.Facing = data.ReadFloat();
+			}
+			else if ((action & 128) != 0)
+			{
+				// TODO: Implement entity savedata
+			}
+			else if ((action & 256) != 0)
+			{
+				gameData.World?.AddEntity(entity);
+				// TODO: Fire placed event on entity
+			}
+		}
     }
 }

@@ -25,6 +25,11 @@ public class GameData
     public Block[] Blocks { get; set; } // Shared objects for all block types that can be used to avoid creating thousands of identical block instances for blocks that have no variation (like grass, unlike chests)
     public Item[] Items { get; set; }  // Shared objects for all item types that can be used to avoid creating thousands of identical item instances for items that have no variation, like unstackable items with no unique qualities
     
+    // Stuff about us, as a client specifically
+    public long MyPlayerId { get; set; } = 0;
+    public Entity MyPlayer { get; set;}
+    public byte MyPlayerKey { get; set; } = 0;
+
     // Account and authorisation
     public string PublicKey { get; set; }
     public string PrivateKey { get; set; }
