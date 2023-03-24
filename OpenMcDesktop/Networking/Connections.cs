@@ -355,11 +355,25 @@ public class Connections
 
     private void BlockSetPacket(ReadablePacket data)
     {
-	    
+	    while (data.Left > 0)
+	    {
+		    var blockType = (sbyte) data.ReadByte();
+		    var x = data.ReadInt();
+		    var y = data.ReadInt();
+		    var blockId = data.ReadShort();
+
+		    if (blockType > 0)
+		    {
+				// TODO: Finish packet implementation
+		    }
+		    else
+		    {
+			    gameData.World?.SetBlock(x, y, blockId);
+		    }
+	    }
     }
 
     private void EntityPacket(ReadablePacket data)
     {
-	    
     }
 }

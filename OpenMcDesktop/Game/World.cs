@@ -56,13 +56,13 @@ public class World
         return chunk?.Tiles[(x & 63) + ((y & 63) << 6)] ?? gameData.Blocks[gameData.BlockIndex[typeof(Air)]];
     }
 
-    public void SetBlock(int x, int y)
+    public void SetBlock(int x, int y, int blockId)
     {
         var chunkKey = (x >>> 6) + (y >>> 6) * 67108864;
         var chunk = Map.GetValueOrDefault(chunkKey);
-        if (chunk is null)
+        if (chunk is not null)
         {
-            return;
+            chunk.Tiles[x & 63 + (y & 63 << 6)] = gameData.Blocks[blockId];
         }
     }
 
