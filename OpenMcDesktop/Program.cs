@@ -3,7 +3,6 @@ using OpenMcDesktop;
 using OpenMcDesktop.Gui;
 using OpenMcDesktop.Networking;
 using NativeFileDialogSharp;
-using OpenMcDesktop.Game;
 using OpenMcDesktop.Mods;
 using SFML.Graphics;
 using SFML.Window;
@@ -18,14 +17,14 @@ var authPage = new Page();
 
 // Window event listeners and input
 var window = new RenderWindow(new VideoMode(1540, 1080), "OpenMc");
-var uiView = new View();
+var view = new View();
 window.Closed += (_, _) =>
 {
     window.Close();
 };
 window.Resized += (_, args) =>
 {
-    var view = new View(new FloatRect(0, 0, args.Width, args.Height));
+    view = new View(new FloatRect(0, 0, args.Width, args.Height));
     window.SetView(view);
 };
 window.MouseButtonPressed += (_, args) =>
@@ -94,9 +93,9 @@ var gameData = new GameData
     AuthSignature = storage.Get<string>(nameof(GameData.AuthSignature)) ?? "",
     KnownServers = storage.Get<List<string>>(nameof(GameData.KnownServers)) ?? new List<string> { "localhost" },
     Storage = storage,
+    View = view
 };
 gameData.ModLoader = new ModLoader(gameData);
-gameData.World = new World(gameData);
 
 var connections = new Connections(gameData);
 var preConnections = new List<PreConnectData>();
@@ -393,8 +392,9 @@ while (window.IsOpen)
 {
     window.DispatchEvents();
     window.Clear(Color.Black);
-    currentPage?.Render(window, uiView);
-    gameData.World.Render(window);
+    currentPage?.Render(window, view);
+    gameData.World?.Render(window, view);
+    window.SetView(view);
     window.Display();
     
     Thread.Sleep(gameData.FrameSleepMs);

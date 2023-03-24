@@ -226,7 +226,7 @@ public class Connections
     {
 	    gameData.CurrentServer = serverData.Socket;
 	    gameData.CurrentServer.MessageReceived += OnMessageReceived;
-	    gameData.CurrentServer.MessageReceived += OnSocketDisconnected;
+	    gameData.CurrentServer.ServerDisconnected += OnSocketDisconnected;
 	    
 	    // Apply data sent to us by server from packs to current client
 	    var blockDefinitions = serverData.DataPacks[0].Split("\n");
@@ -266,7 +266,7 @@ public class Connections
 
 	    void OnSocketDisconnected(object? sender, EventArgs args)
 	    {
-		    
+		    Console.WriteLine("Connection to server closed unexpectedly!");
 	    }
     }
     
@@ -286,17 +286,24 @@ public class Connections
     /// </summary>
     private void DimPacket(ReadablePacket data)
     {
-	    var world = data.ReadString();
+	    var dimension = data.ReadString();
 	    var globalX = data.ReadFloat();
 	    var globalY = data.ReadFloat();
 	    var ticks = data.ReadDouble();
 
-	    Console.WriteLine($"{world}, {globalX}, {globalY}, {ticks}");
+	    Console.WriteLine($"World info: dimension: {dimension}, gx: {globalX}, gy: {globalY}, ticks: {ticks}");
+	    gameData.World = new World(gameData, dimension)
+	    {
+		    TickCount = ticks
+	    };
     }
 
     private void ClockPacket(ReadablePacket data)
     {
-	    gameData.World.TickCount = data.ReadDouble();
+	    if (gameData.World is not null)
+	    {
+		    gameData.World.TickCount = data.ReadDouble();
+	    }
     }
 
     /// <summary>
@@ -304,6 +311,11 @@ public class Connections
     /// </summary>
     private void ChunkPacket(ReadablePacket data)
     {
+	    if (gameData.World is null)
+	    {
+		    return;
+	    }
+
 	    var chunk = new Chunk(data, gameData);
 	    var chunkKey = (chunk.X & 67108863) + (chunk.Y & 67108863) * 67108864;
 	    gameData.World.Map.Add(chunkKey, chunk);
@@ -320,13 +332,18 @@ public class Connections
 			playerEntity.Facing = data.ReadFloat();
 			playerEntity.Age = data.ReadDouble();
 			playerEntity.Chunk = chunk;
-			_ = data.ReadFlexInt(); // We can't reimplement savedatahistory as of yet.
+
 			chunk.Entities.Add(playerEntity);
 	    }
     }
 
     private void ChunkDeletePacket(ReadablePacket data)
     {
+	    if (gameData.World is null)
+	    {
+		    return;
+	    }
+
 	    while (data.Left > 0)
 	    {
 		    var chunkX = data.ReadInt();

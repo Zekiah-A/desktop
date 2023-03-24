@@ -6,11 +6,16 @@ namespace OpenMcDesktop.Game.Definitions.Blocks;
 public class Grass : Block
 {
     public new static Texture Texture => World.TerrainAtlas.AtBlock(3, 0);
+    public override Texture InstanceTexture { get; }
     public override float BreakTime => 1.5f;
     public override Tool Tool => Tool.Shovel;
+    
+    public Grass() { InstanceTexture = Texture; }
 }
 
 public class SnowyGrass : Grass
 {
     public new static Texture Texture => World.TerrainAtlas.AtBlock(4, 4);
+    public override Texture InstanceTexture { get; }
+    public SnowyGrass() { InstanceTexture = Texture; }
 }

@@ -6,4 +6,6 @@ namespace OpenMcDesktop.Game.Definitions.Blocks;
 public class Sand : Block
 {
     public new static Texture Texture => World.TerrainAtlas.AtBlock(2, 1);
+    public override Texture InstanceTexture { get; }
+    public Sand() { InstanceTexture = Texture; }
 }

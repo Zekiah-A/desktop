@@ -6,8 +6,10 @@ namespace OpenMcDesktop.Game.Definitions.Blocks;
 public class Wool : Block
 {
     public new Texture Texture => World.TerrainAtlas.AtBlock(0, 4);
+    public override Texture InstanceTexture { get; }
     public override Tool Tool => Tool.Shears;
     public override float BreakTime => 1.2f;
+    public Wool() { InstanceTexture = Texture; }
 }
 
 public class WhiteWool : Wool { }

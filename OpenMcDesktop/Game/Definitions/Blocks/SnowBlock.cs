@@ -7,5 +7,8 @@ namespace OpenMcDesktop.Game.Definitions.Blocks;
 public class SnowBlock : Block
 {
     public new static Texture Texture => World.TerrainAtlas.AtBlock(2, 4);
+    public override Texture InstanceTexture { get; }
     public override float BreakTime => 0.75f;
+    public SnowBlock() { InstanceTexture = Texture; }
+
 }

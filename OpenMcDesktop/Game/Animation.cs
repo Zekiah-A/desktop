@@ -25,7 +25,7 @@ public class Animation
 
     public float GetAnimationState(DateTimeOffset currentTime, string componentName)
     {
-        var time = ((currentTime - animationStart).Milliseconds % LengthMilliseconds); // Time relative to animation
+        var time = (currentTime - animationStart).Milliseconds % LengthMilliseconds; // Time relative to animation
         // First figure out what two keyframes we are supposedly between
         var previousFrame = Keyframes[0];
         var nextFrame = Keyframes[1];
@@ -51,24 +51,24 @@ public class Animation
         // Now find out what the value should be at the current time given the ease function
         var frameTime = time - previousFrame.timeMilliseconds; // Time relative to previous keyframe
         var timeDiff = nextFrame.timeMilliseconds - previousFrame.timeMilliseconds;
+        var timeProgress = frameTime / (float) timeDiff;
         var previousValue = previousFrame.Components[componentName];
         var valueDiff = nextFrame.Components[componentName] - previousValue;
 
         switch (previousFrame.ease)
         {
             case KeyframeEase.Linear:
-                return ((float) frameTime / timeDiff) * valueDiff + previousValue;
+                return timeProgress * valueDiff + previousValue;
             case KeyframeEase.SineIn:
-                return (float) (1 - Math.Cos((((float) frameTime / timeDiff) * Math.PI) / 2)) * valueDiff + previousValue;
+                return (float) (1 - Math.Cos(timeProgress * Math.PI / 2)) * valueDiff + previousValue;
             case KeyframeEase.SineInOut:
-                return (float) (-(Math.Cos(Math.PI * ((float) frameTime / timeDiff)) - 1) / 2) * valueDiff + previousValue;
+                return (float) (-(Math.Cos(Math.PI * timeProgress) - 1) / 2) * valueDiff + previousValue;
             case KeyframeEase.SineOut:
-                return (float) (Math.Sin((((float) frameTime / timeDiff) * Math.PI) / 2)) * valueDiff + previousValue;
+                return (float) Math.Sin(timeProgress * Math.PI / 2) * valueDiff + previousValue;
             case KeyframeEase.BounceZeroIn:
-                var progress = ((float) frameTime / timeDiff);
-                var a = Math.Pow(2, Math.Floor(Math.Log2(1 - progress)));
-                var b = progress / a % 1;
-                return (float)(((float) 2 * (-4 * Math.Pow(b - 0.5, 2) + 1)) * valueDiff + previousValue);
+                var a = Math.Pow(2, Math.Floor(Math.Log2(1 - timeProgress)));
+                var b = timeProgress / a % 1;
+                return (float) ((float)((float) 2 * (-4 * Math.Pow(b - 0.5, 2) + 1) * valueDiff + previousValue) * a);
             default:
                 throw new NotImplementedException();
         }

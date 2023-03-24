@@ -6,6 +6,8 @@ namespace OpenMcDesktop.Game.Definitions.Blocks;
 public class Air : Block
 {
     public new static Texture Texture => World.TerrainAtlas.AtBlock(5, 11);
+    public override Texture InstanceTexture { get; }
     public override bool Solid => false;
-    public string I_LIKE_BALLS = "22269";
+
+    public Air() { InstanceTexture = Texture; }
 }

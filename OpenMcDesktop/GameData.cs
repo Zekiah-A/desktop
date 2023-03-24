@@ -1,8 +1,6 @@
-using System.Text.Json.Serialization;
 using OpenMcDesktop.Game;
 using OpenMcDesktop.Game.Definitions;
 using OpenMcDesktop.Mods;
-using OpenMcDesktop.Networking;
 using SFML.Graphics;
 using WatsonWebsocket;
 
@@ -14,9 +12,10 @@ public class GameData
     public HttpClient HttpClient { get; } = new();
     public WatsonWsClient CurrentServer { get; set; }
     public Storage Storage { get; set; }
-    public World World { get; set; }
     public ModLoader ModLoader { get; set; }
-    
+    public World? World { get; set; }
+    public View View { get; set; }
+
     // Game runtime objects and definitions
     public Type[] BlockDefinitions { get; set; } // We can use Activator.CreateInstance() to create instances from these block types
     public Type[] ItemDefinitions { get; set; } // We can use Activator.CreateInstance() to create instances from these item types
@@ -36,5 +35,4 @@ public class GameData
     public int FrameSleepMs { get; set; } = 16;
     public List<string> KnownServers { get; set; } = new();
     public byte[] Skin { get; set; } = new byte[1008]; // 28*12*3
-    public string DataPath { get; set; }
 }

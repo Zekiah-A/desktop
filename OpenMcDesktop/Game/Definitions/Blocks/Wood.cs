@@ -12,6 +12,8 @@ public abstract class Wood : Block
 public class OakLog : Wood
 {
     public new static Texture Texture => World.TerrainAtlas.AtBlock(4, 0);
+    public override Texture InstanceTexture { get; }
+    public OakLog() { InstanceTexture = Texture; }
 }
 
 public abstract class Planks : Wood
@@ -22,29 +24,41 @@ public abstract class Planks : Wood
 public class OakPlanks : Planks
 {
     public new static Texture Texture => World.TerrainAtlas.AtBlock(4, 0);
+    public override Texture InstanceTexture { get; }
+    public OakPlanks() { InstanceTexture = Texture; }
 }
 
 public class BirchPlanks : Planks
 {
     public new static Texture Texture => World.TerrainAtlas.AtBlock(4, 0);
+    public override Texture InstanceTexture { get; }
+    public BirchPlanks() { InstanceTexture = Texture; }
 }
 
 public class SprucePlanks : Planks
 {
     public new static Texture Texture => World.TerrainAtlas.AtBlock(4, 0);
+    public override Texture InstanceTexture { get; }
+    public SprucePlanks() { InstanceTexture = Texture; }
 }
 
 public class DarkOakPlanks : Planks
 {
     public new static Texture Texture => World.TerrainAtlas.AtBlock(4, 0);
+    public override Texture InstanceTexture { get; }
+    public DarkOakPlanks() { InstanceTexture = Texture; }
 }
 
 public class AcaciaPlanks : Planks
 {
     public new static Texture Texture => World.TerrainAtlas.AtBlock(4, 0);
+    public override Texture InstanceTexture { get; }
+    public AcaciaPlanks() { InstanceTexture = Texture; }
 }
 
 public class JunglePlanks : Planks
 {
     public new static Texture Texture => World.TerrainAtlas.AtBlock(4, 0);
+    public override Texture InstanceTexture { get; }
+    public JunglePlanks() { InstanceTexture = Texture; }
 }

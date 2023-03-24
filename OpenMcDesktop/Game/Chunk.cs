@@ -41,7 +41,7 @@ public class Chunk
 		while (entityId != 0) // ()
 		{
 			if (Activator.CreateInstance(gameData.EntityDefinitions[entityId],
-				    new[] { data.ReadShort() / 1024 + (x << 6), data.ReadShort() / 1024 + (y << 6)} ) is not Entity entity)
+				new[] { data.ReadShort() / 1024 + (x << 6), data.ReadShort() / 1024 + (y << 6)} ) is not Entity entity)
 			{
 				continue;
 			}
@@ -53,9 +53,9 @@ public class Chunk
 			entity.Facing = data.ReadFloat();
 			entity.Age = data.ReadDouble();
 			entity.Chunk = this;
-			
+
 			// We add all entities back to the global world
-			gameData.World.AddEntity(entity);
+			gameData.World?.AddEntity(entity);
 			Entities.Add(entity);
 			entityId = data.ReadShort();
 		}
@@ -125,8 +125,8 @@ public class Chunk
 			default:
 				for (var j = 0; j < 6144; j++)
 				{
-					var block2 = 0;
-					Tiles[tilesI] = Palette[data.ReadByte() + (((block2 = data.ReadByte()) & 0x0F ) << 8)];
+					var block2 = data.ReadByte();
+					Tiles[tilesI] = Palette[data.ReadByte() + ((block2 & 0x0F) << 8)];
 					Tiles[tilesI] = Palette[data.ReadByte() + ((block2 & 0xF0) << 4)];
 					tilesI++;
 				}
@@ -142,7 +142,7 @@ public class Chunk
 				Tiles[i] = gameData.Blocks[airIndex];
 			}
 			
-			// TODO: Reimplement whatever savedatahistory was
+			// TODO: Reimplement SaveDataHistory
 		}
 	}
 
@@ -156,7 +156,7 @@ public class Chunk
 			for (var y = 0; y < 64; y++)
 			{
 				var block = Tiles[x | (y << 6)];
-				if (block?.GetType() == typeof(Air))
+				if (block is Air)
 				{
 					continue;
 				}
