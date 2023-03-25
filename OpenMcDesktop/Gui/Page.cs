@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using SFML.Graphics;
 using SFML.Window;
 
@@ -9,7 +10,7 @@ namespace OpenMcDesktop.Gui;
 public class Page : Control
 {
     public List<Control> Children;
-    
+
     public Page()
     {
         Children = new List<Control>();
@@ -58,7 +59,9 @@ public class Page : Control
     {
         window.Clear(Color.Black);
 
-        foreach (var child in Children)
+        // Unfortunately we must copy the children every single frame otherwise enumeration modification exceptions may occur
+        // if a child in this collection is added or modified during rendering.
+        foreach (var child in Children.ToList())
         {
             child.Render(window, view);
         }

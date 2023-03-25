@@ -22,19 +22,12 @@ var authPage = new Page();
 var window = new RenderWindow(new VideoMode(1540, 1080), "OpenMc");
 var view = new View(new FloatRect(0, 0, window.Size.X, window.Size.Y));
 
-// Title screen video
-var datasource = new DataSource();
-var videoEnabled = datasource.LoadFromFile("Resources/Brand/title_video.mp4");
-var videoPlayback = new SfmlVideoPlayback(datasource);
-videoPlayback.Scale = new Vector2f(window.GetView().Size.X / datasource.VideoSize.X, window.GetView().Size.Y / datasource.VideoSize.Y);
-
 window.Closed += (_, _) =>
 {
     window.Close();
 };
 window.Resized += (_, args) =>
 {
-    videoPlayback.Scale = new Vector2f(window.GetView().Size.X / datasource.VideoSize.X, window.GetView().Size.Y / datasource.VideoSize.Y);
     view = new View(new FloatRect(0, 0, args.Width, args.Height));
     window.SetView(view);
 };
@@ -119,7 +112,6 @@ var dirtBackgroundRect = new TextureRect(new Texture(@"Resources/Brand/dirt_back
 {
     SubRect = new Bounds(() => 0, () => 0, () => (int) window.GetView().Size.X / 2, () => (int) window.GetView().Size.Y / 2)
 };
-
 
 async Task PlayServer(PreConnectData serverData)
 {
@@ -267,7 +259,7 @@ var accountsGrid = new Grid(1, 6, () => (int) (window.GetView().Size.X / 4), () 
 };
 accountsPage.Children.Add(accountsGrid);
 
-// Title screen fallback if title screen video is unable to play
+// Title screen fallback if title screen video is unable to play, and appears when the video has finished
 var backgroundTexture = new Texture(@"Resources/Textures/Background/panorama_0.png");
 var fitFactor = 0.0f;
 var backgroundRect = new TextureRect(backgroundTexture,
@@ -283,6 +275,20 @@ var backgroundRect = new TextureRect(backgroundTexture,
     }, () => (int) Math.Min(window.GetView().Size.Y, backgroundTexture.Size.Y / fitFactor))
 };
 mainPage.Children.Add(backgroundRect);
+
+// Game start title intro video player
+var titleVideoPlayer = new VideoPlayer("Resources/Brand/title_video.mp4",
+    () => 0,
+    () => 0,
+    () => (int) window.GetView().Size.X,
+    () => (int) window.GetView().Size.Y);
+titleVideoPlayer.Source.Play();
+titleVideoPlayer.Source.EndOfFileReached += (_, _) =>
+{
+    mainPage.Children.Remove(titleVideoPlayer);
+};
+mainPage.Children.Add(titleVideoPlayer);
+
 var logoRect = new TextureRect(new Texture(@"Resources/Brand/logo.png"),
     () => (int) ((int) window.GetView().Center.X - (window.GetView().Size.X * 0.4f) / 2),
     () => (int) (window.GetView().Size.Y * 0.1f), () => (int) (window.GetView().Size.X * 0.4f),
@@ -404,11 +410,6 @@ while (window.IsOpen)
 {
     window.DispatchEvents();
     window.Clear(Color.Black);
-    if (videoEnabled && currentPage == mainPage)
-    {
-        datasource.Update();
-        window.Draw(videoPlayback);
-    }
     currentPage?.Render(window, view);
     gameData.World?.Render(window, view);
     window.SetView(view);
