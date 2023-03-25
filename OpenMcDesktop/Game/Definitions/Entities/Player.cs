@@ -9,7 +9,7 @@ public class Player : Entity
     public new int Health = 20;
 
     public Item?[] Inventory = new Item[32];
-    public Item?[] items = new Item?[] { null, null, null, null, null, null };
+    public Item?[] Items = new Item?[] { null, null, null, null, null, null };
     public int Selected = 0;
     public Texture? Skin = null;
     public Texture[]? Textures = null;

@@ -6,6 +6,9 @@ using NativeFileDialogSharp;
 using OpenMcDesktop.Mods;
 using SFML.Graphics;
 using SFML.Window;
+using MotionNET;
+using MotionNET.SFML;
+using SFML.System;
 
 var currentPage = (Page?) null;
 var mainPage = new Page();
@@ -18,12 +21,20 @@ var authPage = new Page();
 // Window event listeners and input
 var window = new RenderWindow(new VideoMode(1540, 1080), "OpenMc");
 var view = new View(new FloatRect(0, 0, window.Size.X, window.Size.Y));
+
+// Title screen video
+var datasource = new DataSource();
+var videoEnabled = datasource.LoadFromFile("Resources/Brand/title_video.mkv");
+var videoPlayback = new SfmlVideoPlayback(datasource);
+videoPlayback.Scale = new Vector2f(window.GetView().Size.X / datasource.VideoSize.X, window.GetView().Size.Y / datasource.VideoSize.Y);
+
 window.Closed += (_, _) =>
 {
     window.Close();
 };
 window.Resized += (_, args) =>
 {
+    videoPlayback.Scale = new Vector2f(window.GetView().Size.X / datasource.VideoSize.X, window.GetView().Size.Y / datasource.VideoSize.Y);
     view = new View(new FloatRect(0, 0, args.Width, args.Height));
     window.SetView(view);
 };
@@ -256,6 +267,7 @@ var accountsGrid = new Grid(1, 6, () => (int) (window.GetView().Size.X / 4), () 
 };
 accountsPage.Children.Add(accountsGrid);
 
+// Title screen fallback if title screen video is unable to play
 var backgroundTexture = new Texture(@"Resources/Textures/Background/panorama_0.png");
 var fitFactor = 0.0f;
 var backgroundRect = new TextureRect(backgroundTexture,
@@ -392,6 +404,11 @@ while (window.IsOpen)
 {
     window.DispatchEvents();
     window.Clear(Color.Black);
+    if (videoEnabled && currentPage == mainPage)
+    {
+        datasource.Update();
+        window.Draw(videoPlayback);
+    }
     currentPage?.Render(window, view);
     gameData.World?.Render(window, view);
     window.SetView(view);

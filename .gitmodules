@@ -1,3 +1,7 @@
 [submodule "WatsonWebsocketPlus"]
 	path = WatsonWebsocketPlus
 	url = https://github.com/Zekiah-A/WatsonWebsocketPlus
+[submodule "Motion"]
+	path = Motion
+	url = https://github.com/Zekiah-A/Motion
+	branch = openmc

@@ -68,8 +68,8 @@ public class Connections
     public async Task<PreConnectData> PreConnect(string ip)
     {
 	    var socket = new WatsonWsClient(new Uri($"{GetWebsocketUri(ip)}/{gameData.Name}" +
-            $@"/{NetworkingHelpers.EncodeURIComponent(gameData.PublicKey)}" +
-            $@"/{NetworkingHelpers.EncodeURIComponent(gameData.AuthSignature)}"));
+            $@"/{NetworkingHelpers.EncodeUriComponent(gameData.PublicKey)}" +
+            $@"/{NetworkingHelpers.EncodeUriComponent(gameData.AuthSignature)}"));
 	    var name = ip;
 	    var motd = "Failed to connect";
 	    var image = new Image(@"Resources/Brand/grass_icon.png");

@@ -4,7 +4,7 @@ namespace OpenMcDesktop.Networking;
 
 public static class NetworkingHelpers
 {
-    public static string EncodeURIComponent(string uri)
+    public static string EncodeUriComponent(string uri)
     {
         const string allowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*'()";
 

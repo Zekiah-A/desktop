@@ -1,6 +1,6 @@
 public record struct Keyframe
 (
-    int timeMilliseconds,
+    int TimeMilliseconds,
     Dictionary<string, float> Components,
-    KeyframeEase ease
+    KeyframeEase Ease
 );

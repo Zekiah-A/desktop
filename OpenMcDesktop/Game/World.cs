@@ -101,11 +101,11 @@ public class World
     /// <summary>
     /// Turns a given position in block world co-ordinates to screen co-ordinates, so that the rendering position can be determined.
     /// </summary>
-    public Vector2f WorldToScreen(Vector2f blockXY)
+    public Vector2f WorldToScreen(Vector2f blockXy)
     {
         // Get the block co-ords out of world space as a fraction relative to the BL of our camera
         var cameraBottomLeft = new Vector2f(CameraPosition.X, CameraPosition.Y - CameraSize.Y);
-        var relative = blockXY - cameraBottomLeft;
+        var relative = blockXy - cameraBottomLeft;
         var fraction = new Vector2f(relative.X / CameraSize.X, relative.Y / CameraSize.Y);
         
         // Get co-ords into screen space, ↑y within the world increases, while ↓y in screen increases, so we invert fraction on Y.

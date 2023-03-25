@@ -36,11 +36,11 @@ public class Animation
                 continue;
             }
 
-            if (Keyframes[i].timeMilliseconds < time)
+            if (Keyframes[i].TimeMilliseconds < time)
             {
                 previousFrame = Keyframes[i];
             }
-            else if (Keyframes[i].timeMilliseconds > time)
+            else if (Keyframes[i].TimeMilliseconds > time)
             {
                 nextFrame = Keyframes[i];
                 previousFrame = Keyframes[i - 1];
@@ -49,13 +49,13 @@ public class Animation
         }
 
         // Now find out what the value should be at the current time given the ease function
-        var frameTime = time - previousFrame.timeMilliseconds; // Time relative to previous keyframe
-        var timeDiff = nextFrame.timeMilliseconds - previousFrame.timeMilliseconds;
+        var frameTime = time - previousFrame.TimeMilliseconds; // Time relative to previous keyframe
+        var timeDiff = nextFrame.TimeMilliseconds - previousFrame.TimeMilliseconds;
         var timeProgress = frameTime / (float) timeDiff;
         var previousValue = previousFrame.Components[componentName];
         var valueDiff = nextFrame.Components[componentName] - previousValue;
 
-        switch (previousFrame.ease)
+        switch (previousFrame.Ease)
         {
             case KeyframeEase.Linear:
                 return timeProgress * valueDiff + previousValue;
