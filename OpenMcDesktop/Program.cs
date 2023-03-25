@@ -24,7 +24,7 @@ var view = new View(new FloatRect(0, 0, window.Size.X, window.Size.Y));
 
 // Title screen video
 var datasource = new DataSource();
-var videoEnabled = datasource.LoadFromFile("Resources/Brand/title_video.mkv");
+var videoEnabled = datasource.LoadFromFile("Resources/Brand/title_video.mp4");
 var videoPlayback = new SfmlVideoPlayback(datasource);
 videoPlayback.Scale = new Vector2f(window.GetView().Size.X / datasource.VideoSize.X, window.GetView().Size.Y / datasource.VideoSize.Y);
 
