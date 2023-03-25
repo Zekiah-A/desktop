@@ -465,12 +465,12 @@ public class Connections
 			}
 			else if ((action & 16) != 0)
 			{
-				entity.Velocity = new Vector2(data.ReadFloat(), entity.Velocity.Y);
+				entity.Velocity = entity.Velocity with { X = data.ReadFloat() };
 				gameData.World?.MoveEntity(entity);
 			}
 			else if ((action & 32) != 0)
 			{
-				entity.Velocity = new Vector2(entity.Velocity.X, data.ReadFloat());
+				entity.Velocity = entity.Velocity with { Y = data.ReadFloat() };
 				gameData.World?.MoveEntity(entity);
 			}
 			else if ((action & 64) != 0)
@@ -479,7 +479,7 @@ public class Connections
 			}
 			else if ((action & 128) != 0)
 			{
-				// TODO: Implement entity savedata
+				// TODO: Implement entity SaveData
 			}
 			else if ((action & 256) != 0)
 			{

@@ -6,9 +6,6 @@ using NativeFileDialogSharp;
 using OpenMcDesktop.Mods;
 using SFML.Graphics;
 using SFML.Window;
-using MotionNET;
-using MotionNET.SFML;
-using SFML.System;
 
 var currentPage = (Page?) null;
 var mainPage = new Page();
@@ -104,6 +101,7 @@ gameData.ModLoader = new ModLoader(gameData);
 var connections = new Connections(gameData);
 var preConnections = new List<PreConnectData>();
 
+// Dirt background rect used on many pages
 var dirtBackgroundRect = new TextureRect(new Texture(@"Resources/Brand/dirt_background.png") { Repeated = true },
     () => 0,
     () => 0,
@@ -112,6 +110,10 @@ var dirtBackgroundRect = new TextureRect(new Texture(@"Resources/Brand/dirt_back
 {
     SubRect = new Bounds(() => 0, () => 0, () => (int) window.GetView().Size.X / 2, () => (int) window.GetView().Size.Y / 2)
 };
+
+// Game window icon
+var icon = new Image("Resources/Brand/grass_icon.png");
+window.SetIcon(icon.Size.X, icon.Size.Y, icon.Pixels);
 
 async Task PlayServer(PreConnectData serverData)
 {
@@ -277,7 +279,7 @@ var backgroundRect = new TextureRect(backgroundTexture,
 mainPage.Children.Add(backgroundRect);
 
 // Game start title intro video player
-var titleVideoPlayer = new VideoPlayer("Resources/Brand/title_video.mp4",
+var titleVideoPlayer = new VideoPlayer("Resources/Brand/title_video.mkv",
     () => 0,
     () => 0,
     () => (int) window.GetView().Size.X,

@@ -19,18 +19,18 @@ public class World
     public static int BlockTextureHeight = 16;
 
     // Game world components
-    public string Dimension = "overworld";
+    public string Dimension;
     public Dictionary<int, Chunk> Map { get; set; }
     public Dictionary<long, Entity> Entities { get; set; }
-    public double TickCount { get; set; } = 0;
-    public float TicksPerSecond { get; set; } = 0;
+    public double TickCount { get; set; }
+    public float TicksPerSecond { get; set; }
 
     // These are in world units
     public Vector2f CameraCentre { get => CameraPosition + CameraSize / 2; set => CameraPosition = value + CameraSize / 2; }
     public Vector2f CameraPosition { get; set; } = new Vector2f(0, 16); // Where the camera is in the world
     public Vector2f CameraSize { get; set; } = new Vector2f(28, 16); // How many (blocks) across and up/down camera can see
     public int CameraZoomLevel { get; set; } = 1;
-    public int[] CameraZoomRealBlockSizes { get; set; }  = { 32, 64, 128,256 };
+    public int[] CameraZoomRealBlockSizes { get; set; } = { 32, 64, 128,256 };
     
     private GameData gameData;
 
