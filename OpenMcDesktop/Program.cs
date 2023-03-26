@@ -103,12 +103,12 @@ var preConnections = new List<PreConnectData>();
 
 // Dirt background rect used on many pages
 var dirtBackgroundRect = new TextureRect(new Texture(@"Resources/Brand/dirt_background.png") { Repeated = true },
-    () => 0,
-    () => 0,
+    Control.BoundZero,
+    Control.BoundZero,
     () => (int) window.GetView().Size.X,
     () => (int) window.GetView().Size.Y)
 {
-    SubRect = new Bounds(() => 0, () => 0, () => (int) window.GetView().Size.X / 2, () => (int) window.GetView().Size.Y / 2)
+    SubRect = new Bounds(Control.BoundZero, Control.BoundZero, () => (int) window.GetView().Size.X / 2, () => (int) window.GetView().Size.Y / 2)
 };
 
 // Game window icon
@@ -217,10 +217,10 @@ var optionsGrid = new Grid(1, 6, () => (int) (window.GetView().Size.X / 4), () =
 {
     Children =
     {
-        [0, 0] = new Button("Camera: Follow player", () => 0, () => 0, () => 0, () => 0),
-        [0, 1] = new Button("Framerate: 60FPS", () => 0, () => 0, () => 0, () => 0),
-        [0, 2] = new Button("Sound: 75%", () => 0, () => 0, () => 0, () => 0),
-        [0, 3] = new Button("Music: 75%", () => 0, () => 0, () => 0, () => 0),
+        [0, 0] = new Button("Camera: Follow player", Control.BoundZero, Control.BoundZero, Control.BoundZero, Control.BoundZero),
+        [0, 1] = new Button("Framerate: 60FPS", Control.BoundZero, Control.BoundZero, Control.BoundZero, Control.BoundZero),
+        [0, 2] = new Button("Sound: 75%", Control.BoundZero, Control.BoundZero, Control.BoundZero, Control.BoundZero),
+        [0, 3] = new Button("Music: 75%", Control.BoundZero, Control.BoundZero, Control.BoundZero, Control.BoundZero),
         [0, 5] = optionsBackButton
     },
     RowGap = 8
@@ -249,12 +249,23 @@ accountsBackButton.OnMouseUp += (_, _) =>
 {
     currentPage = mainPage;
 };
+
+var skinData = SkinHelpers.SkinDataFromFile("Resources/Textures/alex.png");
+var skinEditor = new SkinEditor(skinData, () => 8, () => 8, () => 328, () => 648)
+{
+    Display =
+    {
+        Animate = true
+    }
+};
+accountsPage.Children.Add(skinEditor);
+
 var accountsGrid = new Grid(1, 6, () => (int) (window.GetView().Size.X / 4), () => (int) (window.GetView().Size.Y / 4),
     () => (int) (window.GetView().Size.X / 2), () => (int) (window.GetView().Size.Y / 2))
 {
     Children =
     {
-        [0, 3] = skinButton,
+        [0, 4] = skinButton,
         [0, 5] = accountsBackButton,
     },
     RowGap = 8
@@ -265,8 +276,8 @@ accountsPage.Children.Add(accountsGrid);
 var backgroundTexture = new Texture(@"Resources/Textures/Background/panorama_0.png");
 var fitFactor = 0.0f;
 var backgroundRect = new TextureRect(backgroundTexture,
-    () => 0,
-    () => 0,
+    Control.BoundZero,
+    Control.BoundZero,
     () => (int) window.GetView().Size.X,
     () => (int) window.GetView().Size.Y)
 {
@@ -280,8 +291,8 @@ mainPage.Children.Add(backgroundRect);
 
 // Game start title intro video player
 var titleVideoPlayer = new VideoPlayer("Resources/Brand/title_video.mkv",
-    () => 0,
-    () => 0,
+    Control.BoundZero,
+    Control.BoundZero,
     () => (int) window.GetView().Size.X,
     () => (int) window.GetView().Size.Y);
 titleVideoPlayer.Source.Play();

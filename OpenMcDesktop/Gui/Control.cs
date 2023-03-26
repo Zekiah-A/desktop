@@ -14,6 +14,9 @@ public abstract class Control
     public event EventHandler<EventArgs>? OnMouseUp;
     public event EventHandler<EventArgs>? OnFocus; 
     public event EventHandler<EventArgs>? OnBlur;
+    public static int BoundZero() => 0;
+    private int Width => Bounds.EndX() - Bounds.StartX();
+    private int Height => Bounds.EndY() - Bounds.StartY();
 
     protected Control(Func<int> x, Func<int> y, Func<int>? width = null, Func<int>? height = null)
     {
@@ -23,14 +26,19 @@ public abstract class Control
         Bounds.EndY = () => y() + (height?.Invoke() ?? 0);
     }
 
+    protected Control(Bounds bounds)
+    {
+        Bounds = bounds;
+    }
+    
     protected Control()
     {
-        Bounds.StartX = () => 0;
-        Bounds.StartY = () => 0;
-        Bounds.EndX = () => 0;
-        Bounds.EndY = () => 0;
+        Bounds.StartX = BoundZero;
+        Bounds.StartY = BoundZero;
+        Bounds.EndX = BoundZero;
+        Bounds.EndY = BoundZero;
     }
-
+    
     public virtual bool HitTest(int x, int y, TestType type)
     {
         if (type == TestType.MouseUp && State == State.Pressed)
