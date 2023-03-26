@@ -1,10 +1,13 @@
-using NativeFileDialogSharp.Native;
 using SFML.Graphics;
 
 namespace OpenMcDesktop.Gui;
 
 public class SkinEditor : Control
 {
+    public byte[] Data
+    {
+        set => Display.Skin = SkinHelpers.DecodeSkin(value);
+    }
     private List<Control> Children;
     public SkinDisplay Display;
     private Grid layersGrid;
@@ -86,8 +89,6 @@ public class SkinEditor : Control
     
     public override void Render(RenderWindow window, View view)
     {
-        window.Clear(Color.Black);
-        
         foreach (var child in Children.ToList())
         {
             child.Render(window, view);

@@ -5,6 +5,7 @@ using OpenMcDesktop.Networking;
 using NativeFileDialogSharp;
 using OpenMcDesktop.Mods;
 using SFML.Graphics;
+using SFML.System;
 using SFML.Window;
 
 var currentPage = (Page?) null;
@@ -93,8 +94,9 @@ var gameData = new GameData
     PrivateKey = storage.Get<string>(nameof(GameData.PrivateKey)) ?? "",
     AuthSignature = storage.Get<string>(nameof(GameData.AuthSignature)) ?? "",
     KnownServers = storage.Get<List<string>>(nameof(GameData.KnownServers)) ?? new List<string> { "localhost" },
+    Skin = SkinHelpers.SkinDataFromFile("Resources/Textures/alex.png"),
     Storage = storage,
-    View = view
+    View = view,
 };
 gameData.ModLoader = new ModLoader(gameData);
 
@@ -227,31 +229,9 @@ var optionsGrid = new Grid(1, 6, () => (int) (window.GetView().Size.X / 4), () =
 };
 optionsPage.Children.Add(optionsGrid);
 
-// Options page UI
+// Accounts and profile page UI
 accountsPage.Children.Add(dirtBackgroundRect);
-var skinButton = new Button("Change skin", () => 0, () => 0, () => 0, () => 0);
-skinButton.OnMouseUp += async (_, _) =>
-{
-    var file = Dialog.FileOpen("png", Directory.GetCurrentDirectory());
-    if (file?.Path is null)
-    {
-        return;
-    }
-
-    var skinData = await File.ReadAllBytesAsync(file.Path);
-    if (skinData.Length == 1008)
-    {
-        gameData.Skin = skinData;
-    }
-};
-var accountsBackButton = new Button("Back", () => 0, () => 0, () => 0, () => 0);
-accountsBackButton.OnMouseUp += (_, _) => 
-{
-    currentPage = mainPage;
-};
-
-var skinData = SkinHelpers.SkinDataFromFile("Resources/Textures/alex.png");
-var skinEditor = new SkinEditor(skinData, () => 8, () => 8, () => 328, () => 648)
+var skinEditor = new SkinEditor(gameData.Skin, () => (int) (window.GetView().Center.X - 164), () => 8, () => 328, () => 648)
 {
     Display =
     {
@@ -259,7 +239,24 @@ var skinEditor = new SkinEditor(skinData, () => 8, () => 8, () => 328, () => 648
     }
 };
 accountsPage.Children.Add(skinEditor);
-
+var skinButton = new Button("Change skin", Control.BoundZero, Control.BoundZero, Control.BoundZero, Control.BoundZero);
+skinButton.OnMouseUp += (_, _) =>
+{
+    var file = Dialog.FileOpen("png,jpg,webp", Directory.GetCurrentDirectory());
+    if (file?.Path is null)
+    {
+        return;
+    }
+    
+    var skinDataFromFile = SkinHelpers.SkinDataFromFile(file.Path);
+    gameData.Skin = skinDataFromFile;
+    skinEditor.Data = skinDataFromFile;
+};
+var accountsBackButton = new Button("Back", Control.BoundZero, Control.BoundZero, Control.BoundZero, Control.BoundZero);
+accountsBackButton.OnMouseUp += (_, _) => 
+{
+    currentPage = mainPage;
+};
 var accountsGrid = new Grid(1, 6, () => (int) (window.GetView().Size.X / 4), () => (int) (window.GetView().Size.Y / 4),
     () => (int) (window.GetView().Size.X / 2), () => (int) (window.GetView().Size.Y / 2))
 {
