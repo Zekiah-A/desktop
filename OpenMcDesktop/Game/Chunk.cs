@@ -147,7 +147,7 @@ public class Chunk
 	}
 
 	// TODO: Implement our own sprite batching algorithm using vertex array to try and optimise drawing performance to the maximum
-	public void Render(RenderWindow window)
+	public void Render(RenderWindow window, RenderStates states)
 	{
 		using var blockSprite = new Sprite();
 
@@ -163,7 +163,7 @@ public class Chunk
 				
 				blockSprite.Texture =  block!.InstanceTexture;
 				blockSprite.Position = new Vector2f(x * World.BlockTextureWidth, y * World.BlockTextureHeight);
-				blockSprite.Draw(window, RenderStates.Default);
+				blockSprite.Draw(window, states);
 			}
 		}
 	}

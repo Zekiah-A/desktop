@@ -18,7 +18,7 @@ public class SkinEditor : Control
     public SkinEditor(byte[] data, Func<int> x, Func<int> y, Func<int> width, Func<int> height) : base(x, y, width, height)
     {
         Children = new List<Control>();
-        Display = new SkinDisplay(data, x, y, width, height);
+        Display = new SkinDisplay(data, x, () => y() + 64, width, height);
         Children.Add(Display);
 
         var bodyButton = new Button("Body", BoundZero, BoundZero, BoundZero, BoundZero);
@@ -28,28 +28,28 @@ public class SkinEditor : Control
                 ? Display.Layer & ~SkinDisplay.Layers.Body
                 : Display.Layer | SkinDisplay.Layers.Body;
         };
-        var armBackButton = new Button("Arm back", BoundZero, BoundZero, BoundZero, BoundZero);
+        var armBackButton = new Button("Back arm", BoundZero, BoundZero, BoundZero, BoundZero);
         armBackButton.OnMouseUp += (_, _) =>
         {
             Display.Layer = ((Display.Layer & SkinDisplay.Layers.ArmBack) == SkinDisplay.Layers.ArmBack)
                 ? Display.Layer & ~SkinDisplay.Layers.ArmBack
                 : Display.Layer | SkinDisplay.Layers.ArmBack;
         };
-        var armFrontButton = new Button("Arm front", BoundZero, BoundZero, BoundZero, BoundZero);
+        var armFrontButton = new Button("Front arm", BoundZero, BoundZero, BoundZero, BoundZero);
         armFrontButton.OnMouseUp += (_, _) =>
         {
             Display.Layer = ((Display.Layer & SkinDisplay.Layers.ArmFront) == SkinDisplay.Layers.ArmFront)
                 ? Display.Layer & ~SkinDisplay.Layers.ArmFront
                 : Display.Layer | SkinDisplay.Layers.ArmFront;
         };
-        var legBackButton = new Button("Leg back", BoundZero, BoundZero, BoundZero, BoundZero);
+        var legBackButton = new Button("Back leg", BoundZero, BoundZero, BoundZero, BoundZero);
         legBackButton.OnMouseUp += (_, _) =>
         {
             Display.Layer = ((Display.Layer & SkinDisplay.Layers.LegBack) == SkinDisplay.Layers.LegBack)
                 ? Display.Layer & ~SkinDisplay.Layers.LegBack
                 : Display.Layer | SkinDisplay.Layers.LegBack;
         };
-        var legFrontButton = new Button("Leg front", BoundZero, BoundZero, BoundZero, BoundZero);
+        var legFrontButton = new Button("Front leg", BoundZero, BoundZero, BoundZero, BoundZero);
         legFrontButton.OnMouseUp += (_, _) =>
         {
             Display.Layer = ((Display.Layer & SkinDisplay.Layers.LegFront) == SkinDisplay.Layers.LegFront)

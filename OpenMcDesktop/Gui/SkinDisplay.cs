@@ -29,19 +29,6 @@ public class SkinDisplay : Control
 
     public override void Render(RenderWindow window, View view)
     {
-        if (State == State.Hover)
-        {
-            var border = new RectangleShape
-            {
-                Position = new Vector2f(Bounds.StartX(), Bounds.StartY()),
-                Size = new Vector2f(Bounds.EndX() - Bounds.StartX(), Bounds.EndY() - Bounds.StartY()),
-                OutlineColor = BorderColour,
-                OutlineThickness = 4,
-                FillColor = Color.Transparent
-            };
-            window.Draw(border);
-        }
-
         const float virtualWidth = 16.0f;
         const float virtualHeight = 32.0f;
         var topLeft = new Vector2f(Bounds.StartX(), Bounds.StartY());
@@ -124,6 +111,19 @@ public class SkinDisplay : Control
             Texture = new Texture(Skin.Head)
         };
         window.Draw(headRect);
+        
+        if (State == State.Hover)
+        {
+            var border = new RectangleShape
+            {
+                Position = new Vector2f(Bounds.StartX(), Bounds.StartY()),
+                Size = new Vector2f(Bounds.EndX() - Bounds.StartX(), Bounds.EndY() - Bounds.StartY()),
+                OutlineColor = BorderColour,
+                OutlineThickness = -4,
+                FillColor = Color.Transparent
+            };
+            window.Draw(border);
+        }
 
         frame = Animate ? frame += 0.05f : 0;
     }

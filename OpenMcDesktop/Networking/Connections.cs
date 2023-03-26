@@ -10,6 +10,7 @@ using OpenMcDesktop.Game.Definitions;
 using OpenMcDesktop.Game.Definitions.Entities;
 using WatsonWebsocket;
 using SFML.Graphics;
+using SFML.System;
 using Item = OpenMcDesktop.Game.Definitions.Item;
 
 namespace OpenMcDesktop.Networking;
@@ -297,13 +298,13 @@ public class Connections
     private void DimPacket(ReadablePacket data)
     {
 	    var dimension = data.ReadString();
-	    var globalX = data.ReadFloat();
-	    var globalY = data.ReadFloat();
+	    var gravityX = data.ReadFloat();
+	    var gravityY = data.ReadFloat();
 	    var ticks = data.ReadDouble();
 
-	    Console.WriteLine($"World info: dimension: {dimension}, gx: {globalX}, gy: {globalY}, ticks: {ticks}");
 	    gameData.World = new World(gameData, dimension)
 	    {
+		    Gravity = new Vector2f(gravityX, gravityY),
 		    TickCount = ticks
 	    };
     }

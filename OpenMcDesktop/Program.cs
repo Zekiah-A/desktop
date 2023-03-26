@@ -3,9 +3,9 @@ using OpenMcDesktop;
 using OpenMcDesktop.Gui;
 using OpenMcDesktop.Networking;
 using NativeFileDialogSharp;
+using OpenMcDesktop.Game;
 using OpenMcDesktop.Mods;
 using SFML.Graphics;
-using SFML.System;
 using SFML.Window;
 
 var currentPage = (Page?) null;
@@ -35,6 +35,7 @@ window.MouseButtonPressed += (_, args) =>
     if (currentPage?.HitTest(args.X, args.Y, TestType.MouseDown) is false)
     {
         // If not blocked by the UI, then we propagate the hit test to the main game
+        Keybinds.MouseDown(args.X, args.Y, TestType.MouseDown);
     }
 };
 window.MouseButtonReleased += (_, args) =>
@@ -43,6 +44,7 @@ window.MouseButtonReleased += (_, args) =>
     if (currentPage?.HitTest(args.X, args.Y, TestType.MouseUp) is false)
     {
         // If not blocked by the UI, then we propagate the hit test to the main game
+        Keybinds.MouseUp(args.X, args.Y, TestType.MouseUp);
     }
 };
 window.MouseMoved += (_, args) =>
@@ -51,6 +53,7 @@ window.MouseMoved += (_, args) =>
     if (currentPage?.HitTest(args.X, args.Y, TestType.MouseHover) is false)
     {
         // If not blocked by the UI, then we propagate the hit test to the main game
+        Keybinds.MouseMove(args.X, args.Y, TestType.MouseHover);
     }
 };
 
@@ -66,19 +69,13 @@ void PropagateKeyTest(KeyEventArgs args, TestType type)
     if (currentPage?.KeyboardTest(args.Code, modifiers, type) is false)
     {
         // If not blocked by the UI, then we propagate the keyboard test to the main game
+        Keybinds.KeyPressed(args.Code, modifiers, type);
     }
 }
 
 window.KeyPressed += (_, args) => PropagateKeyTest(args, TestType.KeyDown);
 window.KeyReleased += (_, args) => PropagateKeyTest(args, TestType.KeyUp);
-window.TextEntered += (_, args) =>
-{
-    // ReSharper disable once AccessToModifiedClosure
-    if (currentPage?.TextTest(args.Unicode) is false)
-    {
-        // If not blocked by the UI, then we propagate the text test to the main game
-    }
-};
+window.TextEntered += (_, args) => currentPage?.TextTest(args.Unicode);
 
 AppDomain.CurrentDomain.UnhandledException += (sender, exceptionEventArgs) =>
 {
@@ -96,7 +93,7 @@ var gameData = new GameData
     KnownServers = storage.Get<List<string>>(nameof(GameData.KnownServers)) ?? new List<string> { "localhost" },
     Skin = SkinHelpers.SkinDataFromFile("Resources/Textures/alex.png"),
     Storage = storage,
-    View = view,
+    View = view
 };
 gameData.ModLoader = new ModLoader(gameData);
 
@@ -231,7 +228,7 @@ optionsPage.Children.Add(optionsGrid);
 
 // Accounts and profile page UI
 accountsPage.Children.Add(dirtBackgroundRect);
-var skinEditor = new SkinEditor(gameData.Skin, () => (int) (window.GetView().Center.X - 164), () => 8, () => 328, () => 648)
+var skinEditor = new SkinEditor(gameData.Skin, () => (int) (window.GetView().Center.X - 164), () => 32, () => 328, () => 648)
 {
     Display =
     {
@@ -257,13 +254,13 @@ accountsBackButton.OnMouseUp += (_, _) =>
 {
     currentPage = mainPage;
 };
-var accountsGrid = new Grid(1, 6, () => (int) (window.GetView().Size.X / 4), () => (int) (window.GetView().Size.Y / 4),
-    () => (int) (window.GetView().Size.X / 2), () => (int) (window.GetView().Size.Y / 2))
+var accountsGrid = new Grid(1, 2, () => (int) (window.GetView().Size.X / 4), () => (int) (window.GetView().Size.Y * 0.75f),
+    () => (int) (window.GetView().Size.X / 2), () => 136)
 {
     Children =
     {
-        [0, 4] = skinButton,
-        [0, 5] = accountsBackButton,
+        [0, 0] = skinButton,
+        [0, 1] = accountsBackButton,
     },
     RowGap = 8
 };

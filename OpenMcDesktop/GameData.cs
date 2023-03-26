@@ -2,6 +2,7 @@ using OpenMcDesktop.Game;
 using OpenMcDesktop.Game.Definitions;
 using OpenMcDesktop.Mods;
 using SFML.Graphics;
+using SFML.System;
 using WatsonWebsocket;
 
 namespace OpenMcDesktop;
