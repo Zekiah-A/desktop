@@ -1,9 +1,6 @@
 using System.Buffers.Binary;
-using System.Collections;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
-using System.Text.Unicode;
 
 namespace OpenMcDesktop.Networking;
 
@@ -118,6 +115,13 @@ public ref struct ReadablePacket
         }
 
         return value;
+    }
+    
+    public byte[] ReadBytes(int count)
+    {
+        var array = Data[Position..(Position + count)];
+        Position += count;
+        return array.ToArray();
     }
 
     /// <summary>

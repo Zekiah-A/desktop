@@ -19,7 +19,7 @@ public class Chunk
 	public List<Entity> Entities;
 	public byte[] Biomes;
 
-	public Chunk(ReadablePacket data, GameData gameData)
+	public Chunk(ref ReadablePacket data, GameData gameData)
 	{
 		var x = data.ReadInt();
 		var y = data.ReadInt();
@@ -38,7 +38,7 @@ public class Chunk
 		
 		// Read and add all entities belonging to this chunk
 		var entityId = data.ReadShort();
-		while (entityId != 0) // ()
+		while (entityId != 0)
 		{
 			if (Activator.CreateInstance(gameData.EntityDefinitions[entityId],
 				new[] { data.ReadShort() / 1024 + (x << 6), data.ReadShort() / 1024 + (y << 6)} ) is not Entity entity)
@@ -60,11 +60,7 @@ public class Chunk
 			entityId = data.ReadShort();
 		}
 
-		Biomes = new[]
-		{
-			data.ReadByte(), data.ReadByte(), data.ReadByte(), data.ReadByte(), data.ReadByte(), data.ReadByte(),
-			data.ReadByte(), data.ReadByte(), data.ReadByte(), data.ReadByte()
-		};
+		Biomes = data.ReadBytes(10);
 
 		for (var i = 0; i < paletteLength; i++)
 		{
@@ -82,6 +78,7 @@ public class Chunk
 				{
 					Tiles[i] = Palette[0];
 				}
+
 				break;
 			case 2:
 				for (var j = 0; j < 512; j++)
@@ -97,6 +94,7 @@ public class Chunk
 					Tiles[tilesI + 6] = Palette[(block >> 7) & 1];
 					tilesI += 8;
 				}
+
 				break;
 			case <= 4:
 				for (var i = 0; i < 1024; i++)
@@ -107,6 +105,7 @@ public class Chunk
 					Tiles[tilesI++] = Palette[(block >> 4) & 3];
 					Tiles[tilesI++] = Palette[(block >> 6) & 3];
 				}
+
 				break;
 			case <= 16:
 				for (var i = 0; i < 2048; i++)
@@ -115,12 +114,14 @@ public class Chunk
 					Tiles[tilesI++] = Palette[block & 15];
 					Tiles[tilesI++] = Palette[block >> 4];
 				}
+
 				break;
 			case <= 256:
 				for (var i = 0; i < 4096; i++)
 				{
 					Tiles[i] = Palette[data.ReadByte()];
 				}
+
 				break;
 			default:
 				for (var j = 0; j < 6144; j++)
@@ -140,9 +141,10 @@ public class Chunk
 			{
 				var airIndex = gameData.BlockIndex[typeof(Air)];
 				Tiles[i] = gameData.Blocks[airIndex];
+				return;
 			}
 			
-			// TODO: Reimplement SaveDataHistory
+			// TODO: Reimplement savedata
 		}
 	}
 

@@ -76,7 +76,7 @@ public class Connections
 	    var image = new Image(@"Resources/Brand/grass_icon.png");
 	    var imageTask = new TaskCompletionSource<Image>();
 	    var descriptionColour = new Color(255, 255, 255, 200);
-	    var challenge = new byte[] {};
+	    var challenge = new byte[] { };
 	    var packs = new string[] { };
 	    var timeout = new Timer(_ =>
 	    {
@@ -184,7 +184,7 @@ public class Connections
 		    var members = definitions[i].Split(" ");
 		    var typeName = "OpenMcDesktop.Game.Definitions." + typeNamespace + "." +  members[0].ToPascalCase();
 
-		    if (members.Length == 1)
+		    if (members.Length >= 1)
 		    {
 			    var type = Type.GetType(typeName);
 			    if (type != null)
@@ -199,20 +199,19 @@ public class Connections
 				    }
 			    }
 		    }
-
-			// TODO: Unfortunately we can not work with modified / custom definitions as of yet.
-		    /*for (var i = 1; i < members.Length; i++)
+			/*if (members.Length == 2)
 		    {
-			    var attempt = JsonSerializer.Deserialize<T>(members[i].Trim());
-
+			    // Read block save data, such as the items present inside a chest
+			    var attempt = JsonSerializer.Deserialize<ISaveData>(members[1]);
 			    if (attempt is null)
 			    {
-				    types.Add(instance);
+				    types.Add();
 			    }
 			    else
 			    {
 				    types.Add(attempt);
 			    }
+
 		    }*/
 		}
 
@@ -327,10 +326,10 @@ public class Connections
 		    return;
 	    }
 
-	    var chunk = new Chunk(data, gameData);
+	    var chunk = new Chunk(ref data, gameData);
 	    var chunkKey = (chunk.X & 67108863) + (chunk.Y & 67108863) * 67108864;
-	    gameData.World.Map.Add(chunkKey, chunk);
-
+	    gameData.World.QueueAddChunk(chunkKey, chunk);
+	    
 	    // Read chunk entities
 	    while (data.Left > 0)
 	    {
@@ -360,7 +359,7 @@ public class Connections
 		    var chunkX = data.ReadInt();
 		    var chunkY = data.ReadInt();
 		    var chunkKey = (chunkX & 67108863) + (chunkY & 67108863) * 67108864;
-		    gameData.World.Map.Remove(chunkKey);
+		    gameData.World.QueueRemoveChunk(chunkKey);
 	    }
     }
 

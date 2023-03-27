@@ -80,7 +80,6 @@ window.TextEntered += (_, args) => currentPage?.TextTest(args.Unicode);
 AppDomain.CurrentDomain.UnhandledException += (sender, exceptionEventArgs) =>
 {
     Console.WriteLine("Critical game error!  " + exceptionEventArgs.ExceptionObject);
-    Environment.Exit(0);
 };
 
 var storage = new Storage(Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "OpenMcDesktop"));
@@ -422,5 +421,5 @@ while (window.IsOpen)
     window.SetView(view);
     window.Display();
     
-    Thread.Sleep(gameData.FrameSleepMs);
+    Thread.Sleep(gameData.FrameSleepMs); // TODO: Perhaps instead use window.SetFrameLimit()
 }
