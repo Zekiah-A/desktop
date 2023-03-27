@@ -328,9 +328,10 @@ public class Connections
 
 	    var chunk = new Chunk(ref data, gameData);
 	    var chunkKey = (chunk.X & 67108863) + (chunk.Y & 67108863) * 67108864;
-	    gameData.World.QueueAddChunk(chunkKey, chunk);
-	    
-	    // Read chunk entities
+	    gameData.World.Map.TryAdd(chunkKey, chunk);
+	    gameData.World.CameraPosition = new Vector2f(chunk.X, chunk.Y); // TESTING CODE
+
+	    // Read chunkW entities
 	    while (data.Left > 0)
 	    {
 		    var playerEntity = (Entity) Activator.CreateInstance(typeof(Player))!;
@@ -359,7 +360,7 @@ public class Connections
 		    var chunkX = data.ReadInt();
 		    var chunkY = data.ReadInt();
 		    var chunkKey = (chunkX & 67108863) + (chunkY & 67108863) * 67108864;
-		    gameData.World.QueueRemoveChunk(chunkKey);
+		    gameData.World.Map.TryRemove(chunkKey, out _);
 	    }
     }
 

@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -23,8 +24,8 @@ public class World
     public static int BlockTextureHeight = 16;
 
     // Game world components
-    public ReadOnlyDictionary<int, Chunk> Map => map.AsReadOnly();
-    public ReadOnlyDictionary<long, Entity> Entities => entities.AsReadOnly();
+    public ConcurrentDictionary<int, Chunk> Map { get; set; }
+    public ConcurrentDictionary<long, Entity> Entities { get; set; }
     public double TickCount { get; set; }
     public float TicksPerSecond { get; set; }
     public Vector2f Gravity { get; set; }
@@ -34,18 +35,13 @@ public class World
     public Texture EndSky;
     public Texture Stars;
     public Texture Sun;
-
-    private Dictionary<int, Chunk> mapQueue;
-    private Dictionary<long, Entity> entityQueue;
-    private Dictionary<int, Chunk> map;
-    private Dictionary<long, Entity> entities;
-
+    
     // These are in world units
     public Vector2f CameraCentre { get => CameraPosition + CameraSize / 2; set => CameraPosition = value + CameraSize / 2; }
     public Vector2f CameraPosition { get; set; } = new Vector2f(128, -128); // Where the camera is in the world
     public Vector2f CameraSize { get; set; } = new Vector2f(28, 16); // How many (blocks) across and up/down camera can see
     public int CameraZoomLevel { get; set; } = 1;
-    public int[] CameraZoomRealBlockSizes { get; set; } = { 32, 64, 128,256 };
+    public int[] CameraZoomRealBlockSizes { get; set; } = { 32, 64, 128, 256 };
     
     private GameData gameData;
 
@@ -60,11 +56,9 @@ public class World
         Dimension = dimension;
         gameData = data;
 
-        mapQueue = new Dictionary<int, Chunk>();
-        entityQueue = new Dictionary<long, Entity>();
-        map = new Dictionary<int, Chunk>();
-        entities = new Dictionary<long, Entity>();
-
+        Map = new ConcurrentDictionary<int, Chunk>();
+        Entities = new ConcurrentDictionary<long, Entity>();
+        
         var skyTexture = new Texture("Resources/Textures/sky.png");
         Sun = new Texture(skyTexture.CopyToImage(), new IntRect(128, 64, 32, 32));
         Moons = new[]
@@ -88,14 +82,14 @@ public class World
     public Block GetBlock(int x, int y)
     {
         var chunkKey = (x >>> 6) + (y >>> 6) * 67108864;
-        var chunk = map.GetValueOrDefault(chunkKey);
+        var chunk = Map.GetValueOrDefault(chunkKey);
         return chunk?.Tiles[(x & 63) + ((y & 63) << 6)] ?? gameData.Blocks[gameData.BlockIndex[typeof(Air)]];
     }
 
     public void SetBlock(int x, int y, int blockId)
     {
         var chunkKey = (x >>> 6) + (y >>> 6) * 67108864;
-        var chunk = map.GetValueOrDefault(chunkKey);
+        var chunk = Map.GetValueOrDefault(chunkKey);
         if (chunk is not null)
         {
             chunk.Tiles[x & 63 + (y & 63 << 6)] = gameData.Blocks[blockId];
@@ -104,7 +98,7 @@ public class World
 
     public void AddEntity(Entity entity)
     {
-        entities.Add(entity.Id, entity);
+        Entities.TryAdd(entity.Id, entity);
         if (entity.Id == gameData.MyPlayerId)
         {
             gameData.MyPlayer = entity;
@@ -115,7 +109,7 @@ public class World
     public void MoveEntity(Entity entity)
     {
         // Chunk that the entity now is in
-        var newChunk = map.GetValueOrDefault((((int) Math.Floor(entity.X)) >>> 6) + (((int) Math.Floor(entity.Y)) >>> 6) * 67108864);
+        var newChunk = Map.GetValueOrDefault((((int) Math.Floor(entity.X)) >>> 6) + (((int) Math.Floor(entity.Y)) >>> 6) * 67108864);
         if (newChunk != entity.Chunk)
         {
             entity.Chunk?.Entities.Remove(entity);
@@ -126,7 +120,7 @@ public class World
 
     public void RemoveEntity(Entity entity)
     {
-        entities.Remove(entity.Id);
+        Entities.TryRemove(entity.Id, out _);
         if (entity == gameData.MyPlayer)
         {
             gameData.MyPlayerId = -1;
@@ -134,49 +128,7 @@ public class World
         
         entity.Chunk?.Entities.Remove(entity);
     }
-
-    public void QueueAddChunk(int chunkKey, Chunk chunk)
-    {
-        if (!map.TryGetValue(chunkKey, out _) && !mapQueue.TryGetValue(chunkKey, out _))
-        {
-            mapQueue.Add(chunkKey, chunk);
-        }
-    }
-
-    public void QueueAddEntity(long entityId, Entity entity)
-    {
-        if (!entityQueue.TryGetValue(entityId, out _) && !entityQueue.TryGetValue(entityId, out _))
-        {
-            entityQueue.Add(entityId, entity);
-        }
-    }
-
-    public void QueueRemoveChunk(int chunkKey)
-    {
-        if (mapQueue.TryGetValue(chunkKey, out _))
-        {
-            mapQueue.Remove(chunkKey);
-        }
-
-        if (map.TryGetValue(chunkKey, out _))
-        {
-            map.Remove(chunkKey);
-        }
-    }
     
-    public void QueueRemoveEntity(long entityId)
-    {
-        if (entityQueue.TryGetValue(entityId, out _))
-        {
-            entityQueue.Remove(entityId);
-        }
-        
-        if (entities.TryGetValue(entityId, out _))
-        {
-            entityQueue.Remove(entityId);
-        }
-    }
-
     /// <summary>
     /// #0a0c14: RGB(10, 12, 20) - A dark blue-black color used as the darker shade in the sky gradient.
     /// #040609: RGB(4, 6, 9) - A darker blue-black color used as the darkest shade in the sky gradient.
@@ -232,6 +184,15 @@ public class World
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Vector2f ScreenToWorld(Vector2f screenXy)
+    {
+        AdjustCameraSize();
+        var fraction = new Vector2f(screenXy.X / gameData.View.Size.X, -screenXy.Y / gameData.View.Size.Y);
+        var relative = new Vector2f(fraction.X * CameraSize.X, fraction.Y * CameraSize.Y);
+        return relative + CameraPosition;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void AdjustCameraSize()
     {
         // 64px screen width and height at standard zoom
@@ -239,13 +200,8 @@ public class World
         // At fullscreen, 1920 / n = realBlockSize, 1080 / n realBlockSize, so to keep blocks square, we just have to find N for X and Y
         CameraSize = new Vector2f(gameData.View.Size.X / realBlockSize, gameData.View.Size.Y / realBlockSize);
     }
-
-    public Vector2f ScreenToWorld(int screenX, int screenY)
-    {
-        throw new NotImplementedException();
-    }
-
-    private Vector2f lpos = new Vector2f();
+    
+    private Vector2f lpos;
     
     // TODO: Implement culling, if world to screen position is clearly off screen, then we skip rendering that chunk
     public void Render(RenderWindow window, View view)
@@ -253,19 +209,19 @@ public class World
         // TEMPORARY - Testing code
         if (Keyboard.IsKeyPressed(Keyboard.Key.W))
         {
-            CameraPosition += new Vector2f(0, 0.1f);
+            CameraPosition += new Vector2f(0, 0.1f) * (Keyboard.IsKeyPressed(Keyboard.Key.LShift) ? 20 : 1);
         }
         if (Keyboard.IsKeyPressed(Keyboard.Key.A))
         {
-            CameraPosition += new Vector2f(-0.1f, 0);
+            CameraPosition += new Vector2f(-0.1f, 0) * (Keyboard.IsKeyPressed(Keyboard.Key.LShift) ? 20 : 1);
         }
         if (Keyboard.IsKeyPressed(Keyboard.Key.S))
         {
-            CameraPosition += new Vector2f(0, -0.1f);
+            CameraPosition += new Vector2f(0, -0.1f) * (Keyboard.IsKeyPressed(Keyboard.Key.LShift) ? 20 : 1);
         }
         if (Keyboard.IsKeyPressed(Keyboard.Key.D))
         {
-            CameraPosition += new Vector2f(0.1f, 0);
+            CameraPosition += new Vector2f(0.1f, 0) * (Keyboard.IsKeyPressed(Keyboard.Key.LShift) ? 20 : 1);
         }
         if (!lpos.Equals(CameraPosition))
         {
@@ -274,18 +230,10 @@ public class World
         }
         // TEMPORARY TESTING CODE
 
-        foreach (var chunk in mapQueue)
-        {
-            map.Add(chunk.Key, chunk.Value);
-            mapQueue.Remove(chunk.Key);
-            Console.WriteLine($"Added a chunk @{chunk.Value.X * 64}, {chunk.Value.Y * 64}");
-            CameraPosition = new Vector2f(chunk.Value.X, chunk.Value.Y);
-        }
-
         RenderSky(window, view);
-
+        
         // 1024 px real chunk width 64 * 16
-        foreach (var chunk in map.Values)
+        foreach (var chunk in Map.Values)
         {
             var transform = new Transform(1, 0, 0,    0, 1, 0,    0, 0, 1);
             transform.Translate(WorldToScreen(new Vector2f(chunk.X * 64, chunk.Y * 64)));
