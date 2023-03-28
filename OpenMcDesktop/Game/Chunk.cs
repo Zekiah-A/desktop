@@ -164,7 +164,7 @@ public class Chunk
 				}
 				
 				blockSprite.Texture =  block!.InstanceTexture;
-				blockSprite.Position = new Vector2f(x * World.BlockTextureWidth, y * World.BlockTextureHeight);
+				blockSprite.Position = new Vector2f(x * World.BlockTextureWidth, 63 - y * World.BlockTextureHeight);
 				blockSprite.Draw(window, states);
 			}
 		}
