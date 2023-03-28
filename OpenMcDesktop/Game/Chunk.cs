@@ -19,6 +19,9 @@ public class Chunk
 	public List<Entity> Entities;
 	public byte[] Biomes;
 
+	private GameData gameData;
+	private Dictionary<Block, VertexArray> generatedVBOs;
+	
 	public Chunk(ref ReadablePacket data, GameData gameData)
 	{
 		var x = data.ReadInt();
@@ -29,6 +32,8 @@ public class Chunk
 		Tiles = new Block[4096]; // Chunk size is 64x64
 		Entities = new List<Entity>();
 		Palette = new List<Block>();
+		this.gameData = gameData;
+		generatedVBOs = new Dictionary<Block, VertexArray>();
 
 		// Chunks are 64x64, while chunk position is a 32 bit integer, therefore highest possible chunk position is
 		// 67108863. That leads to 6 wasted bits in the x and y component of the chunk position (12 bits total). These
@@ -40,24 +45,36 @@ public class Chunk
 		var entityId = data.ReadShort();
 		while (entityId != 0)
 		{
-			if (Activator.CreateInstance(gameData.EntityDefinitions[entityId],
-				new[] { data.ReadShort() / 1024 + (x << 6), data.ReadShort() / 1024 + (y << 6)} ) is not Entity entity)
+			try
 			{
-				continue;
+
+
+				if (Activator.CreateInstance(gameData.EntityDefinitions[entityId]) is not Entity entity)
+				{
+					continue;
+				}
+
+				entity.X = data.ReadShort() / 1024 + (x << 6);
+				entity.Y = data.ReadShort() / 1024 + (y << 6);
+				entity.Id = data.ReadUInt() + data.ReadUShort() * 4294967296;
+				entity.Name = data.ReadString();
+				entity.State = data.ReadShort();
+				entity.Velocity = new Vector2(data.ReadFloat(), data.ReadFloat());
+				entity.Facing = data.ReadFloat();
+				entity.Age = data.ReadDouble();
+				entity.Chunk = this;
+
+				// TODO: Entity.savedata
+
+				// We add all entities back to the global world
+				gameData.World?.AddEntity(entity);
+				Entities.Add(entity);
+				entityId = data.ReadShort();
 			}
-
-			entity.Id = data.ReadUInt() + data.ReadUShort() * int.MaxValue;
-			entity.Name = data.ReadString();
-			entity.State = data.ReadShort();
-			entity.Velocity = new Vector2(data.ReadFloat(), data.ReadFloat());
-			entity.Facing = data.ReadFloat();
-			entity.Age = data.ReadDouble();
-			entity.Chunk = this;
-
-			// We add all entities back to the global world
-			gameData.World?.AddEntity(entity);
-			Entities.Add(entity);
-			entityId = data.ReadShort();
+			catch (Exception exception)
+			{
+				Console.WriteLine($"Could not create entity: {exception}");
+			}
 		}
 
 		Biomes = data.ReadBytes(10);
@@ -146,26 +163,83 @@ public class Chunk
 			
 			// TODO: Reimplement savedata
 		}
+
+		if (gameData.GenerateChunkVBOs)
+		{
+			GenerateChunkVBO();
+		}
 	}
 
+	public void GenerateChunkVBO()
+	{
+		foreach (var blockType in Palette)
+		{
+			if (blockType == gameData.Blocks[gameData.BlockIndex[typeof(Air)]])
+			{
+				continue;
+			}
+			
+			var vertices = new List<Vertex>();
+			
+			for (var x = 0; x < 64; x++)
+			{
+				for (var y = 0; y < 64; y++)
+				{
+					if (Tiles[x | (y << 6)] == blockType)
+					{
+						// Top left vertex, at the X and Y
+						vertices.Add(new Vertex(new Vector2f(16 * x, 16 * y), new Vector2f(0, 0)));
+						// Top right vertex, at X + 16 and Y
+						vertices.Add(new Vertex(new Vector2f(16 * x + 16, 16 * y), new Vector2f(16, 0)));
+						// Bottom right vertex, at X + 16 and Y + 1 6
+						vertices.Add(new Vertex(new Vector2f(16 * x + 16, 16 * y + 16), new Vector2f(16, 16)));
+						// Bottom left vertex, at X and Y + 16
+						vertices.Add(new Vertex(new Vector2f(16 * x, 16 * y + 16), new Vector2f(0, 16)));
+					}
+				}
+			}
+
+			var result = new VertexArray();
+			result.PrimitiveType = PrimitiveType.Quads;
+			foreach (var vertex in vertices)
+			{
+				result.Append(vertex);
+			}
+
+			generatedVBOs.Add(blockType, result);
+		}
+		
+	}
+	
 	// TODO: Implement our own sprite batching algorithm using vertex array to try and optimise drawing performance to the maximum
 	public void Render(RenderWindow window, RenderStates states)
 	{
-		using var blockSprite = new Sprite();
-
-		for (var x = 0; x < 64; x++)
+		if (gameData.GenerateChunkVBOs && generatedVBOs.Count != 0)
 		{
-			for (var y = 0; y < 64; y++)
+			foreach (var blockVertexPair in generatedVBOs)
 			{
-				var block = Tiles[x | (y << 6)];
-				if (block is Air)
+				states.Texture = blockVertexPair.Key.InstanceTexture;
+				window.Draw(blockVertexPair.Value, states);
+			}
+		}
+		else
+		{
+			using var blockSprite = new Sprite();
+
+			for (var x = 0; x < 64; x++)
+			{
+				for (var y = 0; y < 64; y++)
 				{
-					continue;
-				}
+					var block = Tiles[x | (y << 6)];
+					if (block is Air)
+					{
+						continue;
+					}
 				
-				blockSprite.Texture =  block!.InstanceTexture;
-				blockSprite.Position = new Vector2f(x * World.BlockTextureWidth, 63 - y * World.BlockTextureHeight);
-				blockSprite.Draw(window, states);
+					blockSprite.Texture =  block!.InstanceTexture;
+					blockSprite.Position = new Vector2f(x * World.BlockTextureWidth, (63 - y) * World.BlockTextureHeight);
+					blockSprite.Draw(window, states);
+				}
 			}
 		}
 	}

@@ -235,9 +235,20 @@ public class World
         // 1024 px real chunk width 64 * 16
         foreach (var chunk in Map.Values)
         {
+            // If it is not on screen, we can skip drawing this chunk
+            var screenPosition = WorldToScreen(new Vector2f(chunk.X * 64, chunk.Y * 64));
+            var chunkScreenSize = CameraZoomRealBlockSizes[CameraZoomLevel] * 64;
+            
+            if (screenPosition.X < -chunkScreenSize || screenPosition.X > window.GetView().Size.X ||
+                screenPosition.Y < -chunkScreenSize || screenPosition.Y > window.GetView().Size.Y)
+            {
+                continue;
+            }
+            
             var transform = new Transform(1, 0, 0,    0, 1, 0,    0, 0, 1);
-            transform.Translate(WorldToScreen(new Vector2f(chunk.X * 64, chunk.Y * 64)));
-            transform.Scale(new Vector2f((float) CameraZoomRealBlockSizes[CameraZoomLevel] / 16, (float) CameraZoomRealBlockSizes[CameraZoomLevel] / 16));
+            transform.Translate(screenPosition);
+            transform.Scale(new Vector2f((float) CameraZoomRealBlockSizes[CameraZoomLevel] / BlockTextureWidth,
+                (float) CameraZoomRealBlockSizes[CameraZoomLevel] / BlockTextureHeight));
             
             var states = new RenderStates(BlendMode.Alpha, Transform.Identity, null, null)
             {

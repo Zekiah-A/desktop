@@ -225,6 +225,7 @@ public class Connections
     public async Task Connect(PreConnectData serverData)
     {
 	    gameData.CurrentServer = serverData.Socket;
+	    gameData.CurrentServer.Logger += message => Console.WriteLine("Socket:\n" + message);
 	    gameData.CurrentServer.MessageReceived += OnMessageReceived;
 	    gameData.CurrentServer.ServerDisconnected += OnSocketDisconnected;
 	    
@@ -315,7 +316,7 @@ public class Connections
 		    gameData.World.TickCount = data.ReadDouble();
 	    }
     }
-
+    
     /// <summary>
     /// A packet containing chunk data, from which a chunk object can be constructed
     /// </summary>
@@ -325,12 +326,12 @@ public class Connections
 	    {
 		    return;
 	    }
-
+	    
 	    var chunk = new Chunk(ref data, gameData);
 	    var chunkKey = (chunk.X & 67108863) + (chunk.Y & 67108863) * 67108864;
 	    gameData.World.Map.TryAdd(chunkKey, chunk);
-	    gameData.World.CameraPosition = new Vector2f(chunk.X, chunk.Y); // TESTING CODE
-
+	    gameData.World.CameraPosition = new Vector2f(chunk.X * 64, chunk.Y * 64);
+	    
 	    // Read chunkW entities
 	    while (data.Left > 0)
 	    {

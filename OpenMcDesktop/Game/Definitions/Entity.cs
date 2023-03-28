@@ -23,6 +23,11 @@ public abstract class Entity
 	public double Y = 0;
 	public Vector2 Velocity = Vector2.Zero;
 	public float Facing = 0;
+
+	public Entity()
+	{
+		
+	}
 	
 	public virtual void Render(RenderWindow window)
 	{

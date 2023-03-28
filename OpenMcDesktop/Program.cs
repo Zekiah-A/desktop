@@ -19,7 +19,6 @@ var authPage = new Page();
 // Window event listeners and input
 var window = new RenderWindow(new VideoMode(1540, 1080), "OpenMc");
 var view = new View(new FloatRect(0, 0, window.Size.X, window.Size.Y));
-
 window.Closed += (_, _) =>
 {
     window.Close();

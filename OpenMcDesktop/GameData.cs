@@ -2,7 +2,6 @@ using OpenMcDesktop.Game;
 using OpenMcDesktop.Game.Definitions;
 using OpenMcDesktop.Mods;
 using SFML.Graphics;
-using SFML.System;
 using WatsonWebsocket;
 
 namespace OpenMcDesktop;
@@ -41,4 +40,5 @@ public class GameData
     public int FrameSleepMs { get; set; } = 16;
     public List<string> KnownServers { get; set; } = new();
     public byte[] Skin { get; set; } = new byte[1008]; // 28*12*3
+    public bool GenerateChunkVBOs { get; set; } = false;
 }
