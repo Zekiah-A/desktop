@@ -1,6 +1,7 @@
 using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
 using System.Text;
+using OpenMcDesktop.Game.Definitions;
 
 namespace OpenMcDesktop.Networking;
 
@@ -17,54 +18,38 @@ public ref struct ReadablePacket
     {
         Data = data;
     }
-    
-    public T Read<T>(ref T? target) where T : new()
-    {
-        if (typeof(T) == typeof(byte) || typeof(T) == typeof(sbyte)) return (T) (object) ReadByte();
-        if (typeof(T) == typeof(short)) return (T) (object) ReadShort();
-        if (typeof(T) == typeof(ushort)) return (T) (object) ReadUShort();
-        if (typeof(T) == typeof(int)) return (T) (object) ReadInt();
-        if (typeof(T) == typeof(uint)) return (T) (object) ReadUInt();
-        if (typeof(T) == typeof(double)) return (T) (object) ReadDouble();
-        if (typeof(T) == typeof(float)) return (T) (object) ReadFloat();
-        if (typeof(T) == typeof(bool)) return (T) (object) ReadBool();
-        if (typeof(T) == typeof(string)) return (T) (object) ReadString();
-        if (typeof(T) == typeof(byte[])) return (T) (object) ReadByteArray();
 
-        // TODO: Implement array reading
-        if (typeof(T).IsArray)
-        {
-            
-        }
+    public object? Read(object? target, Type type)
+    {
+        if (type == typeof(byte) || type == typeof(sbyte)) return ReadByte();
+        if (type == typeof(short)) return ReadShort();
+        if (type == typeof(ushort)) return ReadUShort();
+        if (type == typeof(int)) return ReadInt();
+        if (type == typeof(uint)) return ReadUInt();
+        if (type == typeof(double)) return ReadDouble();
+        if (type == typeof(float)) return ReadFloat();
+        if (type == typeof(bool)) return ReadBool();
+        if (type == typeof(string)) return ReadString();
+        if (type == typeof(byte[])) return ReadByteArray();
+
+        target ??= Activator.CreateInstance(type);
         
-        // If T is a class, or some other kind of struct or object we use reflection to get the type of each of its
-        // properties, and read into that, this is recursive, so regardless how deep the object is, we can keep reading
-        // into it until we have populated the entire object with the correct data.
-        if (target is null)
+        // If it is a decodable, such an an item, then the item's deserializer will handle this data
+        if (target is IDecodable decodable)
         {
-            var newInstance = new T();
-            var readMethod = ((object) this).GetType().GetMethod(nameof(Read))!;
-            
-            foreach (var property in typeof(T).GetProperties())
-            {
-                var readConstructed = readMethod.MakeGenericMethod(property.GetType());
-                var propertyValue = readConstructed.Invoke(this, new[] { property.GetValue(newInstance) });
-                newInstance.GetType().GetProperty(property.Name)!.SetValue(newInstance, propertyValue);
-            }
+            return decodable.Decode(ref this, target);
         }
-        else
+
+        // Otherwise, we will recurse through their properties and decode each
+        foreach (var property in type.GetProperties())
         {
-            var readMethod = ((object) this).GetType().GetMethod(nameof(Read))!;
-            foreach (var property in typeof(T).GetProperties())
-            {
-                var readConstructed = readMethod.MakeGenericMethod(property.GetType());
-                var propertyValue = readConstructed.Invoke(this, new[] { property.GetValue(target) });
-                target.GetType().GetProperty(property.Name)!.SetValue(target, propertyValue);
-            }
+            var propertyValue = Read(property.GetValue(target), property.PropertyType);
+            target?.GetType().GetProperty(property.Name)!.SetValue(target, propertyValue);
         }
-        
-        throw new InvalidOperationException();
+
+        return target;
     }
+    
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public byte ReadByte() => Data[Position++];

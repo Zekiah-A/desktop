@@ -9,6 +9,7 @@ public class Item : Entity
 
     public Item()
     {
-        
+        SaveData = new ItemSaveData();
+        SaveDataType = typeof(ItemSaveData);
     }
 }

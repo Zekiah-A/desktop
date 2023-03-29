@@ -2,6 +2,8 @@ using System.Net.WebSockets;
 using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 using OpenMcDesktop.Gui;
@@ -202,7 +204,10 @@ public class Connections
 			/*if (members.Length == 2)
 		    {
 			    // Read block save data, such as the items present inside a chest
-			    var attempt = JsonSerializer.Deserialize<ISaveData>(members[1]);
+			    var attempt = JsonSerializer.Deserialize<object>(members[1], new JsonSerializerOptions()
+			    {
+				    UnknownTypeHandling = JsonUnknownTypeHandling.JsonNode
+			    });
 			    if (attempt is null)
 			    {
 				    types.Add();
@@ -214,8 +219,8 @@ public class Connections
 
 		    }*/
 		}
-
-		return (types.ToArray(), indexes, sharedInstances.ToArray());
+	    
+	    return (types.ToArray(), indexes, sharedInstances.ToArray());
 	}
 
     /// <summary>

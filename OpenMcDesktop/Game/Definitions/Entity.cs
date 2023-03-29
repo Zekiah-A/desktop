@@ -18,16 +18,13 @@ public abstract class Entity
 	public Chunk? Chunk = null;
 	public int Health = 0;
 	public int BlocksWalked = 0;
+	public object? SaveData = null;
+	public Type SaveDataType = typeof(object);
 
 	public double X = 0;
 	public double Y = 0;
 	public Vector2 Velocity = Vector2.Zero;
 	public float Facing = 0;
-
-	public Entity()
-	{
-		
-	}
 	
 	public virtual void Render(RenderWindow window)
 	{

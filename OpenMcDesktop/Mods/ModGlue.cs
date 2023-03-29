@@ -1,3 +1,6 @@
+using System;
+using System.Reflection;
+using System.Reflection.Emit;
 using OpenMcDesktop.Game.Definitions;
 
 namespace OpenMcDesktop.Mods;
@@ -31,7 +34,7 @@ public class ModGlue
         return gameData.Items;
     }
 
-    void DefineBlock()
+    void DefineBlock(Block block)
     {
         
     }

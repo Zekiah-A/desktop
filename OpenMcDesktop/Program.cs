@@ -94,6 +94,7 @@ var gameData = new GameData
     View = view
 };
 gameData.ModLoader = new ModLoader(gameData);
+StaticData.GameData = gameData;
 
 var connections = new Connections(gameData);
 var preConnections = new List<PreConnectData>();

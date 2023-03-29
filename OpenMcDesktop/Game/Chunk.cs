@@ -45,36 +45,30 @@ public class Chunk
 		var entityId = data.ReadShort();
 		while (entityId != 0)
 		{
-			try
+			if (Activator.CreateInstance(gameData.EntityDefinitions[entityId]) is not Entity entity)
 			{
-
-
-				if (Activator.CreateInstance(gameData.EntityDefinitions[entityId]) is not Entity entity)
-				{
-					continue;
-				}
-
-				entity.X = data.ReadShort() / 1024 + (x << 6);
-				entity.Y = data.ReadShort() / 1024 + (y << 6);
-				entity.Id = data.ReadUInt() + data.ReadUShort() * 4294967296;
-				entity.Name = data.ReadString();
-				entity.State = data.ReadShort();
-				entity.Velocity = new Vector2(data.ReadFloat(), data.ReadFloat());
-				entity.Facing = data.ReadFloat();
-				entity.Age = data.ReadDouble();
-				entity.Chunk = this;
-
-				// TODO: Entity.savedata
-
-				// We add all entities back to the global world
-				gameData.World?.AddEntity(entity);
-				Entities.Add(entity);
-				entityId = data.ReadShort();
+				continue;
 			}
-			catch (Exception exception)
+
+			entity.X = data.ReadShort() / 1024 + (x << 6);
+			entity.Y = data.ReadShort() / 1024 + (y << 6);
+			entity.Id = data.ReadUInt() + data.ReadUShort() * 4294967296;
+			entity.Name = data.ReadString();
+			entity.State = data.ReadShort();
+			entity.Velocity = new Vector2(data.ReadFloat(), data.ReadFloat());
+			entity.Facing = data.ReadFloat();
+			entity.Age = data.ReadDouble();
+			entity.Chunk = this;
+			
+			if (entity.SaveData is not null)
 			{
-				Console.WriteLine($"Could not create entity: {exception}");
+				entity.SaveData = data.Read(entity.SaveData, entity.SaveDataType);
 			}
+
+			// We add all entities back to the global world
+			gameData.World?.AddEntity(entity);
+			Entities.Add(entity);
+			entityId = data.ReadShort();
 		}
 
 		Biomes = data.ReadBytes(10);
@@ -95,7 +89,6 @@ public class Chunk
 				{
 					Tiles[i] = Palette[0];
 				}
-
 				break;
 			case 2:
 				for (var j = 0; j < 512; j++)
