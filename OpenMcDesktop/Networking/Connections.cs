@@ -406,7 +406,7 @@ public class Connections
     {
 		while (data.Left > 0)
 		{
-			var action = data.ReadByte();
+			var action = (int) data.ReadByte();
 			if (action == 0)
 			{
 				var type = data.ReadByte();
@@ -433,6 +433,7 @@ public class Connections
 				// We create a new entity, it does not yet have a chunk or position
 				if ((action & 128) != 0)
 				{
+					action |= 256;
 					var entityType = gameData.EntityDefinitions[data.ReadShort()];
 					entity = (Entity?) Activator.CreateInstance(entityType);
 					if (entity is not null)
@@ -457,38 +458,38 @@ public class Connections
 				entity.X = data.ReadDouble();
 				gameData.World?.MoveEntity(entity);
 			}
-			else if((action & 2) != 0)
+			if((action & 2) != 0)
 			{
 				entity.Y = data.ReadDouble();
 				gameData.World?.MoveEntity(entity);
 			}	
-			else if ((action & 4) != 0)
+			if ((action & 4) != 0)
 			{
 				entity.Name = data.ReadString();
 			}
-			else if ((action & 8) != 0)
+			if ((action & 8) != 0)
 			{
 				entity.State = data.ReadShort();
 			}
-			else if ((action & 16) != 0)
+			if ((action & 16) != 0)
 			{
 				entity.Velocity = entity.Velocity with { X = data.ReadFloat() };
 				gameData.World?.MoveEntity(entity);
 			}
-			else if ((action & 32) != 0)
+			if ((action & 32) != 0)
 			{
 				entity.Velocity = entity.Velocity with { Y = data.ReadFloat() };
 				gameData.World?.MoveEntity(entity);
 			}
-			else if ((action & 64) != 0)
+			if ((action & 64) != 0)
 			{
 				entity.Facing = data.ReadFloat();
 			}
-			else if ((action & 128) != 0)
+			if ((action & 128) != 0)
 			{
-				// TODO: Implement entity SaveData
+				entity.SaveData = data.Read(entity.SaveData, entity.SaveDataType);
 			}
-			else if ((action & 256) != 0)
+			if ((action & 256) != 0)
 			{
 				gameData.World?.AddEntity(entity);
 				// TODO: Fire placed event on entity

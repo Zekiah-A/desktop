@@ -19,6 +19,8 @@ public abstract class Block
 	public virtual float Viscosity => 0.0f;
 	public virtual float BreakTime => 0.0f;
 	public virtual Tool Tool => Tool.None;
+	public object? SaveData = null;
+	public Type SaveDataType = typeof(object);
 
 	protected Block()
 	{

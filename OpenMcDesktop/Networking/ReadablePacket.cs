@@ -34,18 +34,23 @@ public ref struct ReadablePacket
         if (type == typeof(byte[])) return ReadByteArray();
         
         // If it is a decodable, such an an item, then the item's deserializer will handle this data
-        if (target is IDecodable decodable) 
-        {
-            return decodable.Decode(ref this);
-        }
-        
         if (typeof(IDecodable).IsAssignableFrom(type))
         {
             var decodeInfo = type.GetMethod(nameof(IDecodable.Decode));
             return decodeInfo?.CreateDelegate<IDecodable.DecodeDelegate>(target)(ref this);
         }
 
-        // Otherwise, we will recurse through their properties and decode each
+        // If it is an array, (but not a byte[]), then we hope that the target is an instance so we can extract it's
+        //  length, and populate the array with data of the correct type.
+        if (target is object[] arrayTarget)
+        {
+            for (var i = 0; i < arrayTarget.Length; i++)
+            {
+                arrayTarget[i] = Read(arrayTarget[i], type.GetElementType()!)!;
+            }
+        }
+
+        // Otherwise, we will recurse through their properties and decode each, this is a recursive method, so 
         foreach (var property in type.GetProperties())
         {
             var propertyValue = Read(property.GetValue(target), property.PropertyType);

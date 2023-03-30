@@ -144,7 +144,7 @@ public class Chunk
 				break;
 		}
 		
-		// Parse block entities and fill in array holes
+		// Decode SaveData containing blocks, such as chests
 		for (var i = 0; i < 4096; i++) {
 			var block = Tiles[i];
 			if (block is null)
@@ -153,8 +153,11 @@ public class Chunk
 				Tiles[i] = gameData.Blocks[airIndex];
 				return;
 			}
-			
-			// TODO: Reimplement savedata
+
+			if (block.SaveData is not null)
+			{
+				block.SaveData = data.Read(block.SaveData, block.SaveDataType);
+			}
 		}
 
 		if (gameData.GenerateChunkVBOs)

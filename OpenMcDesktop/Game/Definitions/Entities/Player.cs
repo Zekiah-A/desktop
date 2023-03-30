@@ -42,6 +42,12 @@ public class Player : Entity
     public Animation CrouchAnimation = new Animation();
     public Animation PlaceAnimation = new Animation();
 
+    public Player()
+    {
+        SaveData = new PlayerSaveData();
+        SaveDataType = typeof(PlayerSaveData);
+    }
+
     public override void Render(RenderWindow window)
     {
         
