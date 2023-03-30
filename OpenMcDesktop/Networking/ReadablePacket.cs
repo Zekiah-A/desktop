@@ -1,4 +1,5 @@
 using System.Buffers.Binary;
+using System.Reflection.Metadata.Ecma335;
 using System.Runtime.CompilerServices;
 using System.Text;
 using OpenMcDesktop.Game.Definitions;
@@ -31,13 +32,17 @@ public ref struct ReadablePacket
         if (type == typeof(bool)) return ReadBool();
         if (type == typeof(string)) return ReadString();
         if (type == typeof(byte[])) return ReadByteArray();
-
-        target ??= Activator.CreateInstance(type);
         
         // If it is a decodable, such an an item, then the item's deserializer will handle this data
-        if (target is IDecodable decodable)
+        if (target is IDecodable decodable) 
         {
-            return decodable.Decode(ref this, target);
+            return decodable.Decode(ref this);
+        }
+        
+        if (typeof(IDecodable).IsAssignableFrom(type))
+        {
+            var decodeInfo = type.GetMethod(nameof(IDecodable.Decode));
+            return decodeInfo?.CreateDelegate<IDecodable.DecodeDelegate>(target)(ref this);
         }
 
         // Otherwise, we will recurse through their properties and decode each

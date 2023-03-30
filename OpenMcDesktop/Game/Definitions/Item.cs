@@ -21,17 +21,18 @@ public abstract class Item : IDecodable
     /// <param name="data"></param>
     /// <param name="target">The object which will hold the newly created item, should be passed in as null.</param>
     /// <returns></returns>
-    public object? Decode(ref ReadablePacket data, object? target)
+    public object? Decode(ref ReadablePacket data)
     {
+        var _ = data.ReadByte(); // Padding
         var count = data.ReadByte();
         var itemId = data.ReadUShort();
 
-        target ??= Activator.CreateInstance(StaticData.GameData.ItemDefinitions[itemId]);
-        (target as Item)!.Count = count;
-        (target as Item)!.Name = data.ReadString();
-        if ((target as Item)!.SaveData is not null)
+        var target = (Item) Activator.CreateInstance(StaticData.GameData.ItemDefinitions[itemId])!;
+        target.Count = count;
+        target.Name = data.ReadString();
+        if (target.SaveData is not null)
         {
-            target = data.Read((target as Item)!.SaveData, (target as Item)!.SaveDataType);
+            target.SaveData = data.Read(target.SaveData, target.SaveDataType);
         }
         
         return target;

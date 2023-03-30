@@ -1,4 +1,4 @@
-namespace OpenMcDesktop.Game.Definitions.Entities;
+namespace OpenMcDesktop.Game.Definitions;
 
 public class ItemSaveData
 {
