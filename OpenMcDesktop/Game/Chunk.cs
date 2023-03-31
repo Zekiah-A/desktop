@@ -62,6 +62,7 @@ public class Chunk
 			
 			if (entity.SaveData is not null)
 			{
+				_ = data.ReadByte(); // TODO: BUG: We are missing something...
 				entity.SaveData = data.Read(entity.SaveData, entity.SaveDataType);
 			}
 
@@ -69,6 +70,7 @@ public class Chunk
 			gameData.World?.AddEntity(entity);
 			Entities.Add(entity);
 			entityId = data.ReadShort();
+			Console.WriteLine("...");
 		}
 
 		Biomes = data.ReadBytes(10);
@@ -113,7 +115,7 @@ public class Chunk
 					Tiles[tilesI++] = Palette[block & 3];
 					Tiles[tilesI++] = Palette[(block >> 2) & 3];
 					Tiles[tilesI++] = Palette[(block >> 4) & 3];
-					Tiles[tilesI++] = Palette[(block >> 6) & 3];
+					Tiles[tilesI++] = Palette[(block >> 6)];
 				}
 
 				break;
@@ -145,7 +147,8 @@ public class Chunk
 		}
 		
 		// Decode SaveData containing blocks, such as chests
-		for (var i = 0; i < 4096; i++) {
+		for (var i = 0; i < 4096; i++)
+		{
 			var block = Tiles[i];
 			if (block is null)
 			{
@@ -227,12 +230,12 @@ public class Chunk
 				for (var y = 0; y < 64; y++)
 				{
 					var block = Tiles[x | (y << 6)];
-					if (block is Air)
+					if (block is null or Air)
 					{
 						continue;
 					}
 				
-					blockSprite.Texture =  block!.InstanceTexture;
+					blockSprite.Texture =  block.InstanceTexture;
 					blockSprite.Position = new Vector2f(x * World.BlockTextureWidth, (63 - y) * World.BlockTextureHeight);
 					blockSprite.Draw(window, states);
 				}

@@ -1,3 +1,5 @@
+namespace OpenMcDesktop.Game;
+
 public record struct Keyframe
 (
     int TimeMilliseconds,

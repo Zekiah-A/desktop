@@ -23,7 +23,7 @@ namespace OpenMcDesktop.Networking;
 /// </summary>
 public class Connections
 {
-	public delegate void PacketHandler(ReadablePacket data);
+	public delegate void PacketHandler(ref ReadablePacket data);
 	public readonly Dictionary<int, PacketHandler> PacketHandlers;
 	private readonly GameData gameData;
 
@@ -266,7 +266,9 @@ public class Connections
 		    }
 		    else
 		    {
-			    PacketHandlers.GetValueOrDefault(args.Data[0])?.Invoke((ReadablePacket) args.Data[1..].ToArray());
+			    var data = new ReadablePacket(args.Data.ToArray());
+			    var code = data.ReadByte();
+			    PacketHandlers.GetValueOrDefault(code)?.Invoke(ref data);
 		    }
 	    }
 
@@ -281,7 +283,7 @@ public class Connections
 	    Console.WriteLine(message);
     }
 
-    private void RubberPacket(ReadablePacket data)
+    private void RubberPacket(ref ReadablePacket data)
     {
 		gameData.MyPlayerId = data.ReadUInt() + data.ReadUShort() * 4294967296;
 		var playerEntity = gameData.World?.Entities.GetValueOrDefault(gameData.MyPlayerId);
@@ -300,7 +302,7 @@ public class Connections
     /// <summary>
     /// A packet containing information about the current world and position that the player is located within
     /// </summary>
-    private void DimPacket(ReadablePacket data)
+    private void DimPacket(ref ReadablePacket data)
     {
 	    var dimension = data.ReadString();
 	    var gravityX = data.ReadFloat();
@@ -314,7 +316,7 @@ public class Connections
 	    };
     }
 
-    private void ClockPacket(ReadablePacket data)
+    private void ClockPacket(ref ReadablePacket data)
     {
 	    if (gameData.World is not null)
 	    {
@@ -325,7 +327,7 @@ public class Connections
     /// <summary>
     /// A packet containing chunk data, from which a chunk object can be constructed
     /// </summary>
-    private void ChunkPacket(ReadablePacket data)
+    private void ChunkPacket(ref ReadablePacket data)
     {
 	    if (gameData.World is null)
 	    {
@@ -337,7 +339,7 @@ public class Connections
 	    gameData.World.Map.TryAdd(chunkKey, chunk);
 	    gameData.World.CameraPosition = new Vector2f(chunk.X * 64, chunk.Y * 64);
 	    
-	    // Read chunkW entities
+	    // Read chunk entities
 	    while (data.Left > 0)
 	    {
 		    var playerEntity = (Entity) Activator.CreateInstance(typeof(Player))!;
@@ -354,7 +356,7 @@ public class Connections
 	    }
     }
 
-    private void ChunkDeletePacket(ReadablePacket data)
+    private void ChunkDeletePacket(ref ReadablePacket data)
     {
 	    if (gameData.World is null)
 	    {
@@ -370,7 +372,7 @@ public class Connections
 	    }
     }
 
-    private void BlockSetPacket(ReadablePacket data)
+    private void BlockSetPacket(ref ReadablePacket data)
     {
 	    while (data.Left > 0)
 	    {
@@ -402,7 +404,7 @@ public class Connections
 	/// This packet handles anything to do with entities, for instance an entity movement,
 	/// change in state, or other such data will be distributed to the client via this packet.
 	/// </summary>
-    private void EntityPacket(ReadablePacket data)
+    private void EntityPacket(ref ReadablePacket data)
     {
 		while (data.Left > 0)
 		{

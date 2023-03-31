@@ -21,9 +21,8 @@ public abstract class Item : IDecodable
     /// <param name="data"></param>
     /// <param name="target">The object which will hold the newly created item, should be passed in as null.</param>
     /// <returns></returns>
-    public object? Decode(ref ReadablePacket data)
+    public object Decode(ref ReadablePacket data)
     {
-        var _ = data.ReadByte(); // Padding
         var count = data.ReadByte();
         var itemId = data.ReadUShort();
 

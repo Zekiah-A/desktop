@@ -1,3 +1,5 @@
+namespace OpenMcDesktop.Game;
+
 public enum KeyframeEase
 {
     Linear,

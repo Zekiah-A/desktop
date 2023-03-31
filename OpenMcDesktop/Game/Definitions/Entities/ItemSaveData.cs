@@ -1,6 +1,6 @@
-namespace OpenMcDesktop.Game.Definitions;
+namespace OpenMcDesktop.Game.Definitions.Entities;
 
 public class ItemSaveData
 {
-    public Item Item { get; set; }
+    public Definitions.Item Item { get; set; }
 }

@@ -20,7 +20,7 @@ public ref struct ReadablePacket
         Data = data;
     }
 
-    public object? Read(object? target, Type type)
+    public object? Read(object? target, Type type)     
     {
         if (type == typeof(byte) || type == typeof(sbyte)) return ReadByte();
         if (type == typeof(short)) return ReadShort();

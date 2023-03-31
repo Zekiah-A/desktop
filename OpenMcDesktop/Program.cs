@@ -295,10 +295,12 @@ titleVideoPlayer.Source.EndOfFileReached += (_, _) =>
 };
 mainPage.Children.Add(titleVideoPlayer);
 
+int LogoWidth() => (int) (window.GetView().Size.X * 0.57f);
+int LogoHeight() => (int) (window.GetView().Size.X * 0.2f);
 var logoRect = new TextureRect(new Texture(@"Resources/Brand/logo.png"),
-    () => (int) ((int) window.GetView().Center.X - (window.GetView().Size.X * 0.4f) / 2),
-    () => (int) (window.GetView().Size.Y * 0.1f), () => (int) (window.GetView().Size.X * 0.4f),
-    () => (int) (window.GetView().Size.X * 0.24f));
+    () => (int) window.GetView().Center.X - (LogoWidth() / 2),
+    () => (int) (window.GetView().Size.Y * 0.1f),
+    LogoWidth, LogoHeight);
 mainPage.Children.Add(logoRect);
 
 var playButton = new Button("Play", 
