@@ -62,7 +62,6 @@ public class Chunk
 			
 			if (entity.SaveData is not null)
 			{
-				_ = data.ReadByte(); // TODO: BUG: We are missing something...
 				entity.SaveData = data.Read(entity.SaveData, entity.SaveDataType);
 			}
 

@@ -14,6 +14,7 @@
         <PackageReference Include="Microsoft.ClearScript.V8" Version="7.4.0" />
         <PackageReference Include="NativeFileDialogSharp" Version="0.6.0-alpha" />
         <PackageReference Include="SFML.Net" Version="2.5.0" />
+        <PackageReference Include="SharpWebview" Version="0.7.0" />
         <PackageReference Include="SharpZipLib" Version="1.4.2" />
         <ProjectReference Include="..\Motion\MotionNET\MotionNET\MotionNET.csproj" />
         <ProjectReference Include="..\Motion\MotionNET\MotionNET.SFML\MotionNET.SFML.csproj" />

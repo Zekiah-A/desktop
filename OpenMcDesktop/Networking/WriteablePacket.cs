@@ -133,6 +133,14 @@ public ref struct WriteablePacket
             Realloc();
         }
 
+        if (size > 16383)
+        {
+            if (size > 2147483647)
+            {
+                
+            }
+        }
+
         for (var i = 0; i < data.Length; i++)
         {
             Data[Position + i] = bytes[i];

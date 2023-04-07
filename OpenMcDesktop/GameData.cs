@@ -1,5 +1,6 @@
 using OpenMcDesktop.Game;
 using OpenMcDesktop.Game.Definitions;
+using OpenMcDesktop.Gui;
 using OpenMcDesktop.Mods;
 using SFML.Graphics;
 using WatsonWebsocket;
@@ -15,6 +16,7 @@ public class GameData
     public ModLoader ModLoader { get; set; }
     public World? World { get; set; }
     public View View { get; set; }
+    public Page? CurrentPage { get; set; }
 
     // Game runtime objects and definitions
     public Type[] BlockDefinitions { get; set; } // We can use Activator.CreateInstance() to create instances from these block types
@@ -24,7 +26,7 @@ public class GameData
     public Dictionary<Type, int> ItemIndex { get; set; } // Maps the type of item to the index of item in items
     public Block[] Blocks { get; set; } // Shared objects for all block types that can be used to avoid creating thousands of identical block instances for blocks that have no variation (like grass, unlike chests)
     public Item[] Items { get; set; }  // Shared objects for all item types that can be used to avoid creating thousands of identical item instances for items that have no variation, like unstackable items with no unique qualities
-    
+
     // Stuff about us, as a client specifically
     public long MyPlayerId { get; set; } = 0;
     public Entity MyPlayer { get; set;}

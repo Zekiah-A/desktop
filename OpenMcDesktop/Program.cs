@@ -8,7 +8,6 @@ using OpenMcDesktop.Mods;
 using SFML.Graphics;
 using SFML.Window;
 
-var currentPage = (Page?) null;
 var mainPage = new Page();
 var gamePage = new Page();
 var serversPage = new Page();
@@ -19,6 +18,21 @@ var authPage = new Page();
 // Window event listeners and input
 var window = new RenderWindow(new VideoMode(1540, 1080), "OpenMc");
 var view = new View(new FloatRect(0, 0, window.Size.X, window.Size.Y));
+var storage = new Storage(Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "OpenMcDesktop"));
+var gameData = new GameData
+{
+    Name = storage.Get<string>(nameof(GameData.Name)) ?? "",
+    PublicKey = storage.Get<string>(nameof(GameData.PublicKey)) ?? "",
+    PrivateKey = storage.Get<string>(nameof(GameData.PrivateKey)) ?? "",
+    AuthSignature = storage.Get<string>(nameof(GameData.AuthSignature)) ?? "",
+    KnownServers = storage.Get<List<string>>(nameof(GameData.KnownServers)) ?? new List<string> { "localhost" },
+    Skin = SkinHelpers.SkinDataFromFile("Resources/Textures/alex.png"),
+    Storage = storage,
+    View = view
+};
+gameData.ModLoader = new ModLoader(gameData);
+StaticData.GameData = gameData;
+
 window.Closed += (_, _) =>
 {
     window.Close();
@@ -31,7 +45,7 @@ window.Resized += (_, args) =>
 window.MouseButtonPressed += (_, args) =>
 {
     // ReSharper disable once AccessToModifiedClosure
-    if (currentPage?.HitTest(args.X, args.Y, TestType.MouseDown) is false)
+    if (gameData.CurrentPage?.HitTest(args.X, args.Y, TestType.MouseDown) is false)
     {
         // If not blocked by the UI, then we propagate the hit test to the main game
         Keybinds.MouseDown(args.X, args.Y, TestType.MouseDown);
@@ -40,7 +54,7 @@ window.MouseButtonPressed += (_, args) =>
 window.MouseButtonReleased += (_, args) =>
 {
     // ReSharper disable once AccessToModifiedClosure
-    if (currentPage?.HitTest(args.X, args.Y, TestType.MouseUp) is false)
+    if (gameData.CurrentPage?.HitTest(args.X, args.Y, TestType.MouseUp) is false)
     {
         // If not blocked by the UI, then we propagate the hit test to the main game
         Keybinds.MouseUp(args.X, args.Y, TestType.MouseUp);
@@ -49,7 +63,7 @@ window.MouseButtonReleased += (_, args) =>
 window.MouseMoved += (_, args) =>
 {
     // ReSharper disable once AccessToModifiedClosure
-    if (currentPage?.HitTest(args.X, args.Y, TestType.MouseHover) is false)
+    if (gameData.CurrentPage?.HitTest(args.X, args.Y, TestType.MouseHover) is false)
     {
         // If not blocked by the UI, then we propagate the hit test to the main game
         Keybinds.MouseMove(args.X, args.Y, TestType.MouseHover);
@@ -65,7 +79,7 @@ void PropagateKeyTest(KeyEventArgs args, TestType type)
     modifiers |= args.System ? (int) ModifierFlags.System : 0;
 
     // ReSharper disable once AccessToModifiedClosure
-    if (currentPage?.KeyboardTest(args.Code, modifiers, type) is false)
+    if (gameData.CurrentPage?.KeyboardTest(args.Code, modifiers, type) is false)
     {
         // If not blocked by the UI, then we propagate the keyboard test to the main game
         Keybinds.KeyPressed(args.Code, modifiers, type);
@@ -74,27 +88,12 @@ void PropagateKeyTest(KeyEventArgs args, TestType type)
 
 window.KeyPressed += (_, args) => PropagateKeyTest(args, TestType.KeyDown);
 window.KeyReleased += (_, args) => PropagateKeyTest(args, TestType.KeyUp);
-window.TextEntered += (_, args) => currentPage?.TextTest(args.Unicode);
+window.TextEntered += (_, args) => gameData.CurrentPage?.TextTest(args.Unicode);
 
 AppDomain.CurrentDomain.UnhandledException += (sender, exceptionEventArgs) =>
 {
     Console.WriteLine("Critical game error!  " + exceptionEventArgs.ExceptionObject);
 };
-
-var storage = new Storage(Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "OpenMcDesktop"));
-var gameData = new GameData
-{
-    Name = storage.Get<string>(nameof(GameData.Name)) ?? "",
-    PublicKey = storage.Get<string>(nameof(GameData.PublicKey)) ?? "",
-    PrivateKey = storage.Get<string>(nameof(GameData.PrivateKey)) ?? "",
-    AuthSignature = storage.Get<string>(nameof(GameData.AuthSignature)) ?? "",
-    KnownServers = storage.Get<List<string>>(nameof(GameData.KnownServers)) ?? new List<string> { "localhost" },
-    Skin = SkinHelpers.SkinDataFromFile("Resources/Textures/alex.png"),
-    Storage = storage,
-    View = view
-};
-gameData.ModLoader = new ModLoader(gameData);
-StaticData.GameData = gameData;
 
 var connections = new Connections(gameData);
 var preConnections = new List<PreConnectData>();
@@ -120,7 +119,7 @@ async Task PlayServer(PreConnectData serverData)
         await data.Socket.StopAsync();
     }
     
-    currentPage = gamePage;
+    gameData.CurrentPage = gamePage;
     await connections.Connect(serverData);
 }
 
@@ -208,7 +207,7 @@ optionsPage.Children.Add(dirtBackgroundRect);
 var optionsBackButton = new Button("Back", () => 0, () => 0, () => 0, () => 0);
 optionsBackButton.OnMouseUp += (_, _) =>
 {
-    currentPage = mainPage;
+    gameData.CurrentPage = mainPage;
 };
 var optionsGrid = new Grid(1, 6, () => (int) (window.GetView().Size.X / 4), () => (int) (window.GetView().Size.Y / 4),
     () => (int) (window.GetView().Size.X / 2), () => (int) (window.GetView().Size.Y / 2))
@@ -251,7 +250,7 @@ skinButton.OnMouseUp += (_, _) =>
 var accountsBackButton = new Button("Back", Control.BoundZero, Control.BoundZero, Control.BoundZero, Control.BoundZero);
 accountsBackButton.OnMouseUp += (_, _) => 
 {
-    currentPage = mainPage;
+    gameData.CurrentPage = mainPage;
 };
 var accountsGrid = new Grid(1, 2, () => (int) (window.GetView().Size.X / 4), () => (int) (window.GetView().Size.Y * 0.75f),
     () => (int) (window.GetView().Size.X / 2), () => 136)
@@ -310,7 +309,7 @@ var playButton = new Button("Play",
     () => (int) (0.05 * window.GetView().Size.X));
 playButton.OnMouseUp += (_, _) =>
 {
-    currentPage = serversPage;
+    gameData.CurrentPage = serversPage;
 };
 mainPage.Children.Add(playButton);
 
@@ -321,7 +320,7 @@ var accountButton = new Button("Account & Profile",
     () => (int) (0.05 * window.GetView().Size.X));
 accountButton.OnMouseUp += (_, _) =>
 {
-    currentPage = accountsPage;
+    gameData.CurrentPage = accountsPage;
 };
 mainPage.Children.Add(accountButton);
 
@@ -332,7 +331,7 @@ var optionsButton = new Button("Options",
     () => (int) (0.05 * window.GetView().Size.X));
 optionsButton.OnMouseUp += (_, _) =>
 {
-    currentPage = optionsPage;
+    gameData.CurrentPage = optionsPage;
 };
 mainPage.Children.Add(optionsButton);
 
@@ -371,7 +370,7 @@ authButton.OnMouseUp += async (_, _) =>
 {
     if (await Authorise(authInput.Text))
     {
-        currentPage = mainPage;
+        gameData.CurrentPage = mainPage;
     }
 };
 authPage.Children.Add(authButton);
@@ -404,12 +403,12 @@ async Task<bool> Authorise(string? key = null)
     return true;
 }
 
-currentPage = mainPage;
+gameData.CurrentPage = mainPage;
 Task.Run(async () =>
 {
-    if (currentPage != authPage && !await Authorise(storage.Get<string>("AuthKey")))
+    if (gameData.CurrentPage != authPage && !await Authorise(storage.Get<string>("AuthKey")))
     {
-        currentPage = authPage;
+        gameData.CurrentPage = authPage;
     }
 });
 
@@ -418,7 +417,7 @@ while (window.IsOpen)
 {
     window.DispatchEvents();
     window.Clear(Color.Black);
-    currentPage?.Render(window, view);
+    gameData.CurrentPage?.Render(window, view);
     gameData.World?.Render(window, view);
     window.SetView(view);
     window.Display();

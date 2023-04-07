@@ -18,6 +18,13 @@ public abstract class Control
     private int Width => Bounds.EndX() - Bounds.StartX();
     private int Height => Bounds.EndY() - Bounds.StartY();
 
+    protected void InvokeHover(object? sender, EventArgs args) => OnHover?.Invoke(sender, args);
+    protected void InvokeLeave(object? sender, EventArgs args) => OnLeave?.Invoke(sender, args);
+    protected void InvokeMouseDown(object? sender, EventArgs args) => OnMouseDown?.Invoke(sender, args);
+    protected void InvokeMouseUp(object? sender, EventArgs args) => OnMouseUp?.Invoke(sender, args);
+    protected void InvokeFocus(object? sender, EventArgs args) => OnFocus?.Invoke(sender, args);
+    protected void InvokeBlur(object? sender, EventArgs args) => OnBlur?.Invoke(sender, args);
+
     protected Control(Func<int> x, Func<int> y, Func<int>? width = null, Func<int>? height = null)
     {
         Bounds.StartX = x;

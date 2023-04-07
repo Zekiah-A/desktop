@@ -154,7 +154,7 @@ public class Connections
 	    socket.MessageReceived -= OnMessageReceived;
 	    socket.ServerDisconnected -= OnSocketDisconnected;
 
-	    return new PreConnectData(socket, packs, challenge, new DisplayListItem(new Texture(image), name, motd)
+	    return new PreConnectData(socket, packs, challenge, new ServerListItem(new Texture(image), name, motd, ip)
 	    {
 		    DescriptionColour = descriptionColour
 	    });
