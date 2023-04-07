@@ -39,7 +39,6 @@ public class GameData
     public string Name { get; set; }
     
     // Game options
-    public int FrameSleepMs { get; set; } = 16;
     public List<string> KnownServers { get; set; } = new();
     public byte[] Skin { get; set; } = new byte[1008]; // 28*12*3
     public bool GenerateChunkVBOs { get; set; } = false;

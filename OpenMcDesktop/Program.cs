@@ -33,6 +33,9 @@ var gameData = new GameData
 gameData.ModLoader = new ModLoader(gameData);
 StaticData.GameData = gameData;
 
+// TODO: Make configurable, perhaps a setter in GameData
+window.SetFramerateLimit(60);
+
 window.Closed += (_, _) =>
 {
     window.Close();
@@ -421,6 +424,4 @@ while (window.IsOpen)
     gameData.World?.Render(window, view);
     window.SetView(view);
     window.Display();
-    
-    Thread.Sleep(gameData.FrameSleepMs); // TODO: Perhaps instead use window.SetFrameLimit()
 }
