@@ -21,42 +21,42 @@ public class SkinEditor : Control
         Display = new SkinDisplay(data, x, () => y() + 64, width, height);
         Children.Add(Display);
 
-        var bodyButton = new Button("Body", BoundZero, BoundZero, BoundZero, BoundZero);
+        var bodyButton = new Button("Body", BoundsZero, BoundsZero, BoundsZero, BoundsZero);
         bodyButton.OnMouseUp += (_, _) =>
         {
             Display.Layer = ((Display.Layer & SkinDisplay.Layers.Body) == SkinDisplay.Layers.Body)
                 ? Display.Layer & ~SkinDisplay.Layers.Body
                 : Display.Layer | SkinDisplay.Layers.Body;
         };
-        var armBackButton = new Button("Back arm", BoundZero, BoundZero, BoundZero, BoundZero);
+        var armBackButton = new Button("Back arm", BoundsZero, BoundsZero, BoundsZero, BoundsZero);
         armBackButton.OnMouseUp += (_, _) =>
         {
             Display.Layer = ((Display.Layer & SkinDisplay.Layers.ArmBack) == SkinDisplay.Layers.ArmBack)
                 ? Display.Layer & ~SkinDisplay.Layers.ArmBack
                 : Display.Layer | SkinDisplay.Layers.ArmBack;
         };
-        var armFrontButton = new Button("Front arm", BoundZero, BoundZero, BoundZero, BoundZero);
+        var armFrontButton = new Button("Front arm", BoundsZero, BoundsZero, BoundsZero, BoundsZero);
         armFrontButton.OnMouseUp += (_, _) =>
         {
             Display.Layer = ((Display.Layer & SkinDisplay.Layers.ArmFront) == SkinDisplay.Layers.ArmFront)
                 ? Display.Layer & ~SkinDisplay.Layers.ArmFront
                 : Display.Layer | SkinDisplay.Layers.ArmFront;
         };
-        var legBackButton = new Button("Back leg", BoundZero, BoundZero, BoundZero, BoundZero);
+        var legBackButton = new Button("Back leg", BoundsZero, BoundsZero, BoundsZero, BoundsZero);
         legBackButton.OnMouseUp += (_, _) =>
         {
             Display.Layer = ((Display.Layer & SkinDisplay.Layers.LegBack) == SkinDisplay.Layers.LegBack)
                 ? Display.Layer & ~SkinDisplay.Layers.LegBack
                 : Display.Layer | SkinDisplay.Layers.LegBack;
         };
-        var legFrontButton = new Button("Front leg", BoundZero, BoundZero, BoundZero, BoundZero);
+        var legFrontButton = new Button("Front leg", BoundsZero, BoundsZero, BoundsZero, BoundsZero);
         legFrontButton.OnMouseUp += (_, _) =>
         {
             Display.Layer = ((Display.Layer & SkinDisplay.Layers.LegFront) == SkinDisplay.Layers.LegFront)
                 ? Display.Layer & ~SkinDisplay.Layers.LegFront
                 : Display.Layer | SkinDisplay.Layers.LegFront;
         };
-        var animateButton = new Button("Animate", BoundZero, BoundZero, BoundZero, BoundZero);
+        var animateButton = new Button("Animate", BoundsZero, BoundsZero, BoundsZero, BoundsZero);
         animateButton.OnMouseUp += (_, _) =>
         {
             Display.Animate = !Display.Animate;

@@ -14,6 +14,7 @@ var serversPage = new Page();
 var optionsPage = new Page();
 var accountsPage = new Page();
 var authPage = new Page();
+var gameGuiPage = new Page();
 
 // Window event listeners and input
 var window = new RenderWindow(new VideoMode(1540, 1080), "OpenMc");
@@ -47,7 +48,6 @@ window.Resized += (_, args) =>
 };
 window.MouseButtonPressed += (_, args) =>
 {
-    // ReSharper disable once AccessToModifiedClosure
     if (gameData.CurrentPage?.HitTest(args.X, args.Y, TestType.MouseDown) is false)
     {
         // If not blocked by the UI, then we propagate the hit test to the main game
@@ -56,7 +56,6 @@ window.MouseButtonPressed += (_, args) =>
 };
 window.MouseButtonReleased += (_, args) =>
 {
-    // ReSharper disable once AccessToModifiedClosure
     if (gameData.CurrentPage?.HitTest(args.X, args.Y, TestType.MouseUp) is false)
     {
         // If not blocked by the UI, then we propagate the hit test to the main game
@@ -65,7 +64,6 @@ window.MouseButtonReleased += (_, args) =>
 };
 window.MouseMoved += (_, args) =>
 {
-    // ReSharper disable once AccessToModifiedClosure
     if (gameData.CurrentPage?.HitTest(args.X, args.Y, TestType.MouseHover) is false)
     {
         // If not blocked by the UI, then we propagate the hit test to the main game
@@ -81,7 +79,6 @@ void PropagateKeyTest(KeyEventArgs args, TestType type)
     modifiers |= args.Shift ? (int) ModifierFlags.Shift : 0;
     modifiers |= args.System ? (int) ModifierFlags.System : 0;
 
-    // ReSharper disable once AccessToModifiedClosure
     if (gameData.CurrentPage?.KeyboardTest(args.Code, modifiers, type) is false)
     {
         // If not blocked by the UI, then we propagate the keyboard test to the main game
@@ -95,7 +92,7 @@ window.TextEntered += (_, args) => gameData.CurrentPage?.TextTest(args.Unicode);
 
 AppDomain.CurrentDomain.UnhandledException += (sender, exceptionEventArgs) =>
 {
-    Console.WriteLine("Critical game error!  " + exceptionEventArgs.ExceptionObject);
+    Console.WriteLine($"Critical game error in module {sender} " + exceptionEventArgs.ExceptionObject);
 };
 
 var connections = new Connections(gameData);
@@ -103,12 +100,12 @@ var preConnections = new List<PreConnectData>();
 
 // Dirt background rect used on many pages
 var dirtBackgroundRect = new TextureRect(new Texture(@"Resources/Brand/dirt_background.png") { Repeated = true },
-    Control.BoundZero,
-    Control.BoundZero,
+    Control.BoundsZero,
+    Control.BoundsZero,
     () => (int) window.GetView().Size.X,
     () => (int) window.GetView().Size.Y)
 {
-    SubRect = new Bounds(Control.BoundZero, Control.BoundZero, () => (int) window.GetView().Size.X / 2, () => (int) window.GetView().Size.Y / 2)
+    SubRect = new Bounds(Control.BoundsZero, Control.BoundsZero, () => (int) window.GetView().Size.X / 2, () => (int) window.GetView().Size.Y / 2)
 };
 
 // Game window icon
@@ -217,10 +214,10 @@ var optionsGrid = new Grid(1, 6, () => (int) (window.GetView().Size.X / 4), () =
 {
     Children =
     {
-        [0, 0] = new Button("Camera: Follow player", Control.BoundZero, Control.BoundZero, Control.BoundZero, Control.BoundZero),
-        [0, 1] = new Button("Framerate: 60FPS", Control.BoundZero, Control.BoundZero, Control.BoundZero, Control.BoundZero),
-        [0, 2] = new Button("Sound: 75%", Control.BoundZero, Control.BoundZero, Control.BoundZero, Control.BoundZero),
-        [0, 3] = new Button("Music: 75%", Control.BoundZero, Control.BoundZero, Control.BoundZero, Control.BoundZero),
+        [0, 0] = new Button("Camera: Follow player", Control.BoundsZero, Control.BoundsZero, Control.BoundsZero, Control.BoundsZero),
+        [0, 1] = new Button("Framerate: 60FPS", Control.BoundsZero, Control.BoundsZero, Control.BoundsZero, Control.BoundsZero),
+        [0, 2] = new Button("Sound: 75%", Control.BoundsZero, Control.BoundsZero, Control.BoundsZero, Control.BoundsZero),
+        [0, 3] = new Button("Music: 75%", Control.BoundsZero, Control.BoundsZero, Control.BoundsZero, Control.BoundsZero),
         [0, 5] = optionsBackButton
     },
     RowGap = 8
@@ -237,7 +234,7 @@ var skinEditor = new SkinEditor(gameData.Skin, () => (int) (window.GetView().Cen
     }
 };
 accountsPage.Children.Add(skinEditor);
-var skinButton = new Button("Change skin", Control.BoundZero, Control.BoundZero, Control.BoundZero, Control.BoundZero);
+var skinButton = new Button("Change skin", Control.BoundsZero, Control.BoundsZero, Control.BoundsZero, Control.BoundsZero);
 skinButton.OnMouseUp += (_, _) =>
 {
     var file = Dialog.FileOpen("png,jpg,webp", Directory.GetCurrentDirectory());
@@ -250,7 +247,7 @@ skinButton.OnMouseUp += (_, _) =>
     gameData.Skin = skinDataFromFile;
     skinEditor.Data = skinDataFromFile;
 };
-var accountsBackButton = new Button("Back", Control.BoundZero, Control.BoundZero, Control.BoundZero, Control.BoundZero);
+var accountsBackButton = new Button("Back", Control.BoundsZero, Control.BoundsZero, Control.BoundsZero, Control.BoundsZero);
 accountsBackButton.OnMouseUp += (_, _) => 
 {
     gameData.CurrentPage = mainPage;
@@ -271,8 +268,8 @@ accountsPage.Children.Add(accountsGrid);
 var backgroundTexture = new Texture(@"Resources/Textures/Background/panorama_0.png");
 var fitFactor = 0.0f;
 var backgroundRect = new TextureRect(backgroundTexture,
-    Control.BoundZero,
-    Control.BoundZero,
+    Control.BoundsZero,
+    Control.BoundsZero,
     () => (int) window.GetView().Size.X,
     () => (int) window.GetView().Size.Y)
 {
@@ -286,8 +283,8 @@ mainPage.Children.Add(backgroundRect);
 
 // Game start title intro video player
 var titleVideoPlayer = new VideoPlayer("Resources/Brand/title_video.mkv",
-    Control.BoundZero,
-    Control.BoundZero,
+    Control.BoundsZero,
+    Control.BoundsZero,
     () => (int) window.GetView().Size.X,
     () => (int) window.GetView().Size.Y);
 titleVideoPlayer.Source.Play();
@@ -316,6 +313,16 @@ playButton.OnMouseUp += (_, _) =>
 };
 mainPage.Children.Add(playButton);
 
+gameGuiPage.Children.Add(
+    new Grid(2, 2, Control.BoundsZero, Control.BoundsZero, () => (int) window.GetView().Size.X, () => (int) window.GetView().Size.Y)
+    {
+        Children =
+        {
+            [0, 0] = new Hotbar(Control.BoundsZero, Control.BoundsZero, Control.BoundsZero, Control.BoundsZero),
+        },
+        RowGap = 8
+    }
+);
 var accountButton = new Button("Account & Profile", 
     () => (int) (window.GetView().Center.X - 0.5 * window.GetView().Center.X),
     () => playButton.Bounds.EndY() + 16,
@@ -414,6 +421,7 @@ Task.Run(async () =>
         gameData.CurrentPage = authPage;
     }
 });
+
 
 // Render loop
 while (window.IsOpen)

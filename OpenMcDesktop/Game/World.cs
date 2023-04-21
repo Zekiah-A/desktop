@@ -85,7 +85,7 @@ public class World
         var chunk = Map.GetValueOrDefault(chunkKey);
         return chunk?.Tiles[(x & 63) + ((y & 63) << 6)] ?? gameData.Blocks[gameData.BlockIndex[typeof(Air)]];
     }
-
+    
     public void SetBlock(int x, int y, int blockId)
     {
         var chunkKey = (x >>> 6) + (y >>> 6) * 67108864;
@@ -222,6 +222,12 @@ public class World
         if (Keyboard.IsKeyPressed(Keyboard.Key.D))
         {
             CameraPosition += new Vector2f(0.1f, 0) * (Keyboard.IsKeyPressed(Keyboard.Key.LShift) ? 20 : 1);
+        }
+        if (Mouse.IsButtonPressed(Mouse.Button.Left))
+        {
+            var mousePosition = Mouse.GetPosition();
+            ScreenToWorld(new Vector2f(mousePosition.X, mousePosition.Y));
+            gameData.World?.SetBlock(mousePosition.X, mousePosition.Y, gameData.BlockIndex[typeof(Air)]);
         }
         if (!lpos.Equals(CameraPosition))
         {

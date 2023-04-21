@@ -9,12 +9,18 @@ public abstract class Item : IDecodable
     public virtual Type Places => typeof(Block);
     public virtual Tool Tool => Tool.None;
     public virtual int Speed => 0;
+    public virtual Texture InstanceTexture { get; }
 
     public int Count;
     public string Name;
     public object? SaveData = null;
     public Type SaveDataType = typeof(object);
-    
+
+    protected Item()
+    {
+        InstanceTexture = Texture;
+    }
+
     /// <summary>
     /// Decodes a packet into a specific type of item with some runtime trickery.
     /// </summary>
