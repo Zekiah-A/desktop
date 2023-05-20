@@ -14,6 +14,11 @@ public class Button : Control
     private readonly IntRect pressedCrop;
     private readonly Font font;
 
+    public Button(string text) : this(text, BoundsZero, BoundsZero, BoundsZero, BoundsZero)
+    {
+        
+    }
+
     public Button(string text, Func<int> x, Func<int> y, Func<int> width, Func<int> height) : base(x, y, width, height)
     {
         Text = text;

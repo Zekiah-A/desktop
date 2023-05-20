@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Runtime.InteropServices;
 using OpenMcDesktop;
 using OpenMcDesktop.Gui;
 using OpenMcDesktop.Networking;
@@ -15,6 +16,7 @@ var optionsPage = new Page();
 var accountsPage = new Page();
 var authPage = new Page();
 var gameGuiPage = new Page();
+var serverLoadingPage = new Page();
 
 // Window event listeners and input
 var window = new RenderWindow(new VideoMode(1540, 1080), "OpenMc");
@@ -134,24 +136,49 @@ var serverList = new DisplayList(() => 64, () => 192,
     () => (int) (window.GetView().Size.X - 128),
     () => (int) (window.GetView().Size.X * 0.8));
 
-void UpdateServerList()
+var serverListSemaphore = new SemaphoreSlim(1);
+async Task UpdateServerList()
 {
-    serverList.Children.Clear();
-    preConnections.Clear();
-    
+    await serverListSemaphore.WaitAsync();
+    async Task DisconnectFromServer(PreConnectData connection, DisplayListItem item)
+    {
+        preConnections.Remove(connection);
+        try
+        {
+            serverList.Children.Remove(item);
+            await connection.Socket.StopAsync();
+        }
+        catch (Exception)
+        {
+            // ignored
+        }
+    }
+    var disconnectionTasks = new List<Task>();
+    for (var index = 0; index < preConnections.Count; index++)
+    {
+        disconnectionTasks.Add(DisconnectFromServer(preConnections[index], serverList.Children[index]));
+    }
+    await Task.WhenAll(disconnectionTasks);
+    serverList.SelectedIndex = -1;
+
+    async Task ConnectToKnownServer(string serverIp)
+    {
+        var connectionData = await connections.PreConnect(serverIp);
+        preConnections.Add(connectionData);
+        connectionData.Item.OnMouseUp += async (_, _) => await PlayServer(connectionData);
+        serverList.Children.Add(connectionData.Item);
+    }
+
+    var connectionTasks = new List<Task>();
     foreach (var serverIp in gameData.KnownServers)
     {
-        _ = Task.Run(async () =>
-        {
-            var connectionData = await connections.PreConnect(serverIp);
-            preConnections.Add(connectionData);
-            connectionData.Item.OnMouseUp += async (_, _) => await PlayServer(connectionData);
-            serverList.Children.Add(connectionData.Item);
-        });
+        connectionTasks.Add(ConnectToKnownServer(serverIp));
     }
+    await Task.WhenAll(connectionTasks);
+    serverListSemaphore.Release();
 }
 
-UpdateServerList();
+Task.Run(UpdateServerList);
 var serverDeleteButton = new Button("Delete",
     () => 16,
     () =>  (int) (window.GetView().Size.Y - 0.05 * window.GetView().Size.X - 16), 
@@ -159,9 +186,14 @@ var serverDeleteButton = new Button("Delete",
     () => (int) (0.05 * window.GetView().Size.X));
 serverDeleteButton.OnMouseUp += (_, _) =>
 {
-    gameData.KnownServers.RemoveAt(gameData.KnownServers.Count - 1);
+    if (serverList.SelectedIndex == -1)
+    {
+        return;
+    }
+    
+    gameData.KnownServers.RemoveAt(serverList.SelectedIndex);
     storage.Save(nameof(GameData.KnownServers), gameData.KnownServers);
-    UpdateServerList();
+    Task.Run(UpdateServerList);
 };
 serversPage.Children.Add(serverDeleteButton);
 serversPage.Children.Add(serverList);
@@ -204,6 +236,17 @@ serversPage.Children.Add(serverAddButton);
 
 // Options page UI
 optionsPage.Children.Add(dirtBackgroundRect);
+var optionsSoundSlider = new Slider(7, "Sound: 70%");
+optionsSoundSlider.ValueChanged += (_, _) =>
+{
+    optionsSoundSlider.Text = $"Sound: {(int) ((float) optionsSoundSlider.Value / optionsSoundSlider.MaxValue * 100)}%";
+};
+var optionsMusicSlider = new Slider(7, "Music: 70%");
+optionsMusicSlider.ValueChanged += (_, _) =>
+{
+    optionsMusicSlider.Text = $"Music: {(int) ((float) optionsMusicSlider.Value / optionsMusicSlider.MaxValue * 100)}%";
+};
+
 var optionsBackButton = new Button("Back", () => 0, () => 0, () => 0, () => 0);
 optionsBackButton.OnMouseUp += (_, _) =>
 {
@@ -214,10 +257,10 @@ var optionsGrid = new Grid(1, 6, () => (int) (window.GetView().Size.X / 4), () =
 {
     Children =
     {
-        [0, 0] = new Button("Camera: Follow player", Control.BoundsZero, Control.BoundsZero, Control.BoundsZero, Control.BoundsZero),
-        [0, 1] = new Button("Framerate: 60FPS", Control.BoundsZero, Control.BoundsZero, Control.BoundsZero, Control.BoundsZero),
-        [0, 2] = new Button("Sound: 75%", Control.BoundsZero, Control.BoundsZero, Control.BoundsZero, Control.BoundsZero),
-        [0, 3] = new Button("Music: 75%", Control.BoundsZero, Control.BoundsZero, Control.BoundsZero, Control.BoundsZero),
+        [0, 0] = new Button("Camera: Follow player"),
+        [0, 1] = new Button("Framerate: 60FPS"),
+        [0, 2] = optionsSoundSlider,
+        [0, 3] = optionsMusicSlider,
         [0, 5] = optionsBackButton
     },
     RowGap = 8
@@ -234,7 +277,7 @@ var skinEditor = new SkinEditor(gameData.Skin, () => (int) (window.GetView().Cen
     }
 };
 accountsPage.Children.Add(skinEditor);
-var skinButton = new Button("Change skin", Control.BoundsZero, Control.BoundsZero, Control.BoundsZero, Control.BoundsZero);
+var skinButton = new Button("Change skin");
 skinButton.OnMouseUp += (_, _) =>
 {
     var file = Dialog.FileOpen("png,jpg,webp", Directory.GetCurrentDirectory());
@@ -247,7 +290,7 @@ skinButton.OnMouseUp += (_, _) =>
     gameData.Skin = skinDataFromFile;
     skinEditor.Data = skinDataFromFile;
 };
-var accountsBackButton = new Button("Back", Control.BoundsZero, Control.BoundsZero, Control.BoundsZero, Control.BoundsZero);
+var accountsBackButton = new Button("Back");
 accountsBackButton.OnMouseUp += (_, _) => 
 {
     gameData.CurrentPage = mainPage;
@@ -266,33 +309,33 @@ accountsPage.Children.Add(accountsGrid);
 
 // Title screen fallback if title screen video is unable to play, and appears when the video has finished
 var backgroundTexture = new Texture(@"Resources/Textures/Background/panorama_0.png");
-var fitFactor = 0.0f;
 var backgroundRect = new TextureRect(backgroundTexture,
     Control.BoundsZero,
     Control.BoundsZero,
     () => (int) window.GetView().Size.X,
     () => (int) window.GetView().Size.Y)
 {
-    SubRect = new Bounds(() => 0, () => 0, () =>
-    {
-        fitFactor = window.GetView().Size.X / backgroundTexture.Size.X;
-        return (int) backgroundTexture.Size.X;
-    }, () => (int) Math.Min(window.GetView().Size.Y, backgroundTexture.Size.Y / fitFactor))
+    SubRect = new Bounds(Control.BoundsZero, Control.BoundsZero,
+        () => (int) window.GetView().Size.X,
+        () => (int) window.GetView().Size.Y)
 };
 mainPage.Children.Add(backgroundRect);
 
 // Game start title intro video player
-var titleVideoPlayer = new VideoPlayer("Resources/Brand/title_video.mkv",
-    Control.BoundsZero,
-    Control.BoundsZero,
-    () => (int) window.GetView().Size.X,
-    () => (int) window.GetView().Size.Y);
-titleVideoPlayer.Source.Play();
-titleVideoPlayer.Source.EndOfFileReached += (_, _) =>
+if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
 {
-    mainPage.Children.Remove(titleVideoPlayer);
-};
-mainPage.Children.Add(titleVideoPlayer);
+    var titleVideoPlayer = new VideoPlayer("Resources/Brand/title_video.mkv",
+        Control.BoundsZero,
+        Control.BoundsZero,
+        () => (int) window.GetView().Size.X,
+        () => (int) window.GetView().Size.Y);
+    titleVideoPlayer.Source.Play();
+    titleVideoPlayer.Source.EndOfFileReached += (_, _) =>
+    {
+        mainPage.Children.Remove(titleVideoPlayer);
+    };
+    mainPage.Children.Add(titleVideoPlayer);
+}
 
 int LogoWidth() => (int) (window.GetView().Size.X * 0.57f);
 int LogoHeight() => (int) (window.GetView().Size.X * 0.2f);
@@ -355,6 +398,21 @@ quitButton.OnMouseUp += (_, _) =>
     Environment.Exit(0);
 };
 mainPage.Children.Add(quitButton);
+
+// Server connecting loading screen
+serverLoadingPage.Children.Add(dirtBackgroundRect);
+var serverLoadingLabel = new Label("Connecting to server...", 24, Color.White);
+serverLoadingLabel.Bounds.StartX = () => (int) (window.GetView().Size.X / 2);
+serverLoadingLabel.Bounds.StartY = () => (int) (window.GetView().Size.Y / 2);
+serverLoadingPage.Children.Add(serverLoadingLabel);
+connections.ServerConnectionStarted = () =>
+{
+    gameData.CurrentPage = serverLoadingPage;
+};
+connections.ServerConnectionFinished = () =>
+{
+    gameData.CurrentPage = gameGuiPage;
+};
 
 // Central server auth key page
 authPage.Children.Add(dirtBackgroundRect);
@@ -421,7 +479,6 @@ Task.Run(async () =>
         gameData.CurrentPage = authPage;
     }
 });
-
 
 // Render loop
 while (window.IsOpen)

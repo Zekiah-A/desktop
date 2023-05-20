@@ -6,4 +6,5 @@ namespace OpenMcDesktop;
 public static class StaticData
 {
     public static GameData GameData { get; set; }
+    public static ushort ProtocolVersion = 1;
 }

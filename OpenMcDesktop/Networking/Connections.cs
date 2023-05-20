@@ -2,8 +2,6 @@ using System.Net.WebSockets;
 using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 using OpenMcDesktop.Gui;
@@ -23,6 +21,8 @@ namespace OpenMcDesktop.Networking;
 /// </summary>
 public class Connections
 {
+	public Action ServerConnectionFinished;
+	public Action ServerConnectionStarted;
 	public delegate void PacketHandler(ref ReadablePacket data);
 	public readonly Dictionary<int, PacketHandler> PacketHandlers;
 	private readonly GameData gameData;
@@ -233,6 +233,7 @@ public class Connections
 	    gameData.CurrentServer.Logger += message => Console.WriteLine("Socket:\n" + message);
 	    gameData.CurrentServer.MessageReceived += OnMessageReceived;
 	    gameData.CurrentServer.ServerDisconnected += OnSocketDisconnected;
+	    gameData.CurrentServer.ServerConnected += OnSocketConnected;
 	    
 	    // Apply data sent to us by server from packs to current client
 	    var blockDefinitions = serverData.DataPacks[0].Split("\n");
@@ -248,14 +249,22 @@ public class Connections
 	    
 	    // Authenticate client fully with challenge & accept messages
 	    var signature = ProcessChallenge(serverData.Challenge);
-	    var packet = new byte[signature.Length + gameData.Skin.Length];
-	    
+	    var packet = new byte[sizeof(short) + gameData.Skin.Length + signature.Length];
+
+	    packet[0] = (byte) (StaticData.ProtocolVersion >> 8);
+	    packet[1] = (byte) StaticData.ProtocolVersion;
 	    gameData.Skin.CopyTo(packet, 0);
-	    signature.CopyTo(packet, gameData.Skin.Length);
+	    signature.CopyTo(packet, sizeof(short) + gameData.Skin.Length);
 	    await gameData.CurrentServer.SendAsync(packet);
-	    
+
+	    void OnSocketConnected(object? sender, EventArgs args)
+	    {
+		    ServerConnectionStarted.Invoke();
+	    }
+
 	    void OnMessageReceived(object? sender, MessageReceivedEventArgs args)
 	    {
+		    ServerConnectionFinished.Invoke();
 		    Console.WriteLine("Packet: ");
 		    foreach (var @byte in args.Data) Console.Write(@byte + " ");
 		    Console.WriteLine("");

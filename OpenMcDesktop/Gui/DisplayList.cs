@@ -10,6 +10,7 @@ public class DisplayList : Control
     public int ItemHeight = 128;
     public int ItemSpacing = 16;
     public int Scroll = 0;
+    public int SelectedIndex = -1;
     
     public DisplayList(Func<int> x, Func<int> y, Func<int> width, Func<int> height) : base(x, y, width, height)
     {
@@ -22,6 +23,7 @@ public class DisplayList : Control
         {
             if (Children[i].HitTest(x, y, type))
             {
+                SelectedIndex = i;
                 return true;
             }
         }
