@@ -68,30 +68,22 @@ public class Connections
     /// <summary>
     /// ServerList MOTD and server info initial query 
     /// </summary>
-    public async Task<PreConnectData> PreConnect(string ip)
+    public async Task<PreConnectData> PreConnect(string ip, ServerListItem targetItem)
     {
 	    var socket = new WatsonWsClient(new Uri($"{GetWebsocketUri(ip)}/{gameData.Name}" +
             $@"/{NetworkingHelpers.EncodeUriComponent(gameData.PublicKey)}" +
             $@"/{NetworkingHelpers.EncodeUriComponent(gameData.AuthSignature)}"));
+	    
 	    var name = ip;
 	    var motd = "Failed to connect";
-	    var image = new Image(@"Resources/Brand/grass_icon.png");
 	    var imageTask = new TaskCompletionSource<Image>();
 	    var descriptionColour = new Color(255, 255, 255, 200);
-	    var challenge = new byte[] { };
-	    var packs = new string[] { };
+	    var challenge = Array.Empty<byte>();
+	    var packs = Array.Empty<string>();
 	    var timeout = new Timer(_ =>
 	    {
-		    if (socket.Connected)
-		    {
-			    socket.Stop();
-			    motd = "Server refused connection";
-		    }
-		    else
-		    {
-			    descriptionColour = new Color(255, 0, 0, 200);
-			    motd = "Failed to connect (server timeout)";
-		    }
+		    descriptionColour = new Color(255, 0, 0, 200);
+		    motd = "Failed to connect (server timeout)";
 		    imageTask.SetCanceled();
 	    }, null, 5000, Timeout.Infinite);
 	    
@@ -126,7 +118,6 @@ public class Connections
 				    imageTask.SetCanceled();
 			    }
 		    });
-
 	    }
 
 	    void OnSocketDisconnected(object? sender, EventArgs args)
@@ -143,21 +134,20 @@ public class Connections
 	    await socket.StartAsync();
 	    try
 	    {
-		    image = await imageTask.Task;
+		    targetItem.Texture = new Texture(await imageTask.Task);
 	    }
-	    catch (Exception)
-	    {
-		    // Image will use default value
-	    }
-	    
+	    catch (TaskCanceledException) { /* Image will use default value */ }
+
 	    socket.ServerConnected -= OnSocketConnected;
 	    socket.MessageReceived -= OnMessageReceived;
 	    socket.ServerDisconnected -= OnSocketDisconnected;
-
-	    return new PreConnectData(socket, packs, challenge, new ServerListItem(new Texture(image), name, motd, ip)
-	    {
-		    DescriptionColour = descriptionColour
-	    });
+	    
+	    targetItem.WebviewWindowName = name;
+	    targetItem.Name = name;
+	    targetItem.Description = motd;
+	    targetItem.DescriptionColour = descriptionColour;
+	    targetItem.WebviewUri = ip;
+	    return new PreConnectData(socket, packs, challenge);
     }
 
     /// <summary>

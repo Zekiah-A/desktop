@@ -7,19 +7,24 @@ namespace OpenMcDesktop.Gui;
 
 public class ServerListItem : DisplayListItem
 {
+    public string WebviewWindowName;
+    public string WebviewUri;
+
     private Button openPageButton;
-    
+
     public ServerListItem(Texture texture, string name, string description, string pageUri) : base(texture, name, description)
     {
         openPageButton = new Button("?", () => Bounds.EndX() - 64, () => Bounds.StartY(), () => 64, () => 64);
+        WebviewWindowName = name;
+        WebviewUri = pageUri;
 
         openPageButton.OnMouseUp += (_, _) =>
         {
             using var webview = new Webview();
-            webview.SetTitle($"{name} - Server statistics")             
+            webview.SetTitle($"{WebviewWindowName} - Server statistics")             
                 .SetSize(1024, 768, WebviewHint.None)
                 .SetSize(800, 600, WebviewHint.Min)
-                .Navigate(new UrlContent("https://" + pageUri + ":27277/"))
+                .Navigate(new UrlContent("https://" + WebviewUri + ":27277/"))
                 .Run();
         };
     }

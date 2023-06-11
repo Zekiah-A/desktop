@@ -10,4 +10,4 @@ namespace OpenMcDesktop.Networking;
 /// <param name="DataPacks">Custom game data sent from the server to the client and applied at runtime, including [blockindex, itemindex, entityindex, ...JS mod URLs]</param>
 /// <param name="Challenge">Used to verify the authenticity of the client without exposing their private key.</param>
 /// <param name="Item">A display list item representing the icon, MOTD and name of this server instance</param>
-public record struct PreConnectData(WatsonWsClient Socket, string[] DataPacks, byte[] Challenge, ServerListItem Item);
+public record struct PreConnectData(WatsonWsClient Socket, string[] DataPacks, byte[] Challenge);

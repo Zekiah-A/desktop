@@ -136,37 +136,43 @@ var serverList = new DisplayList(() => 64, () => 192,
     () => (int) (window.GetView().Size.X - 128),
     () => (int) (window.GetView().Size.X * 0.8));
 
-var serverListSemaphore = new SemaphoreSlim(1);
+var serverListUpdating = false;
 async Task UpdateServerList()
 {
-    await serverListSemaphore.WaitAsync();
-    async Task DisconnectFromServer(PreConnectData connection, DisplayListItem item)
+    if (serverListUpdating)
     {
-        preConnections.Remove(connection);
-        try
-        {
-            serverList.Children.Remove(item);
-            await connection.Socket.StopAsync();
-        }
-        catch (Exception)
-        {
-            // ignored
-        }
+        return;
     }
+    serverListUpdating = true;
+
     var disconnectionTasks = new List<Task>();
-    for (var index = 0; index < preConnections.Count; index++)
+    foreach (var connection in preConnections)
     {
-        disconnectionTasks.Add(DisconnectFromServer(preConnections[index], serverList.Children[index]));
+        disconnectionTasks.Add(Task.Run(async () =>
+        {
+            try
+            {
+                await connection.Socket.StopAsync();
+            }
+            catch (Exception) { /* Ignore */ }
+        }));
     }
     await Task.WhenAll(disconnectionTasks);
     serverList.SelectedIndex = -1;
+    serverList.Children.Clear();
+    preConnections.Clear();
 
     async Task ConnectToKnownServer(string serverIp)
     {
-        var connectionData = await connections.PreConnect(serverIp);
+        var listItem = new ServerListItem(new Texture(@"Resources/Brand/grass_icon.png"), serverIp, "Connecting...", serverIp);
+        serverList.Children.Add(listItem);
+        
+        var connectionData = await connections.PreConnect(serverIp, listItem);
         preConnections.Add(connectionData);
-        connectionData.Item.OnMouseUp += async (_, _) => await PlayServer(connectionData);
-        serverList.Children.Add(connectionData.Item);
+        listItem.OnMouseUp += async (_, _) =>
+        {
+            await PlayServer(connectionData);
+        };
     }
 
     var connectionTasks = new List<Task>();
@@ -175,7 +181,7 @@ async Task UpdateServerList()
         connectionTasks.Add(ConnectToKnownServer(serverIp));
     }
     await Task.WhenAll(connectionTasks);
-    serverListSemaphore.Release();
+    serverListUpdating = false;
 }
 
 Task.Run(UpdateServerList);
