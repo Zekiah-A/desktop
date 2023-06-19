@@ -63,7 +63,7 @@ public class Grid : Control
         return false;
     }
 
-    public override void Render(RenderWindow window, View view)
+    public override void Render(RenderWindow window, View view, float deltaTime)
     {
         var columnWidth = (Bounds.EndX() - Bounds.StartX()) / Columns;
         var rowHeight = (Bounds.EndY() - Bounds.StartY()) / Rows;
@@ -83,7 +83,7 @@ public class Grid : Control
                 Children[column, row]!.Bounds.StartY = () => Bounds.StartY() + (rowHeight) * childRow + RowGap / 2;
                 Children[column, row]!.Bounds.EndX = () => Bounds.StartX() + (columnWidth) * (childColumn + 1) - ColumnGap / 2;
                 Children[column, row]!.Bounds.EndY = () => Bounds.StartY() + (rowHeight) * (childRow + 1) - RowGap / 2;
-                Children[column, row]!.Render(window, view);
+                Children[column, row]!.Render(window, view, deltaTime);
             }
         }
     }

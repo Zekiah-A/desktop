@@ -1,27 +1,36 @@
 ﻿using System.Net;
 using System.Runtime.InteropServices;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using OpenMcDesktop;
 using OpenMcDesktop.Gui;
 using OpenMcDesktop.Networking;
 using NativeFileDialogSharp;
 using OpenMcDesktop.Game;
 using OpenMcDesktop.Mods;
+using Serilog;
 using SFML.Graphics;
+using SFML.System;
 using SFML.Window;
 
 var mainPage = new Page();
-var gamePage = new Page();
 var serversPage = new Page();
 var optionsPage = new Page();
 var accountsPage = new Page();
 var authPage = new Page();
-var gameGuiPage = new Page();
-var serverLoadingPage = new Page();
 
 // Window event listeners and input
-var window = new RenderWindow(new VideoMode(1540, 1080), "OpenMc");
-var view = new View(new FloatRect(0, 0, window.Size.X, window.Size.Y));
-var storage = new Storage(Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "OpenMcDesktop"));
+var storagePath = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "OpenMcDesktop");
+var window = new RenderWindow(new VideoMode(1540, 1080), "open-mc");
+var dirtBackgroundRect = new TextureRect(new Texture(@"Resources/Brand/dirt_background.png") { Repeated = true },
+    Control.BoundsZero,
+    Control.BoundsZero,
+    () => (int) window.GetView().Size.X,
+    () => (int) window.GetView().Size.Y)
+{
+    SubRect = new Bounds(Control.BoundsZero, Control.BoundsZero, () => (int) window.GetView().Size.X / 2, () => (int) window.GetView().Size.Y / 2)
+};
+var storage = new Storage(storagePath);
 var gameData = new GameData
 {
     Name = storage.Get<string>(nameof(GameData.Name)) ?? "",
@@ -31,9 +40,28 @@ var gameData = new GameData
     KnownServers = storage.Get<List<string>>(nameof(GameData.KnownServers)) ?? new List<string> { "localhost" },
     Skin = SkinHelpers.SkinDataFromFile("Resources/Textures/alex.png"),
     Storage = storage,
-    View = view
+    Window = window,
+    WorldLayer = new View(new FloatRect(0, 0, window.Size.X, window.Size.Y)),
+    BackgroundLayer = new View(new FloatRect(0, 0, window.Size.X, window.Size.Y)),
+    UiLayer = new View(new FloatRect(0, 0, window.Size.X, window.Size.Y)),
+    DirtBackgroundRect = dirtBackgroundRect,
+    Logger = new LoggerConfiguration()
+        .WriteTo.Console()
+        .WriteTo.File(Path.Join(storagePath, "Log"),
+            rollingInterval: RollingInterval.Day,
+            rollOnFileSizeLimit: true)
+        .CreateLogger(),
+    Host = Host.CreateDefaultBuilder(args)
+        .ConfigureServices(services =>
+        {
+            services.AddLocalization(options =>
+            {
+                options.ResourcesPath = Path.Join("Resources");
+            });
+        })
+        .Build(),
+    ModLoader = new ModLoader()
 };
-gameData.ModLoader = new ModLoader(gameData);
 StaticData.GameData = gameData;
 
 // TODO: Make configurable, perhaps a setter in GameData
@@ -45,27 +73,38 @@ window.Closed += (_, _) =>
 };
 window.Resized += (_, args) =>
 {
-    view = new View(new FloatRect(0, 0, args.Width, args.Height));
-    window.SetView(view);
+    gameData.WorldLayer = new View(new FloatRect(0, 0, args.Width, args.Height));
+    gameData.UiLayer = new View(new FloatRect(0, 0, args.Width, args.Height));
 };
 window.MouseButtonPressed += (_, args) =>
 {
-    if (gameData.CurrentPage?.HitTest(args.X, args.Y, TestType.MouseDown) is false)
+    if (window.HasFocus())
     {
-        // If not blocked by the UI, then we propagate the hit test to the main game
-        Keybinds.MouseDown(args.X, args.Y, TestType.MouseDown);
+        if (gameData.CurrentPage?.HitTest(args.X, args.Y, TestType.MouseDown) is false)
+        {
+            // If not blocked by the UI, then we propagate the hit test to the main game
+            Keybinds.MouseDown(args.X, args.Y, TestType.MouseDown);
+        }
     }
 };
 window.MouseButtonReleased += (_, args) =>
 {
-    if (gameData.CurrentPage?.HitTest(args.X, args.Y, TestType.MouseUp) is false)
+    if (window.HasFocus())
     {
-        // If not blocked by the UI, then we propagate the hit test to the main game
-        Keybinds.MouseUp(args.X, args.Y, TestType.MouseUp);
+        if (gameData.CurrentPage?.HitTest(args.X, args.Y, TestType.MouseUp) is false)
+        {
+            // If not blocked by the UI, then we propagate the hit test to the main game
+            Keybinds.MouseUp(args.X, args.Y, TestType.MouseUp);
+        }
     }
 };
 window.MouseMoved += (_, args) =>
 {
+    if (!window.HasFocus())
+    {
+        return;
+    }
+    
     if (gameData.CurrentPage?.HitTest(args.X, args.Y, TestType.MouseHover) is false)
     {
         // If not blocked by the UI, then we propagate the hit test to the main game
@@ -88,27 +127,38 @@ void PropagateKeyTest(KeyEventArgs args, TestType type)
     }
 }
 
-window.KeyPressed += (_, args) => PropagateKeyTest(args, TestType.KeyDown);
-window.KeyReleased += (_, args) => PropagateKeyTest(args, TestType.KeyUp);
-window.TextEntered += (_, args) => gameData.CurrentPage?.TextTest(args.Unicode);
+window.KeyPressed += (_, args) =>
+{
+    if (window.HasFocus())
+    {
+        PropagateKeyTest(args, TestType.KeyDown);
+    }
+};
+window.KeyReleased += (_, args) =>
+{
+    if (window.HasFocus())
+    {
+        PropagateKeyTest(args, TestType.KeyUp);
+    }
+};
+window.TextEntered += (_, args) =>
+{
+    if (window.HasFocus())
+    {
+        gameData.CurrentPage?.TextTest(args.Unicode);
+    }
+};
 
 AppDomain.CurrentDomain.UnhandledException += (sender, exceptionEventArgs) =>
 {
-    Console.WriteLine($"Critical game error in module {sender} " + exceptionEventArgs.ExceptionObject);
+    gameData.Logger.Fatal($"Critical game error in module {sender} " + exceptionEventArgs.ExceptionObject);
 };
 
 var connections = new Connections(gameData);
 var preConnections = new List<PreConnectData>();
 
-// Dirt background rect used on many pages
-var dirtBackgroundRect = new TextureRect(new Texture(@"Resources/Brand/dirt_background.png") { Repeated = true },
-    Control.BoundsZero,
-    Control.BoundsZero,
-    () => (int) window.GetView().Size.X,
-    () => (int) window.GetView().Size.Y)
-{
-    SubRect = new Bounds(Control.BoundsZero, Control.BoundsZero, () => (int) window.GetView().Size.X / 2, () => (int) window.GetView().Size.Y / 2)
-};
+
+gameData.DirtBackgroundRect = dirtBackgroundRect;
 
 // Game window icon
 var icon = new Image("Resources/Brand/grass_icon.png");
@@ -118,10 +168,13 @@ async Task PlayServer(PreConnectData serverData)
 {
     foreach (var data in preConnections.Where(data => data.Socket != serverData.Socket))
     {
-        await data.Socket.StopAsync();
+        try
+        {
+            await data.Socket.StopAsync();
+        }
+        catch (Exception) { /* Ignore */ }
     }
     
-    gameData.CurrentPage = gamePage;
     await connections.Connect(serverData);
 }
 
@@ -169,9 +222,19 @@ async Task UpdateServerList()
         
         var connectionData = await connections.PreConnect(serverIp, listItem);
         preConnections.Add(connectionData);
-        listItem.OnMouseUp += async (_, _) =>
+        listItem.OnDoubleClick += async (_, _) =>
         {
             await PlayServer(connectionData);
+        };
+        listItem.OnMouseUp += (_, _) =>
+        {
+            if (serverList.SelectedIndex != -1)
+            {
+                serverList.Children[serverList.SelectedIndex].Selected = false;
+            }
+
+            serverList.SelectedIndex = serverList.Children.IndexOf(listItem);
+            listItem.Selected = true;
         };
     }
 
@@ -199,6 +262,7 @@ serverDeleteButton.OnMouseUp += (_, _) =>
     
     gameData.KnownServers.RemoveAt(serverList.SelectedIndex);
     storage.Save(nameof(GameData.KnownServers), gameData.KnownServers);
+    serverList.SelectedIndex = -1;
     Task.Run(UpdateServerList);
 };
 serversPage.Children.Add(serverDeleteButton);
@@ -362,16 +426,6 @@ playButton.OnMouseUp += (_, _) =>
 };
 mainPage.Children.Add(playButton);
 
-gameGuiPage.Children.Add(
-    new Grid(2, 2, Control.BoundsZero, Control.BoundsZero, () => (int) window.GetView().Size.X, () => (int) window.GetView().Size.Y)
-    {
-        Children =
-        {
-            [0, 0] = new Hotbar(Control.BoundsZero, Control.BoundsZero, Control.BoundsZero, Control.BoundsZero),
-        },
-        RowGap = 8
-    }
-);
 var accountButton = new Button("Account & Profile", 
     () => (int) (window.GetView().Center.X - 0.5 * window.GetView().Center.X),
     () => playButton.Bounds.EndY() + 16,
@@ -405,20 +459,13 @@ quitButton.OnMouseUp += (_, _) =>
 };
 mainPage.Children.Add(quitButton);
 
-// Server connecting loading screen
-serverLoadingPage.Children.Add(dirtBackgroundRect);
-var serverLoadingLabel = new Label("Connecting to server...", 24, Color.White);
-serverLoadingLabel.Bounds.StartX = () => (int) (window.GetView().Size.X / 2);
-serverLoadingLabel.Bounds.StartY = () => (int) (window.GetView().Size.Y / 2);
-serverLoadingPage.Children.Add(serverLoadingLabel);
-connections.ServerConnectionStarted = () =>
-{
-    gameData.CurrentPage = serverLoadingPage;
-};
-connections.ServerConnectionFinished = () =>
-{
-    gameData.CurrentPage = gameGuiPage;
-};
+var disclaimerLabel = new Label(
+    "Open source project. Not affiliated with Mojang Studios",
+    24,
+    Color.White,
+    () => 8,
+    () => (int) window.GetView().Size.Y - 32);
+mainPage.Children.Add(disclaimerLabel);
 
 // Central server auth key page
 authPage.Children.Add(dirtBackgroundRect);
@@ -484,15 +531,36 @@ Task.Run(async () =>
     {
         gameData.CurrentPage = authPage;
     }
+    
+    await gameData.Host.RunAsync();
+});
+
+// Update loop
+Task.Run(async () =>
+{
+    var updateClock = new Clock();
+
+    while (true)
+    {
+        var deltaTime = updateClock.ElapsedTime.AsSeconds();
+        updateClock.Restart();
+
+        gameData.World?.Update(deltaTime);
+        await Task.Delay(16, CancellationToken.None);
+    }
 });
 
 // Render loop
+var renderClock = new Clock();
 while (window.IsOpen)
 {
+    var deltaTime = renderClock.ElapsedTime.AsSeconds();
+    renderClock.Restart();
+    
     window.DispatchEvents();
-    window.Clear(Color.Black);
-    gameData.CurrentPage?.Render(window, view);
-    gameData.World?.Render(window, view);
-    window.SetView(view);
+    window.SetView(gameData.WorldLayer);
+    gameData.World?.Render(window, gameData.WorldLayer, gameData.BackgroundLayer, deltaTime);
+    window.SetView(gameData.UiLayer);
+    gameData.CurrentPage?.Render(window, gameData.UiLayer, deltaTime);
     window.Display();
 }

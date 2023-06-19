@@ -13,6 +13,9 @@
         <PackageReference Include="Microsoft.ClearScript.osx-x64" Version="7.4.0" />
         <PackageReference Include="Microsoft.ClearScript.V8" Version="7.4.0" />
         <PackageReference Include="NativeFileDialogSharp" Version="0.6.0-alpha" />
+        <PackageReference Include="Serilog" Version="3.0.0-dev-02028" />
+        <PackageReference Include="Serilog.Sinks.Console" Version="4.1.1-dev-00910" />
+        <PackageReference Include="Serilog.Sinks.File" Version="5.0.1-dev-00947" />
         <PackageReference Include="SFML.Net" Version="2.5.0" />
         <PackageReference Include="SharpWebview" Version="0.7.0" />
         <PackageReference Include="SharpZipLib" Version="1.4.2" />
@@ -32,5 +35,9 @@
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
             <TargetPath>%(RecursiveDir)%(Filename)%(Extension)</TargetPath>
         </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Resources\Locale\" />
     </ItemGroup>
 </Project>

@@ -45,13 +45,13 @@ public class Chunk
 		var entityId = data.ReadShort();
 		while (entityId != 0)
 		{
-			if (Activator.CreateInstance(gameData.EntityDefinitions[entityId]) is not Entity entity)
+			if (gameData.Entities[entityId].CopyNew() is not { } entity)
 			{
 				continue;
 			}
 
-			entity.X = data.ReadShort() / 1024 + (x << 6);
-			entity.Y = data.ReadShort() / 1024 + (y << 6);
+			entity.X = data.ReadShort() / 1024.0f + (x << 6);
+			entity.Y = data.ReadShort() / 1024.0f + (y << 6);
 			entity.Id = data.ReadUInt() + data.ReadUShort() * 4294967296;
 			entity.Name = data.ReadString();
 			entity.State = data.ReadShort();
@@ -151,7 +151,7 @@ public class Chunk
 			var block = Tiles[i];
 			if (block is null)
 			{
-				var airIndex = gameData.BlockIndex[typeof(Air)];
+				var airIndex = gameData.BlockIndex[nameof(Air)];
 				Tiles[i] = gameData.Blocks[airIndex];
 				return;
 			}
@@ -172,7 +172,7 @@ public class Chunk
 	{
 		foreach (var blockType in Palette)
 		{
-			if (blockType == gameData.Blocks[gameData.BlockIndex[typeof(Air)]])
+			if (blockType == gameData.Blocks[gameData.BlockIndex[nameof(Air)]])
 			{
 				continue;
 			}
@@ -210,7 +210,7 @@ public class Chunk
 	}
 	
 	// TODO: Implement our own sprite batching algorithm using vertex array to try and optimise drawing performance to the maximum
-	public void Render(RenderWindow window, RenderStates states)
+	public void Render(RenderWindow window, View worldLayer, RenderStates states)
 	{
 		if (gameData.GenerateChunkVBOs && generatedVBOs.Count != 0)
 		{
@@ -235,7 +235,7 @@ public class Chunk
 					}
 				
 					blockSprite.Texture =  block.InstanceTexture;
-					blockSprite.Position = new Vector2f(x * World.BlockTextureWidth, (63 - y) * World.BlockTextureHeight);
+					blockSprite.Position = new Vector2f(X + x * World.BlockTextureWidth, Y + (63 - y) * World.BlockTextureHeight);
 					blockSprite.Draw(window, states);
 				}
 			}

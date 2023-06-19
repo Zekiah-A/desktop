@@ -27,7 +27,7 @@ public class SkinDisplay : Control
         Skin = SkinHelpers.DecodeSkin(data);
     }
 
-    public override void Render(RenderWindow window, View view)
+    public override void Render(RenderWindow window, View view, float deltaTime)
     {
         const float virtualWidth = 16.0f;
         const float virtualHeight = 32.0f;

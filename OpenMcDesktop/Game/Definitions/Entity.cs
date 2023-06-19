@@ -18,7 +18,7 @@ public abstract class Entity
 	public Chunk? Chunk = null;
 	public int Health = 0;
 	public int BlocksWalked = 0;
-	public object? SaveData = null;
+	public object? SaveData = null; // TODO: Make dictionary, we can't keep using types and objects as it is too static
 	public Type SaveDataType = typeof(object);
 
 	public double X = 0;
@@ -29,5 +29,17 @@ public abstract class Entity
 	public virtual void Render(RenderWindow window)
 	{
 
+	}
+	
+	/// <summary>
+	/// Deep copies an entity, usually from a template instance such as those provided in the entity definitions to apply
+	/// specific modifications, such as a certain health or effect, etc.
+	/// </summary>
+	/// <returns>Newly created deep clone of this entity instance</returns>
+	public Entity CopyNew()
+	{
+		var newEntity = (Entity) MemberwiseClone();
+		// TODO: Perhaps ditch inheritance so this can be implemented properly
+		return newEntity;
 	}
 }

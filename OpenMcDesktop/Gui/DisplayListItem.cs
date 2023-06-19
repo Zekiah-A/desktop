@@ -5,6 +5,7 @@ namespace OpenMcDesktop.Gui;
 
 public class DisplayListItem : Control
 {
+    public bool Selected { get; set; }
     public Texture Texture { get; set; }
     public string Name { get; set; }
     public string Description { get; set; }
@@ -19,9 +20,9 @@ public class DisplayListItem : Control
         Description = description;
     }
     
-    public override void Render(RenderWindow window, View view)
+    public override void Render(RenderWindow window, View view, float deltaTime)
     {
-        if (State == State.Hover)
+        if (State == State.Hover || Selected)
         {
             var border = new RectangleShape
             {

@@ -32,7 +32,7 @@ public abstract class Item : IDecodable
         var count = data.ReadByte();
         var itemId = data.ReadUShort();
 
-        var target = (Item) Activator.CreateInstance(StaticData.GameData.ItemDefinitions[itemId])!;
+        var target = StaticData.GameData.Items[itemId].CopyNew();
         target.Count = count;
         target.Name = data.ReadString();
         if (target.SaveData is not null)
@@ -41,5 +41,17 @@ public abstract class Item : IDecodable
         }
         
         return target;
+    }
+    
+    /// <summary>
+    /// Deep copies an item, usually from a template instance such as those provided in the item definitions to apply
+    /// specific modifications, such as a certain nametag, etc.
+    /// </summary>
+    /// <returns>Newly created deep clone of this item instance</returns>
+    public Item CopyNew()
+    {
+        var newItem = (Item) MemberwiseClone();
+        // TODO: Perhaps ditch inheritance so this can be implemented properly
+        return newItem;
     }
 }

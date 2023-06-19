@@ -56,7 +56,7 @@ public class TextInput : Control
         return true;
     }
 
-    public override void Render(RenderWindow window, View view)
+    public override void Render(RenderWindow window, View view, float deltaTime)
     {
         var backgroundRect = new RectangleShape
         {

@@ -8,16 +8,14 @@ namespace OpenMcDesktop.Mods;
 public class ModLoader
 {
     private const string DefaultUrl = "https://openmc.pages.dev";
-    private GameData gameData;
     private ModGlue glue;
     private string apiScript;
     private string definitionsScript;
     private string worldScript;
     
-    public ModLoader(GameData data)
+    public ModLoader()
     {
-        gameData = data;
-        glue = new ModGlue(gameData);
+        glue = new ModGlue(StaticData.GameData);
         apiScript = File.ReadAllText("Resources/ModBindings/api.js");
         definitionsScript = File.ReadAllText("Resources/ModBindings/definitions.js");
         worldScript = File.ReadAllText("Resources/ModBindings/world.js");
@@ -28,7 +26,7 @@ public class ModLoader
         try
         {
             var uri = new Uri(string.Concat(url.StartsWith("http") ? "" : DefaultUrl, url));
-            var initialScript = await gameData.HttpClient.GetStringAsync(uri);
+            var initialScript = await StaticData.GameData.HttpClient.GetStringAsync(uri);
 
             using var engine = new V8ScriptEngine();
             engine.DocumentSettings = new DocumentSettings
@@ -46,7 +44,7 @@ public class ModLoader
         }
         catch(Exception exception)
         {
-            Console.WriteLine($"Failed to execute mod pack {url}, {exception}");
+            StaticData.GameData.Logger.Fatal($"Failed to execute mod pack {url}, {exception}");
         }
     }
 }

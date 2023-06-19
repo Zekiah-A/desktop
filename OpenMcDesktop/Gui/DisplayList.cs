@@ -23,7 +23,6 @@ public class DisplayList : Control
         {
             if (Children[i].HitTest(x, y, type))
             {
-                SelectedIndex = i;
                 return true;
             }
         }
@@ -31,7 +30,7 @@ public class DisplayList : Control
         return false;
     }
 
-    public override void Render(RenderWindow window, View view)
+    public override void Render(RenderWindow window, View view, float deltaTime)
     {
         for (var i = 0; i < Children.Count; i++)
         {
@@ -40,7 +39,7 @@ public class DisplayList : Control
             Children[i].Bounds.EndX = Bounds.EndX;
             Children[i].Bounds.StartY = () => Bounds.StartY() + childIndex * (ItemHeight + ItemSpacing);
             Children[i].Bounds.EndY = () => Children[childIndex].Bounds.StartY() + Children[childIndex].Height;
-            Children[i].Render(window, view);
+            Children[i].Render(window, view, deltaTime);
         }
     }
 }

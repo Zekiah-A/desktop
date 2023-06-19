@@ -37,7 +37,7 @@ public class Button : Control
         };
     }
 
-    public override void Render(RenderWindow window, View view)
+    public override void Render(RenderWindow window, View view, float deltaTime)
     {
         var background = new RectangleShape
         {

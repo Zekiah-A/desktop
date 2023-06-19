@@ -105,5 +105,5 @@ public abstract class Control
         return false;
     }
 
-    public virtual void Render(RenderWindow window, View view) { }
+    public virtual void Render(RenderWindow window, View view, float deltaTime) { }
 }

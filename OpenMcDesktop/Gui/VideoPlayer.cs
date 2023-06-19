@@ -18,7 +18,7 @@ public class VideoPlayer : Control
         VideoPlayback = new SfmlVideoPlayback(Source);
     }
 
-    public override void Render(RenderWindow window, View view)
+    public override void Render(RenderWindow window, View view, float deltaTime)
     {
         if (!LoadingSuccess)
         {

@@ -1,7 +1,9 @@
+using Microsoft.Extensions.Hosting;
 using OpenMcDesktop.Game;
 using OpenMcDesktop.Game.Definitions;
 using OpenMcDesktop.Gui;
 using OpenMcDesktop.Mods;
+using Serilog.Core;
 using SFML.Graphics;
 using WatsonWebsocket;
 
@@ -13,31 +15,44 @@ public class GameData
     public HttpClient HttpClient { get; } = new();
     public WatsonWsClient CurrentServer { get; set; }
     public Storage Storage { get; set; }
+    public Logger Logger { get; set; }
+    public IHost Host { get; set; }
     public ModLoader ModLoader { get; set; }
     public World? World { get; set; }
-    public View View { get; set; }
+    public RenderWindow Window { get; set; }
+    public View WorldLayer { get; set; } // Blocks, chunks terrain
+    public View BackgroundLayer { get; set; } // Game sky, background effects, etc
+    public View UiLayer { get; set; } // Interfaces, menus, etc
     public Page? CurrentPage { get; set; }
+    public TextureRect DirtBackgroundRect { get; set; } // Shared against many pages
+
 
     // Game runtime objects and definitions
-    public Type[] BlockDefinitions { get; set; } // We can use Activator.CreateInstance() to create instances from these block types
-    public Type[] ItemDefinitions { get; set; } // We can use Activator.CreateInstance() to create instances from these item types
-    public Type[] EntityDefinitions { get; set; } // We can use Activator.CreateInstance() to create instances from these entity types
-    public Dictionary<Type, int> BlockIndex { get; set; } // Maps the type of block to the index of block in blocks
-    public Dictionary<Type, int> ItemIndex { get; set; } // Maps the type of item to the index of item in items
-    public Block[] Blocks { get; set; } // Shared objects for all block types that can be used to avoid creating thousands of identical block instances for blocks that have no variation (like grass, unlike chests)
-    public Item[] Items { get; set; }  // Shared objects for all item types that can be used to avoid creating thousands of identical item instances for items that have no variation, like unstackable items with no unique qualities
+        // We can use Activator.CreateInstance() to create instances from these [thing] types
+    public string[] BlockDefinitions { get; set; }
+    public string[] ItemDefinitions { get; set; }
+    public string[] EntityDefinitions { get; set; }
+        // Maps the type of [thing] to the index of [thing] in [Thing]s
+    public Dictionary<string, int> BlockIndex { get; set; }
+    public Dictionary<string, int> ItemIndex { get; set; }
+    public Dictionary<string, int> EntityIndex { get; set; }
+        // Shared/template objects for all [thing] types that can be used to avoid creating thousands of identical block
+        // instances for [thing] that have no variation (like grass), or to copy from for creating new [thing] instances.
+    public Block[] Blocks { get; set; }
+    public Item[] Items { get; set; }
+    public Entity[] Entities { get; set; }
 
-    // Stuff about us, as a client specifically
-    public long MyPlayerId { get; set; } = 0;
+    // Specific client properties
+    public long MyPlayerId { get; set; }
     public Entity MyPlayer { get; set;}
-    public byte MyPlayerKey { get; set; } = 0;
+    public byte MyPlayerKey { get; set; }
 
     // Account and authorisation
     public string PublicKey { get; set; }
     public string PrivateKey { get; set; }
     public string AuthSignature { get; set; }
     public string Name { get; set; }
-    
+
     // Game options
     public List<string> KnownServers { get; set; } = new();
     public byte[] Skin { get; set; } = new byte[1008]; // 28*12*3

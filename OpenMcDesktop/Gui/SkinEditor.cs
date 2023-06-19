@@ -87,11 +87,11 @@ public class SkinEditor : Control
         return false;
     }
     
-    public override void Render(RenderWindow window, View view)
+    public override void Render(RenderWindow window, View view, float deltaTime)
     {
         foreach (var child in Children.ToList())
         {
-            child.Render(window, view);
+            child.Render(window, view, deltaTime);
         }
     }
 

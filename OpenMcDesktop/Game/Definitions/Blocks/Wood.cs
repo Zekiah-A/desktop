@@ -11,7 +11,7 @@ public abstract class Wood : Block
 
 public class OakLog : Wood
 {
-    public new static Texture Texture => World.TerrainAtlas.AtBlock(4, 0);
+    public new static Texture Texture => World.TerrainAtlas.AtBlock(4, 1);
     public override Texture InstanceTexture { get; }
     public OakLog() { InstanceTexture = Texture; }
 }

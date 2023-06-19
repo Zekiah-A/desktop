@@ -55,15 +55,13 @@ public class Page : Control
         return false;
     }
 
-    public override void Render(RenderWindow window, View view)
+    public override void Render(RenderWindow window, View view, float deltaTime)
     {
-        window.Clear(Color.Black);
-
         // Unfortunately we must copy the children every single frame otherwise enumeration modification exceptions may occur
         // if a child in this collection is added or modified during rendering.
         foreach (var child in Children.ToList())
         {
-            child.Render(window, view);
+            child.Render(window, view, deltaTime);
         }
     }
 }

@@ -7,11 +7,15 @@ namespace OpenMcDesktop.Gui;
 
 public class ServerListItem : DisplayListItem
 {
+    public event EventHandler<EventArgs>? OnDoubleClick;
     public string WebviewWindowName;
     public string WebviewUri;
 
     private Button openPageButton;
+    private long lastClick;
 
+    private void InvokeDoubleClick(object? sender, EventArgs args) => OnDoubleClick?.Invoke(sender, args);
+    
     public ServerListItem(Texture texture, string name, string description, string pageUri) : base(texture, name, description)
     {
         openPageButton = new Button("?", () => Bounds.EndX() - 64, () => Bounds.StartY(), () => 64, () => 64);
@@ -40,7 +44,18 @@ public class ServerListItem : DisplayListItem
         if (type == TestType.MouseUp && State == State.Pressed)
         {
             State = State.Default;
-            InvokeMouseUp(this, EventArgs.Empty);
+            
+            var now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            if (now - lastClick < 500)
+            {
+                InvokeDoubleClick(this, EventArgs.Empty);
+            }
+            else
+            {
+                InvokeMouseUp(this, EventArgs.Empty);
+            }
+            lastClick = now;
+            
             return true;
         }
 
@@ -85,9 +100,9 @@ public class ServerListItem : DisplayListItem
     }
 
     
-    public override void Render(RenderWindow window, View view)
+    public override void Render(RenderWindow window, View view, float deltaTime)
     {
-        if (State == State.Hover)
+        if (State == State.Hover || Selected)
         {
             var border = new RectangleShape
             {
@@ -125,6 +140,6 @@ public class ServerListItem : DisplayListItem
         };
         window.Draw(descriptionText);
         
-        openPageButton.Render(window, view);
+        openPageButton.Render(window, view, deltaTime);
     }
 }

@@ -6,6 +6,7 @@ namespace OpenMcDesktop.Gui;
 
 public class Hotbar : Control
 {
+    public const int SlotCount = 9;
     public int Selected;
     private Texture backgroundTexture;
     private Texture selectionTexture;
@@ -18,17 +19,16 @@ public class Hotbar : Control
         Items = new Item?[9];
     }
     
-    public override void Render(RenderWindow window, View view)
+    public override void Render(RenderWindow window, View view, float deltaTime)
     {
+        var width = Bounds.EndX() - Bounds.StartX();
         var height = Bounds.EndY() - Bounds.StartY();
         
         var backgroundRect = new RectangleShape
         {
             Texture = backgroundTexture,
             Position = new Vector2f(Bounds.StartX(), Bounds.StartY()),
-            // TODO: Select should be modified to respect the width of the hotbar, instead of just preserving aspect ratio and ignoring width,
-            // TEMPORARY: 8.272727272727273 is the ratio of the texture's width to height, this is done to maintain aspect ratio
-            Size = new Vector2f(8.272727272727273f * height, height)
+            Size = new Vector2f(width, height)
         };
         window.Draw(backgroundRect);
 
@@ -48,12 +48,15 @@ public class Hotbar : Control
             
             window.Draw(itemRect);
         }
-
+        
+        var selectSize = selectionTexture.Size.X / (float)backgroundTexture.Size.X * width;
         var selectRect = new RectangleShape
         {
             Texture = selectionTexture,
-            Position = new Vector2f(Bounds.StartX() + Selected * height, Bounds.StartY()),
-            Size = new Vector2f(height, height)
+            Position = new Vector2f(
+                Bounds.StartX() + Selected * selectSize,
+                Bounds.StartY() + (height / 2.0f - selectSize / 2.0f)),
+            Size = new Vector2f(selectSize, selectSize)
         };
         window.Draw(selectRect);
     }

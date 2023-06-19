@@ -19,38 +19,58 @@ namespace OpenMcDesktop.Networking;
 /// This class handles all networking within the game, a mix between https://github.com/open-mc/client/blob/main/iframe/ipc.js
 /// and https://github.com/open-mc/client/blob/main/iframe/incomingPacket.js.
 /// </summary>
-public class Connections
+public partial class Connections
 {
-	public Action ServerConnectionFinished;
-	public Action ServerConnectionStarted;
-	public delegate void PacketHandler(ref ReadablePacket data);
-	public readonly Dictionary<int, PacketHandler> PacketHandlers;
+	private delegate void PacketHandler(ref ReadablePacket data);
+	private readonly Dictionary<int, PacketHandler> packetHandlers;
 	private readonly GameData gameData;
+	private readonly Page gameGuiPage;
+	private readonly Page serverLoadingPage;
+	private bool initialPacket;
 
 	public Connections(GameData data)
     {
 	    gameData = data;
-	    PacketHandlers = new Dictionary<int, PacketHandler>
+	    gameGuiPage = new Page();
+	    serverLoadingPage = new Page();
+	    packetHandlers = new Dictionary<int, PacketHandler>
 	    {
 		    { 1, RubberPacket },
-		    { 2, DimPacket },
+		    { 2, DimensionPacket },
 		    { 3, ClockPacket },
 		    { 8, BlockSetPacket },
 		    { 16, ChunkPacket },
 		    { 17, ChunkDeletePacket },
 		    { 20, EntityPacket }
 	    };
+	    
+	    // Game GUI page
+	    int GameHotbarHeight() => (int)(22 / 182.0f * gameData.Window.GetView().Size.X * 0.4f);
+	    int GameHotbarWidth() => (int)(gameData.Window.GetView().Size.X * 0.4f);
+
+	    var gameHotbar = new Hotbar(
+		    () => (int)(gameData.Window.GetView().Size.X / 2 - GameHotbarWidth() / 2.0f),
+		    () => (int)(gameData.Window.GetView().Size.Y - GameHotbarHeight() - 8),
+		    GameHotbarWidth,
+		    GameHotbarHeight);
+	    gameGuiPage.Children.Add(gameHotbar);
+
+	    // Server connecting loading screen
+	    serverLoadingPage.Children.Add(gameData.DirtBackgroundRect);
+	    var serverLoadingLabel = new Label("Connecting to server...", 24, Color.White);
+	    serverLoadingLabel.Bounds.StartX = () => (int) (gameData.Window.GetView().Size.X / 2 - 128);
+	    serverLoadingLabel.Bounds.StartY = () => (int) (gameData.Window.GetView().Size.Y / 2);
+	    serverLoadingPage.Children.Add(serverLoadingLabel);
     }
 	
 	private static string GetWebsocketUri(string ip)
     {
-	    if (!Regex.IsMatch(ip, @"\w+:\/\/"))
+	    if (!IpEncryptionRegex().IsMatch(ip))
 	    {
-		    var unencrypted = Regex.IsMatch(ip, @"^(localhost|127.0.0.1|0.0.0.0|\[::1\])$");
+		    var unencrypted = LoopbackDeviceRegex().IsMatch(ip);
 		    ip = (unencrypted ? "ws://" : "wss://") + ip;
 	    }
-	    
-	    if (!Regex.IsMatch(ip, @":\d+$"))
+	    if (!IpPortRegex().IsMatch(ip))
 	    {
 		    ip += ":27277";
 	    }
@@ -165,16 +185,17 @@ public class Connections
     /// <summary>
     /// Creates a GameData *Definitions array of types from the server's initial connection packs packet containing block IDs/definitions.
     /// </summary>
-    private (Type[], Dictionary<Type, int>, T[]) DecodePacksDefinition<T>(string[] definitions, string typeNamespace)
+    private (string[], Dictionary<string, int>, T[]) DecodePacksDefinition<T>(string[] definitions, string typeNamespace)
     {
-	    var types = new List<Type>();
-		var indexes = new Dictionary<Type, int>();
+	    var names = new List<string>();
+		var indexes = new Dictionary<string, int>();
 		var sharedInstances = new List<T>();
 		
 	    for (var i = 0; i < definitions.Length; i++)
 		{
 		    var members = definitions[i].Split(" ");
-		    var typeName = "OpenMcDesktop.Game.Definitions." + typeNamespace + "." +  members[0].ToPascalCase();
+		    var name = members[0].ToPascalCase();
+		    var typeName = "OpenMcDesktop.Game.Definitions." + typeNamespace + "." +  name;
 
 		    if (members.Length >= 1)
 		    {
@@ -183,10 +204,10 @@ public class Connections
 			    {
 				    var instance = (T) Activator.CreateInstance(type)!;
 
-				    types.Add(type);
-				    if (!indexes.Keys.Contains(type))
+				    names.Add(name);
+				    if (!indexes.Keys.Contains(name))
 				    {
-					    indexes.Add(type, i);
+					    indexes.Add(name, i);
 					    sharedInstances.Add(instance);
 				    }
 			    }
@@ -210,7 +231,7 @@ public class Connections
 		    }*/
 		}
 	    
-	    return (types.ToArray(), indexes, sharedInstances.ToArray());
+	    return (names.ToArray(), indexes, sharedInstances.ToArray());
 	}
 
     /// <summary>
@@ -219,11 +240,13 @@ public class Connections
     /// </summary>
     public async Task Connect(PreConnectData serverData)
     {
+	    gameData.CurrentPage = gameGuiPage;
+	    //gameData.CurrentPage = serverLoadingPage;
 	    gameData.CurrentServer = serverData.Socket;
-	    gameData.CurrentServer.Logger += message => Console.WriteLine("Socket:\n" + message);
-	    gameData.CurrentServer.MessageReceived += OnMessageReceived;
+	    gameData.CurrentServer.Logger += gameData.Logger.Information;
 	    gameData.CurrentServer.ServerDisconnected += OnSocketDisconnected;
 	    gameData.CurrentServer.ServerConnected += OnSocketConnected;
+	    gameData.CurrentServer.MessageReceived += OnMessageReceived;
 	    
 	    // Apply data sent to us by server from packs to current client
 	    var blockDefinitions = serverData.DataPacks[0].Split("\n");
@@ -239,25 +262,31 @@ public class Connections
 	    
 	    // Authenticate client fully with challenge & accept messages
 	    var signature = ProcessChallenge(serverData.Challenge);
-	    var packet = new byte[sizeof(short) + gameData.Skin.Length + signature.Length];
+	    var packet = new byte[sizeof(ushort) + gameData.Skin.Length + signature.Length];
 
 	    packet[0] = (byte) (StaticData.ProtocolVersion >> 8);
 	    packet[1] = (byte) StaticData.ProtocolVersion;
-	    gameData.Skin.CopyTo(packet, 0);
-	    signature.CopyTo(packet, sizeof(short) + gameData.Skin.Length);
+	    gameData.Skin.CopyTo(packet, sizeof(ushort));
+	    signature.CopyTo(packet, sizeof(ushort) + gameData.Skin.Length);
 	    await gameData.CurrentServer.SendAsync(packet);
 
 	    void OnSocketConnected(object? sender, EventArgs args)
 	    {
-		    ServerConnectionStarted.Invoke();
+		    // TODO: BUG: This function never seems to call
 	    }
 
 	    void OnMessageReceived(object? sender, MessageReceivedEventArgs args)
 	    {
-		    ServerConnectionFinished.Invoke();
-		    Console.WriteLine("Packet: ");
+		    if (!initialPacket)
+		    {
+			    gameData.CurrentPage = gameGuiPage;
+			    gameData.Logger.Information("Successfully connected to server");
+			    initialPacket = true;
+		    }
+		    
+		    Console.Write("Packet: ");
 		    foreach (var @byte in args.Data) Console.Write(@byte + " ");
-		    Console.WriteLine("");
+		    Console.WriteLine();
 
 		    if (args.MessageType == WebSocketMessageType.Text)
 		    {
@@ -267,19 +296,21 @@ public class Connections
 		    {
 			    var data = new ReadablePacket(args.Data.ToArray());
 			    var code = data.ReadByte();
-			    PacketHandlers.GetValueOrDefault(code)?.Invoke(ref data);
+			    packetHandlers.GetValueOrDefault(code)?.Invoke(ref data);
 		    }
 	    }
 
 	    void OnSocketDisconnected(object? sender, EventArgs args)
 	    {
-		    Console.WriteLine("Connection to server closed unexpectedly!");
+		    gameData.CurrentPage = serverLoadingPage;
+		    gameData.Logger.Error("Connection to server closed unexpectedly!");
 	    }
     }
     
     private void ChatPacket(string message)
     {
 	    Console.WriteLine(message);
+	    
     }
 
     private void RubberPacket(ref ReadablePacket data)
@@ -301,7 +332,7 @@ public class Connections
     /// <summary>
     /// A packet containing information about the current world and position that the player is located within
     /// </summary>
-    private void DimPacket(ref ReadablePacket data)
+    private void DimensionPacket(ref ReadablePacket data)
     {
 	    var dimension = data.ReadString();
 	    var gravityX = data.ReadFloat();
@@ -332,12 +363,14 @@ public class Connections
 	    {
 		    return;
 	    }
-	    
+
 	    var chunk = new Chunk(ref data, gameData);
 	    var chunkKey = (chunk.X & 67108863) + (chunk.Y & 67108863) * 67108864;
 	    gameData.World.Map.TryAdd(chunkKey, chunk);
 	    gameData.World.CameraPosition = new Vector2f(chunk.X * 64, chunk.Y * 64);
 	    
+	    Console.WriteLine("CHUNK X: {0}, CHUNK Y: {1}", chunk.X, chunk.Y);
+
 	    // Read chunk entities
 	    while (data.Left > 0)
 	    {
@@ -384,10 +417,11 @@ public class Connections
 			// It is a block event, such as a door being opened
 		    else if (type > 0)
 		    {
-				var x = data.ReadInt();
+			    // TODO: Handle this block event
+			    var x = data.ReadInt();
 				var y = data.ReadInt();
 				var id = data.ReadUInt();
-				// TODO: Handle this block event
+				gameData.World?.SetBlock(x, y, (int) id);
 		    }
 		    else
 		    {
@@ -404,7 +438,9 @@ public class Connections
 	/// change in state, or other such data will be distributed to the client via this packet.
 	/// </summary>
     private void EntityPacket(ref ReadablePacket data)
-    {
+	{
+		return; // TODO: Patch
+	    
 		while (data.Left > 0)
 		{
 			var action = (int) data.ReadByte();
@@ -436,7 +472,7 @@ public class Connections
 				{
 					action |= 256;
 					var entityType = gameData.EntityDefinitions[data.ReadShort()];
-					entity = (Entity?) Activator.CreateInstance(entityType);
+					//entity = (Entity?) Activator.CreateInstance(entityType);
 					if (entity is not null)
 					{
 						entity.Id = entityId;
@@ -497,4 +533,11 @@ public class Connections
 			}
 		}
     }
+
+    [GeneratedRegex(":\\d+$")]
+    private static partial Regex IpPortRegex();
+    [GeneratedRegex("\\w+:\\/\\/")]
+    private static partial Regex IpEncryptionRegex();
+    [GeneratedRegex("^(localhost|127.0.0.1|0.0.0.0|\\[::1\\])$")]
+    private static partial Regex LoopbackDeviceRegex();
 }

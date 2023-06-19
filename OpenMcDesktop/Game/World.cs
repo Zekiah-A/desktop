@@ -4,6 +4,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using OpenMcDesktop.Game.Definitions.Blocks;
 using OpenMcDesktop.Game.Definitions;
+using OpenMcDesktop.Networking;
 using SFML.Graphics;
 using SFML.Graphics.Glsl;
 using SFML.System;
@@ -83,7 +84,7 @@ public class World
     {
         var chunkKey = (x >>> 6) + (y >>> 6) * 67108864;
         var chunk = Map.GetValueOrDefault(chunkKey);
-        return chunk?.Tiles[(x & 63) + ((y & 63) << 6)] ?? gameData.Blocks[gameData.BlockIndex[typeof(Air)]];
+        return chunk?.Tiles[(x & 63) + ((y & 63) << 6)] ?? gameData.Blocks[gameData.BlockIndex[nameof(Air)]];
     }
     
     public void SetBlock(int x, int y, int blockId)
@@ -136,8 +137,10 @@ public class World
     /// #78a7ff: RGB(120, 167, 255) - A brighter blue color used as the brightest shade in the sky gradient.
     /// #c5563b: RGB(197, 86, 59) - A reddish-orange color used as the base color for the horizon during sunset and sunrise.
     /// </summary>
-    private void RenderSky(RenderWindow window, View view)
+    private void RenderSky(RenderWindow window, View worldLayer, View backgroundLayer)
     {
+        window.SetView(backgroundLayer);
+        
         var time = TickCount % 24000;
         var lightness = time < 1800 ? time / 1800 * 255 : time < 13800 ? 255 : time < 15600 ? (15600 - time) / 1800 * 255 : 0;
         var orangeness = time switch
@@ -156,6 +159,8 @@ public class World
             new Color(195, 210, 255, (byte) lightness));
         // Orange sunrise/sunset hue
         CreateSkyGradient(window, Color.Transparent, new Color(197, 86, 59, (byte) orangeness));
+        
+        window.SetView(worldLayer);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -174,20 +179,20 @@ public class World
     /// <summary>
     /// Turns a given position in block world co-ordinates to screen co-ordinates, so that the rendering position can be determined.
     /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    /*[MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Vector2f WorldToScreen(Vector2f blockXy)
     {
         AdjustCameraSize();
         var relative = blockXy - CameraPosition;
         var fraction = new Vector2f(relative.X / CameraSize.X, relative.Y / CameraSize.Y);
         return new Vector2f(fraction.X * gameData.View.Size.X, -fraction.Y * gameData.View.Size.Y);
-    }
+    }*/
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Vector2f ScreenToWorld(Vector2f screenXy)
     {
         AdjustCameraSize();
-        var fraction = new Vector2f(screenXy.X / gameData.View.Size.X, -screenXy.Y / gameData.View.Size.Y);
+        var fraction = new Vector2f(screenXy.X / gameData.WorldLayer.Size.X, -screenXy.Y / gameData.WorldLayer.Size.Y);
         var relative = new Vector2f(fraction.X * CameraSize.X, fraction.Y * CameraSize.Y);
         return relative + CameraPosition;
     }
@@ -198,15 +203,12 @@ public class World
         // 64px screen width and height at standard zoom
         var realBlockSize = CameraZoomRealBlockSizes[Math.Clamp(CameraZoomLevel, 0, CameraZoomRealBlockSizes.Length - 1)];
         // At fullscreen, 1920 / n = realBlockSize, 1080 / n realBlockSize, so to keep blocks square, we just have to find N for X and Y
-        CameraSize = new Vector2f(gameData.View.Size.X / realBlockSize, gameData.View.Size.Y / realBlockSize);
+        CameraSize = new Vector2f(gameData.WorldLayer.Size.X / realBlockSize, gameData.WorldLayer.Size.Y / realBlockSize);
     }
     
-    private Vector2f lpos;
-    
-    // TODO: Implement culling, if world to screen position is clearly off screen, then we skip rendering that chunk
-    public void Render(RenderWindow window, View view)
+    private Vector2f lastPosition;
+    public void Update(float deltaTime)
     {
-        // TEMPORARY - Testing code
         if (Keyboard.IsKeyPressed(Keyboard.Key.W))
         {
             CameraPosition += new Vector2f(0, 0.1f) * (Keyboard.IsKeyPressed(Keyboard.Key.LShift) ? 20 : 1);
@@ -223,45 +225,37 @@ public class World
         {
             CameraPosition += new Vector2f(0.1f, 0) * (Keyboard.IsKeyPressed(Keyboard.Key.LShift) ? 20 : 1);
         }
+        if (Keyboard.IsKeyPressed(Keyboard.Key.Num1))
+        {
+               
+        }
+        
         if (Mouse.IsButtonPressed(Mouse.Button.Left))
         {
             var mousePosition = Mouse.GetPosition();
             ScreenToWorld(new Vector2f(mousePosition.X, mousePosition.Y));
-            gameData.World?.SetBlock(mousePosition.X, mousePosition.Y, gameData.BlockIndex[typeof(Air)]);
+            SetBlock(mousePosition.X, mousePosition.Y, gameData.BlockIndex[nameof(Stone)]);
         }
-        if (!lpos.Equals(CameraPosition))
+        if (!lastPosition.Equals(CameraPosition))
         {
             Console.WriteLine(CameraPosition);
-            lpos = CameraPosition;
+            lastPosition = CameraPosition;
         }
-        // TEMPORARY TESTING CODE
+    }
+    
+    public void Render(RenderWindow window, View worldLayer, View backgroundLayer, float deltaTime)
+    {
+        RenderSky(window, worldLayer, backgroundLayer);
+        worldLayer.Center = new Vector2f(CameraCentre.X * CameraZoomRealBlockSizes[CameraZoomLevel] / BlockTextureWidth,
+            -CameraCentre.Y * CameraZoomRealBlockSizes[CameraZoomLevel] / BlockTextureHeight);
+        worldLayer.Zoom(CameraZoomLevel);
 
-        RenderSky(window, view);
-        
         // 1024 px real chunk width 64 * 16
         foreach (var chunk in Map.Values)
         {
             // If it is not on screen, we can skip drawing this chunk
-            var screenPosition = WorldToScreen(new Vector2f(chunk.X * 64, chunk.Y * 64));
-            var chunkScreenSize = CameraZoomRealBlockSizes[CameraZoomLevel] * 64;
-            
-            if (screenPosition.X < -chunkScreenSize || screenPosition.X > window.GetView().Size.X ||
-                screenPosition.Y < -chunkScreenSize || screenPosition.Y > window.GetView().Size.Y)
-            {
-                continue;
-            }
-            
-            var transform = new Transform(1, 0, 0,    0, 1, 0,    0, 0, 1);
-            transform.Translate(screenPosition);
-            transform.Scale(new Vector2f((float) CameraZoomRealBlockSizes[CameraZoomLevel] / BlockTextureWidth,
-                (float) CameraZoomRealBlockSizes[CameraZoomLevel] / BlockTextureHeight));
-            
-            var states = new RenderStates(BlendMode.Alpha, Transform.Identity, null, null)
-            {
-                Transform = transform
-            };
-            
-            chunk.Render(window, states);
+            var states = new RenderStates(BlendMode.Alpha, Transform.Identity, null, null);
+            chunk.Render(window, worldLayer, states);
         }
     }
 }
