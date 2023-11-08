@@ -2,6 +2,7 @@ using ICSharpCode.SharpZipLib.Zip.Compression;
 using Microsoft.ClearScript;
 using Microsoft.ClearScript.JavaScript;
 using Microsoft.ClearScript.V8;
+using Microsoft.Extensions.Logging;
 
 namespace OpenMcDesktop.Mods;
 
@@ -44,7 +45,7 @@ public class ModLoader
         }
         catch(Exception exception)
         {
-            StaticData.GameData.Logger.Fatal($"Failed to execute mod pack {url}, {exception}");
+            StaticData.GameData.Logger.LogError("Failed to execute mod pack {url}, {exception}", url, exception);
         }
     }
 }

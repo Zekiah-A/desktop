@@ -1,9 +1,10 @@
+using System.Resources;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using OpenMcDesktop.Game;
 using OpenMcDesktop.Game.Definitions;
 using OpenMcDesktop.Gui;
 using OpenMcDesktop.Mods;
-using Serilog.Core;
 using SFML.Graphics;
 using WatsonWebsocket;
 
@@ -15,7 +16,8 @@ public class GameData
     public HttpClient HttpClient { get; } = new();
     public WatsonWsClient CurrentServer { get; set; }
     public Storage Storage { get; set; }
-    public Logger Logger { get; set; }
+    public ILogger Logger { get; set; }
+    public ResourceManager Translations { get; set; }
     public IHost Host { get; set; }
     public ModLoader ModLoader { get; set; }
     public World? World { get; set; }

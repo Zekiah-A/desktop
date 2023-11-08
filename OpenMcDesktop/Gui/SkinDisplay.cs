@@ -1,3 +1,4 @@
+using System.Numerics;
 using SFML.Graphics;
 using SFML.System;
 
@@ -10,7 +11,10 @@ public class SkinDisplay : Control
     public Layers Layer = Layers.All;
     public bool Animate;
     private float frame;
-    
+    private float mouseX;
+    private float mouseY;
+    private float headRotation;
+
     [Flags]
     public enum Layers
     {
@@ -25,6 +29,13 @@ public class SkinDisplay : Control
     public SkinDisplay(byte[] data, Func<int> x, Func<int> y, Func<int> width, Func<int> height) : base(x, y, width, height)
     {
         Skin = SkinHelpers.DecodeSkin(data);
+    }
+
+    public override bool HitTest(int x, int y, TestType type)
+    {
+        mouseX = x;
+        mouseY = y;
+        return base.HitTest(x, y, type);;
     }
 
     public override void Render(RenderWindow window, View view, float deltaTime)
@@ -105,12 +116,21 @@ public class SkinDisplay : Control
         
         var headRect = new RectangleShape
         {
-            Position = topLeft + new Vector2f(4 / virtualWidth * (Bounds.EndX() - Bounds.StartX()), 0),
             Size = new Vector2f(8 / virtualWidth * (Bounds.EndX() - Bounds.StartX()),
                 8  / virtualHeight * (Bounds.EndY() - Bounds.StartY())),
             Texture = new Texture(Skin.Head)
         };
-        window.Draw(headRect);
+        var headCentrePosition =
+            topLeft + new Vector2f(4 / virtualWidth * (Bounds.EndX() - Bounds.StartX()), 0) + headRect.Size / 2;
+        var headAngle = float.Atan2(mouseY - headCentrePosition.Y, mouseX - headCentrePosition.X);
+        headAngle = Math.Clamp(MathHelpers.RadToDeg(headAngle), -90, 90);
+        headAngle = MathHelpers.Lerp(headRotation, headAngle, 0.05f);
+        
+        var headTransform = Transform.Identity;
+        headTransform.Translate(topLeft + new Vector2f(4 / virtualWidth * (Bounds.EndX() - Bounds.StartX()), 0));
+        headTransform.Rotate(headAngle, new Vector2f(headRect.Size.X / 2, headRect.Size.Y));
+        headRotation = headAngle;
+        window.Draw(headRect, new RenderStates(headTransform));
         
         if (State == State.Hover)
         {

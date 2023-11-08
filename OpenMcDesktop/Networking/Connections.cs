@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
+using Microsoft.Extensions.Logging;
 using OpenMcDesktop.Gui;
 using OpenMcDesktop.Game;
 using OpenMcDesktop.Game.Definitions;
@@ -37,7 +38,7 @@ public partial class Connections
 	    {
 		    { 1, RubberPacket },
 		    { 2, DimensionPacket },
-		    { 3, ClockPacket },
+		    { 3, ClockSyncPacket },
 		    { 8, BlockSetPacket },
 		    { 16, ChunkPacket },
 		    { 17, ChunkDeletePacket },
@@ -243,7 +244,6 @@ public partial class Connections
 	    gameData.CurrentPage = gameGuiPage;
 	    //gameData.CurrentPage = serverLoadingPage;
 	    gameData.CurrentServer = serverData.Socket;
-	    gameData.CurrentServer.Logger += gameData.Logger.Information;
 	    gameData.CurrentServer.ServerDisconnected += OnSocketDisconnected;
 	    gameData.CurrentServer.ServerConnected += OnSocketConnected;
 	    gameData.CurrentServer.MessageReceived += OnMessageReceived;
@@ -256,7 +256,7 @@ public partial class Connections
 	    (gameData.ItemDefinitions, gameData.ItemIndex, gameData.Items) = DecodePacksDefinition<Item>(itemDefinitions, "Items");
 
 	    var entityDefinitions = serverData.DataPacks[2].Split("\n");
-	    (gameData.EntityDefinitions, _, _) = DecodePacksDefinition<Entity>(entityDefinitions, "Entities");
+	    (gameData.EntityDefinitions, gameData.EntityIndex, gameData.Entities) = DecodePacksDefinition<Entity>(entityDefinitions, "Entities");
 
 	    await gameData.ModLoader.ExecutePack(serverData.DataPacks[3]);
 	    
@@ -280,7 +280,7 @@ public partial class Connections
 		    if (!initialPacket)
 		    {
 			    gameData.CurrentPage = gameGuiPage;
-			    gameData.Logger.Information("Successfully connected to server");
+			    gameData.Logger.LogInformation("Successfully connected to server");
 			    initialPacket = true;
 		    }
 		    
@@ -302,8 +302,8 @@ public partial class Connections
 
 	    void OnSocketDisconnected(object? sender, EventArgs args)
 	    {
-		    gameData.CurrentPage = serverLoadingPage;
-		    gameData.Logger.Error("Connection to server closed unexpectedly!");
+		    //gameData.CurrentPage = serverLoadingPage;
+		    gameData.Logger.LogError("Connection to server closed unexpectedly!");
 	    }
     }
     
@@ -346,7 +346,11 @@ public partial class Connections
 	    };
     }
 
-    private void ClockPacket(ref ReadablePacket data)
+    /// <summary>
+    /// Game ticks occur at 20TPS, width ticks maintained clientside, server sends 1 clock sync packet per second
+    /// that ensures the server's ticks are aligned with that on the client (prevents a desync).
+    /// </summary>
+    private void ClockSyncPacket(ref ReadablePacket data)
     {
 	    if (gameData.World is not null)
 	    {

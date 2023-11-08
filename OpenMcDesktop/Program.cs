@@ -1,14 +1,15 @@
 ﻿using System.Net;
+using System.Resources;
 using System.Runtime.InteropServices;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using OpenMcDesktop;
 using OpenMcDesktop.Gui;
 using OpenMcDesktop.Networking;
 using NativeFileDialogSharp;
 using OpenMcDesktop.Game;
 using OpenMcDesktop.Mods;
-using Serilog;
+using OpenMcDesktop.Translations;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
@@ -45,21 +46,8 @@ var gameData = new GameData
     BackgroundLayer = new View(new FloatRect(0, 0, window.Size.X, window.Size.Y)),
     UiLayer = new View(new FloatRect(0, 0, window.Size.X, window.Size.Y)),
     DirtBackgroundRect = dirtBackgroundRect,
-    Logger = new LoggerConfiguration()
-        .WriteTo.Console()
-        .WriteTo.File(Path.Join(storagePath, "Log"),
-            rollingInterval: RollingInterval.Day,
-            rollOnFileSizeLimit: true)
-        .CreateLogger(),
-    Host = Host.CreateDefaultBuilder(args)
-        .ConfigureServices(services =>
-        {
-            services.AddLocalization(options =>
-            {
-                options.ResourcesPath = Path.Join("Resources");
-            });
-        })
-        .Build(),
+    Logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger(nameof(OpenMcDesktop)),
+    Translations = ResourceManager.CreateFileBasedResourceManager("Translations", "Locale/", typeof(Translations)),
     ModLoader = new ModLoader()
 };
 StaticData.GameData = gameData;
@@ -69,6 +57,7 @@ window.SetFramerateLimit(60);
 
 window.Closed += (_, _) =>
 {
+    gameData.Logger.LogInformation("Quit received. Exiting.");
     window.Close();
 };
 window.Resized += (_, args) =>
@@ -151,7 +140,8 @@ window.TextEntered += (_, args) =>
 
 AppDomain.CurrentDomain.UnhandledException += (sender, exceptionEventArgs) =>
 {
-    gameData.Logger.Fatal($"Critical game error in module {sender} " + exceptionEventArgs.ExceptionObject);
+    gameData.Logger.LogCritical("Critical game error in module {sender}, {exceptionEventArgs}: ",
+        sender, exceptionEventArgs.ExceptionObject);
 };
 
 var connections = new Connections(gameData);
@@ -190,6 +180,30 @@ var serverList = new DisplayList(() => 64, () => 192,
     () => (int) (window.GetView().Size.X * 0.8));
 
 var serverListUpdating = false;
+
+async Task ConnectToKnownServer(string serverIp)
+{
+    var listItem = new ServerListItem(new Texture(@"Resources/Brand/grass_icon.png"), serverIp, "Connecting...", serverIp);
+    serverList.Children.Add(listItem);
+        
+    var connectionData = await connections.PreConnect(serverIp, listItem);
+    preConnections.Add(connectionData);
+    listItem.OnDoubleClick += async (_, _) =>
+    {
+        await PlayServer(connectionData);
+    };
+    listItem.OnMouseUp += (_, _) =>
+    {
+        if (serverList.SelectedIndex != -1)
+        {
+            serverList.Children[serverList.SelectedIndex].Selected = false;
+        }
+
+        serverList.SelectedIndex = serverList.Children.IndexOf(listItem);
+        listItem.Selected = true;
+    };
+}
+
 async Task UpdateServerList()
 {
     if (serverListUpdating)
@@ -214,35 +228,13 @@ async Task UpdateServerList()
     serverList.SelectedIndex = -1;
     serverList.Children.Clear();
     preConnections.Clear();
-
-    async Task ConnectToKnownServer(string serverIp)
-    {
-        var listItem = new ServerListItem(new Texture(@"Resources/Brand/grass_icon.png"), serverIp, "Connecting...", serverIp);
-        serverList.Children.Add(listItem);
-        
-        var connectionData = await connections.PreConnect(serverIp, listItem);
-        preConnections.Add(connectionData);
-        listItem.OnDoubleClick += async (_, _) =>
-        {
-            await PlayServer(connectionData);
-        };
-        listItem.OnMouseUp += (_, _) =>
-        {
-            if (serverList.SelectedIndex != -1)
-            {
-                serverList.Children[serverList.SelectedIndex].Selected = false;
-            }
-
-            serverList.SelectedIndex = serverList.Children.IndexOf(listItem);
-            listItem.Selected = true;
-        };
-    }
-
+    
     var connectionTasks = new List<Task>();
     foreach (var serverIp in gameData.KnownServers)
     {
         connectionTasks.Add(ConnectToKnownServer(serverIp));
     }
+    
     await Task.WhenAll(connectionTasks);
     serverListUpdating = false;
 }
@@ -394,7 +386,7 @@ mainPage.Children.Add(backgroundRect);
 // Game start title intro video player
 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
 {
-    var titleVideoPlayer = new VideoPlayer("Resources/Brand/title_video.mkv",
+    /*var titleVideoPlayer = new VideoPlayer("Resources/Brand/title_video.mkv",
         Control.BoundsZero,
         Control.BoundsZero,
         () => (int) window.GetView().Size.X,
@@ -404,7 +396,7 @@ if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
     {
         mainPage.Children.Remove(titleVideoPlayer);
     };
-    mainPage.Children.Add(titleVideoPlayer);
+    mainPage.Children.Add(titleVideoPlayer);*/
 }
 
 int LogoWidth() => (int) (window.GetView().Size.X * 0.57f);

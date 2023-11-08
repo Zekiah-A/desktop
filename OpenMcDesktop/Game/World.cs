@@ -2,8 +2,10 @@ using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Timers;
 using OpenMcDesktop.Game.Definitions.Blocks;
 using OpenMcDesktop.Game.Definitions;
+using OpenMcDesktop.Gui;
 using OpenMcDesktop.Networking;
 using SFML.Graphics;
 using SFML.Graphics.Glsl;
@@ -36,7 +38,7 @@ public class World
     public Texture EndSky;
     public Texture Stars;
     public Texture Sun;
-    
+
     // These are in world units
     public Vector2f CameraCentre { get => CameraPosition + CameraSize / 2; set => CameraPosition = value + CameraSize / 2; }
     public Vector2f CameraPosition { get; set; } = new Vector2f(128, -128); // Where the camera is in the world
@@ -78,8 +80,20 @@ public class World
         {
             Repeated = true
         };
-    }
+        EndSky = new Texture(skyTexture.CopyToImage(), new IntRect(128, 128, 128, 128))
+        {
+            Repeated = true
+        };
 
+        var tickTimer = new System.Timers.Timer
+        {
+            Interval = TimeSpan.FromSeconds(1).TotalMilliseconds,
+            AutoReset = true,
+        };
+        tickTimer.Elapsed += Tick;
+        tickTimer.Start();
+    }
+    
     public Block GetBlock(int x, int y)
     {
         var chunkKey = (x >>> 6) + (y >>> 6) * 67108864;
@@ -140,31 +154,62 @@ public class World
     private void RenderSky(RenderWindow window, View worldLayer, View backgroundLayer)
     {
         window.SetView(backgroundLayer);
-        
-        var time = TickCount % 24000;
-        var lightness = time < 1800 ? time / 1800 * 255 : time < 13800 ? 255 : time < 15600 ? (15600 - time) / 1800 * 255 : 0;
-        var orangeness = time switch
-        {
-            < 1800 => (int) (255 * (1 - Math.Abs(time - 900) / 900f)),
-            >= 13800 and < 15600 => (int) (255 * (1 - Math.Abs(time - 14700) / 900f)),
-            _ => 0
-        };        
 
-        var atmosphereColour = new Color(10, 12, 20);
-        var horizonColour = new Color(4, 6, 9);
-        // Night sky backing sky layer
-        CreateSkyGradient(window, atmosphereColour, horizonColour);
-        // Daylight horizon and sky
-        CreateSkyGradient(window, new Color(120, 167, 255, (byte) lightness),
-            new Color(195, 210, 255, (byte) lightness));
-        // Orange sunrise/sunset hue
-        CreateSkyGradient(window, Color.Transparent, new Color(197, 86, 59, (byte) orangeness));
-        
+        if (Dimension == OpenMcDesktop.Game.Dimension.Overworld)
+        {
+            var time = TickCount % 24000;
+            var lightness = time < 1800 ? time / 1800 * 255 : time < 13800 ? 255 : time < 15600 ? (15600 - time) / 1800 * 255 : 0;
+            var orangeness = time switch
+            {
+                < 1800 => (int) (255 * (1 - Math.Abs(time - 900) / 900f)),
+                >= 13800 and < 15600 => (int) (255 * (1 - Math.Abs(time - 14700) / 900f)),
+                _ => 0
+            };        
+
+            var atmosphereColour = new Color(10, 12, 20);
+            var horizonColour = new Color(4, 6, 9);
+            // Night sky backing sky layer
+            CreateSkyGradient(window, atmosphereColour, horizonColour);
+            // Daylight horizon and sky
+            CreateSkyGradient(window, new Color(120, 167, 255, (byte) lightness),
+                new Color(195, 210, 255, (byte) lightness));
+            // Orange sunrise/sunset hue
+            CreateSkyGradient(window, Color.Transparent, new Color(197, 86, 59, (byte) orangeness));
+        }
+        else if (Dimension == OpenMcDesktop.Game.Dimension.Nether)
+        {
+		    var backgroundRect = new RectangleShape(window.GetView().Size)
+            {
+                FillColor = new Color(25, 4, 4)
+            };
+            
+            window.Draw(backgroundRect);
+        }
+        else if (Dimension == OpenMcDesktop.Game.Dimension.End)
+        {
+            var backgroundRect = new RectangleShape(window.GetView().Size)
+            {
+                FillColor = Color.Black
+            };
+            window.Draw(backgroundRect);
+            
+            var skyRect = new RectangleShape
+            {
+                Size = window.GetView().Size,
+                Texture = EndSky,
+                TextureRect = new IntRect((int)window.GetView().Viewport.Left, (int)window.GetView().Viewport.Top,
+                    (int)window.GetView().Viewport.Width, (int)window.GetView().Viewport.Height),
+                FillColor = new Color(255, 255, 255, 38)
+            };
+            
+            window.Draw(skyRect);
+        }
+
         window.SetView(worldLayer);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void CreateSkyGradient(RenderWindow window, Color atmosphereColour, Color horizonColour)
+    private static void CreateSkyGradient(RenderTarget window, Color atmosphereColour, Color horizonColour)
     {
         var vertices = new VertexArray(PrimitiveType.Quads, 4);
         
@@ -243,6 +288,11 @@ public class World
         }
     }
     
+    private void Tick(object? sender, ElapsedEventArgs args)
+    {
+        TickCount++;
+    }
+
     public void Render(RenderWindow window, View worldLayer, View backgroundLayer, float deltaTime)
     {
         RenderSky(window, worldLayer, backgroundLayer);
