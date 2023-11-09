@@ -183,11 +183,14 @@ var serverListUpdating = false;
 
 async Task ConnectToKnownServer(string serverIp)
 {
-    var listItem = new ServerListItem(new Texture(@"Resources/Brand/grass_icon.png"), serverIp, "Connecting...", serverIp);
+    var listItem = new ServerListItem(new Texture(@"Resources/Brand/grass_icon.png"),
+        serverIp, "Connecting...", serverIp);
     serverList.Children.Add(listItem);
         
     var connectionData = await connections.PreConnect(serverIp, listItem);
     preConnections.Add(connectionData);
+    listItem.ConnectData = connectionData;
+    
     listItem.OnDoubleClick += async (_, _) =>
     {
         await PlayServer(connectionData);
@@ -240,11 +243,16 @@ async Task UpdateServerList()
 }
 
 Task.Run(UpdateServerList);
-var serverDeleteButton = new Button("Delete",
-    () => 16,
-    () =>  (int) (window.GetView().Size.Y - 0.05 * window.GetView().Size.X - 16), 
-    () => (int) (0.2 * window.GetView().Size.X), 
-    () => (int) (0.05 * window.GetView().Size.X));
+
+serversPage.Children.Add(serverList);
+var serversOptionsGrid = new Grid(4, 1, Control.BoundsZero, () => (int)(window.GetView().Size.Y - 152),
+    () => (int)window.GetView().Size.X, () => 64)
+{
+    ColumnGap = 16
+};
+serversPage.Children.Add(serversOptionsGrid);
+var serverDeleteButton = new Button("Delete", Control.BoundsZero, Control.BoundsZero,
+    Control.BoundsZero, Control.BoundsZero);
 serverDeleteButton.OnMouseUp += (_, _) =>
 {
     if (serverList.SelectedIndex == -1)
@@ -257,23 +265,16 @@ serverDeleteButton.OnMouseUp += (_, _) =>
     serverList.SelectedIndex = -1;
     Task.Run(UpdateServerList);
 };
-serversPage.Children.Add(serverDeleteButton);
-serversPage.Children.Add(serverList);
-var serverRefreshButton = new Button("Refresh",
-    () => (int) (0.2 * window.GetView().Size.X + 32),
-    () =>  (int) (window.GetView().Size.Y - 0.05 * window.GetView().Size.X - 16), 
-    () => (int) (0.2 * window.GetView().Size.X), 
-    () => (int) (0.05 * window.GetView().Size.X));
+serversOptionsGrid.Children[0, 0] = serverDeleteButton;
+var serverRefreshButton = new Button("Refresh", Control.BoundsZero, Control.BoundsZero, 
+    Control.BoundsZero, Control.BoundsZero);
 serverRefreshButton.OnMouseUp += (_, _) =>
 {
     Task.Run(UpdateServerList);
 };
-serversPage.Children.Add(serverRefreshButton);
-var serverInput = new TextInput("server ip", 
-    () => (int) (0.4 * window.GetView().Size.X + 52),
-    () => (int) (window.GetView().Size.Y - 0.05 * window.GetView().Size.X - 16),
-    () => (int) (0.3 * window.GetView().Size.X),
-    () => (int) (0.05 * window.GetView().Size.X));
+serversOptionsGrid.Children[1, 0] = serverRefreshButton;
+var serverInput = new TextInput("server ip", Control.BoundsZero, Control.BoundsZero,
+    Control.BoundsZero, Control.BoundsZero);
 serverInput.OnSubmit += (_, _) =>
 {
     gameData.KnownServers.Add(serverInput.Text);
@@ -281,12 +282,9 @@ serverInput.OnSubmit += (_, _) =>
     serverInput.Text = "";
     Task.Run(UpdateServerList);
 };
-serversPage.Children.Add(serverInput);
-var serverAddButton = new Button("Add server",
-    () => (int) (0.7 * window.GetView().Size.X + 72),
-    () => (int) (window.GetView().Size.Y - 0.05 * window.GetView().Size.X - 16),
-    () => (int) (0.25 * window.GetView().Size.X),
-    () => (int) (0.05 * window.GetView().Size.X));
+serversOptionsGrid.Children[2, 0] = serverInput;
+var serverAddButton = new Button("Add server", Control.BoundsZero, Control.BoundsZero,
+    Control.BoundsZero, Control.BoundsZero);
 serverAddButton.OnMouseUp += (_, _) =>
 {
     gameData.KnownServers.Add(serverInput.Text);
@@ -294,7 +292,32 @@ serverAddButton.OnMouseUp += (_, _) =>
     serverInput.Text = "";
     Task.Run(UpdateServerList);
 };
-serversPage.Children.Add(serverAddButton);
+serversOptionsGrid.Children[3, 0] = serverAddButton;
+
+var serversPageGrid = new Grid(4, 1, Control.BoundsZero, () => (int)(window.GetView().Size.Y - 72),
+    () => (int)window.GetView().Size.X, () => 64)
+{
+    ColumnGap = 16
+};
+serversPage.Children.Add(serversPageGrid);
+var serversJoinButton = new Button("Join Server", Control.BoundsZero, Control.BoundsZero,
+    Control.BoundsZero, Control.BoundsZero);
+serversJoinButton.OnMouseUp += async (_, _) =>
+{
+    if (serverList.SelectedIndex != -1
+        && serverList.Children.ElementAtOrDefault(serverList.SelectedIndex) is ServerListItem { ConnectData: not null } item)
+    {
+        await PlayServer(item.ConnectData.Value);
+    }
+};
+serversPageGrid.Children[0, 0] = serversJoinButton;
+var serversBackButton = new Button("Back", Control.BoundsZero, Control.BoundsZero,
+    Control.BoundsZero, Control.BoundsZero);
+serversBackButton.OnMouseUp += (_, _) =>
+{
+    gameData.CurrentPage = mainPage;
+};
+serversPageGrid.Children[3, 0] = serversBackButton;
 
 // Options page UI
 optionsPage.Children.Add(dirtBackgroundRect);

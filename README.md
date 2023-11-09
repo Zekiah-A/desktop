@@ -29,4 +29,4 @@ All native library depdencies are included as git submodules on this repository,
    - For example, to compile motion, the command should look like `export CC=x86_64-w64-mingw32-gcc && cmake -DCMAKE_TOOLCHAIN_FILE=CrossWindowsToolchain.cmake Motion/Motion/ -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=TRUE -DMOTION_LINK_SFML_STATICALLY=FALSE` 
 
 ### TODO:
- - Dynamically link motion to .NET dependencies
+ - Dynamically link motion to .NET SFML.NET dependencies

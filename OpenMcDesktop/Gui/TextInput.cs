@@ -73,6 +73,8 @@ public class TextInput : Control
         text.Position = new Vector2f(Bounds.StartX() + 8, Bounds.StartY() + 2);
         text.FillColor = string.IsNullOrEmpty(Text) ? BorderColour : Color.White;
         window.Draw(text);
+
+        window.SetMouseCursor(State is State.Hover or State.Pressed ? SfmlHelpers.TextCursor : SfmlHelpers.DefaultCursor);
         
         if (Focused)
         {

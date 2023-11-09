@@ -48,89 +48,97 @@ public class SkinDisplay : Control
         var frontRotation = (float) Math.Sin(frame) * 30f;
         var backRotation = (float) Math.Sin(frame + (float) Math.PI) * 30f;
         
+        var bodyPosition = topLeft + new Vector2f(
+            6 / virtualWidth * (Bounds.EndX() - Bounds.StartX()) + (limbSize.X / 2),
+            8 / virtualHeight * (Bounds.EndY() - Bounds.StartY()));
         var legsPosition = topLeft + new Vector2f(6 / virtualWidth * (Bounds.EndX() - Bounds.StartX()) + (limbSize.X / 2),
             20 / virtualHeight * (Bounds.EndY() - Bounds.StartY()));
         var armsBodyPosition = topLeft + new Vector2f(
             6 / virtualWidth * (Bounds.EndX() - Bounds.StartX()) + (limbSize.X / 2),
-            8 / virtualHeight * (Bounds.EndY() - Bounds.StartY()));
-
+            8 / virtualHeight * (Bounds.EndY() - Bounds.StartY()) + (limbSize.Y / 6));
+        
+        var headSize = new Vector2f(8 / virtualWidth * (Bounds.EndX() - Bounds.StartX()),
+            8  / virtualHeight * (Bounds.EndY() - Bounds.StartY()));
+        var headCentrePosition =
+            topLeft + new Vector2f(4 / virtualWidth * (Bounds.EndX() - Bounds.StartX()), 0) + headSize / 2;
+        var flip = mouseX < headCentrePosition.X;
+        var flipVector = new Vector2f(flip ? -1 : 1, 1);
+        var flipTransform = Transform.Identity;
+        flipTransform.Scale(flip ? new Vector2f(-1, 1) : new Vector2f(1, 1));
+        var flipStates = new RenderStates(flipTransform);
+         
         if ((Layer & Layers.LegBack) == Layers.LegBack)
         {
             var legsBackRect = new RectangleShape
             {
-                Position = legsPosition,
+                Position = legsPosition.Multiply(flipVector),
                 Size = limbSize,
                 Texture = new Texture(Skin.LegBack)
             }; 
             legsBackRect.Origin = new Vector2f(limbSize.X / 2, 0);
             legsBackRect.Rotation = backRotation;
-            window.Draw(legsBackRect);
+            window.Draw(legsBackRect, flipStates);
         }
         if ((Layer & Layers.ArmBack) == Layers.ArmBack)
         {
             var armBackRect = new RectangleShape
             {
-                Position = armsBodyPosition,
+                Position = armsBodyPosition.Multiply(flipVector),
                 Size = limbSize,
                 Texture = new Texture(Skin.ArmBack)
             };
-            armBackRect.Origin = new Vector2f(limbSize.X / 2, 0);
+            armBackRect.Origin = new Vector2f(limbSize.X / 2, limbSize.Y / 6);
             armBackRect.Rotation = backRotation;
-            window.Draw(armBackRect);
+            window.Draw(armBackRect, flipStates);
         }
         if ((Layer & Layers.LegFront) == Layers.LegFront)
         {
             var legsFrontRect = new RectangleShape
             {
-                Position = legsPosition,
+                Position = legsPosition.Multiply(flipVector),
                 Size = limbSize,
                 Texture = new Texture(Skin.LegFront)
             };
             legsFrontRect.Origin = new Vector2f(limbSize.X / 2, 0);
             legsFrontRect.Rotation = frontRotation;
-            window.Draw(legsFrontRect);
+            window.Draw(legsFrontRect, flipStates);
         }
         if ((Layer & Layers.Body) == Layers.Body)
         {
             var bodyRect = new RectangleShape
             {
-                Position = armsBodyPosition,
+                Position = bodyPosition.Multiply(flipVector),
                 Size = limbSize,
                 Texture = new Texture(Skin.Body)
             };
             bodyRect.Origin = new Vector2f(limbSize.X / 2, 0);
-            window.Draw(bodyRect);
+            window.Draw(bodyRect, flipStates);
         }
         if ((Layer & Layers.ArmFront) == Layers.ArmFront)
         {
             var armFrontRect = new RectangleShape
             {
-                Position = armsBodyPosition,
+                Position = armsBodyPosition.Multiply(flipVector),
                 Size = limbSize,
                 Texture = new Texture(Skin.ArmFront)
             };
-            armFrontRect.Origin = new Vector2f(limbSize.X / 2, 0);
+            armFrontRect.Origin = new Vector2f(limbSize.X / 2, limbSize.Y / 6);
             armFrontRect.Rotation = frontRotation;
-            window.Draw(armFrontRect);
+            window.Draw(armFrontRect, flipStates);
         }
         
         var headRect = new RectangleShape
         {
-            Size = new Vector2f(8 / virtualWidth * (Bounds.EndX() - Bounds.StartX()),
-                8  / virtualHeight * (Bounds.EndY() - Bounds.StartY())),
+            Position = bodyPosition.Multiply(flipVector),
+            Origin = new Vector2f(headSize.X / 2, headSize.Y),
+            Size = headSize,
             Texture = new Texture(Skin.Head)
         };
-        var headCentrePosition =
-            topLeft + new Vector2f(4 / virtualWidth * (Bounds.EndX() - Bounds.StartX()), 0) + headRect.Size / 2;
-        var headAngle = float.Atan2(mouseY - headCentrePosition.Y, mouseX - headCentrePosition.X);
-        headAngle = Math.Clamp(MathHelpers.RadToDeg(headAngle), -90, 90);
-        headAngle = MathHelpers.Lerp(headRotation, headAngle, 0.05f);
-        
-        var headTransform = Transform.Identity;
-        headTransform.Translate(topLeft + new Vector2f(4 / virtualWidth * (Bounds.EndX() - Bounds.StartX()), 0));
-        headTransform.Rotate(headAngle, new Vector2f(headRect.Size.X / 2, headRect.Size.Y));
-        headRotation = headAngle;
-        window.Draw(headRect, new RenderStates(headTransform));
+        var headAngle = float.Atan2( (mouseY - headCentrePosition.Y), Math.Abs(mouseX - headCentrePosition.X));
+        headAngle = MathHelpers.RadToDeg(headAngle);
+        headRect.Rotation = MathHelpers.Lerp(headRotation, headAngle, 0.1f);
+        headRotation = headRect.Rotation;
+        window.Draw(headRect, flipStates);
         
         if (State == State.Hover)
         {

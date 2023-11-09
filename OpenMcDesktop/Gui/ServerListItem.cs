@@ -1,3 +1,4 @@
+using OpenMcDesktop.Networking;
 using SFML.Graphics;
 using SFML.System;
 using SharpWebview;
@@ -10,6 +11,7 @@ public class ServerListItem : DisplayListItem
     public event EventHandler<EventArgs>? OnDoubleClick;
     public string WebviewWindowName;
     public string WebviewUri;
+    public PreConnectData? ConnectData;
 
     private Button openPageButton;
     private long lastClick;
