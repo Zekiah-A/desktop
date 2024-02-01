@@ -160,9 +160,12 @@ async Task PlayServer(PreConnectData serverData)
     {
         try
         {
-            await data.Socket.StopAsync();
+            _ = data.Socket.StopAsync();
         }
-        catch (Exception) { /* Ignore */ }
+        catch (Exception error)
+        {
+            gameData.Logger.LogWarning("Failed to disconnect from server: {error}", error);
+        }
     }
     
     await connections.Connect(serverData);
@@ -181,7 +184,7 @@ var serverList = new DisplayList(() => 64, () => 192,
 
 var serverListUpdating = false;
 
-async Task ConnectToKnownServer(string serverIp)
+async Task CreateKnownServerItem(string serverIp)
 {
     var listItem = new ServerListItem(new Texture(@"Resources/Brand/grass_icon.png"),
         serverIp, "Connecting...", serverIp);
@@ -224,7 +227,10 @@ async Task UpdateServerList()
             {
                 await connection.Socket.StopAsync();
             }
-            catch (Exception) { /* Ignore */ }
+            catch (Exception error)
+            {
+                gameData.Logger.LogError("Failed to disconnect from a server {error}", error);
+            }
         }));
     }
     await Task.WhenAll(disconnectionTasks);
@@ -232,12 +238,7 @@ async Task UpdateServerList()
     serverList.Children.Clear();
     preConnections.Clear();
     
-    var connectionTasks = new List<Task>();
-    foreach (var serverIp in gameData.KnownServers)
-    {
-        connectionTasks.Add(ConnectToKnownServer(serverIp));
-    }
-    
+    var connectionTasks = gameData.KnownServers.Select(CreateKnownServerItem).ToList();
     await Task.WhenAll(connectionTasks);
     serverListUpdating = false;
 }
