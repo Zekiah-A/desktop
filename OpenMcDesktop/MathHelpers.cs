@@ -5,7 +5,7 @@ namespace OpenMcDesktop;
 public static class MathHelpers
 {
     public const float PIf = (float) Math.PI;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float RadToDeg(float angle)
     {

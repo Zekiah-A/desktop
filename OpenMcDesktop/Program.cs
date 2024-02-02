@@ -93,7 +93,7 @@ window.MouseMoved += (_, args) =>
     {
         return;
     }
-    
+
     if (gameData.CurrentPage?.HitTest(args.X, args.Y, TestType.MouseHover) is false)
     {
         // If not blocked by the UI, then we propagate the hit test to the main game
@@ -167,7 +167,7 @@ async Task PlayServer(PreConnectData serverData)
             gameData.Logger.LogWarning("Failed to disconnect from server: {error}", error);
         }
     }
-    
+
     await connections.Connect(serverData);
 }
 
@@ -189,11 +189,11 @@ async Task CreateKnownServerItem(string serverIp)
     var listItem = new ServerListItem(new Texture(@"Resources/Brand/grass_icon.png"),
         serverIp, "Connecting...", serverIp);
     serverList.Children.Add(listItem);
-        
+
     var connectionData = await connections.PreConnect(serverIp, listItem);
     preConnections.Add(connectionData);
     listItem.ConnectData = connectionData;
-    
+
     listItem.OnDoubleClick += async (_, _) =>
     {
         await PlayServer(connectionData);
@@ -237,7 +237,7 @@ async Task UpdateServerList()
     serverList.SelectedIndex = -1;
     serverList.Children.Clear();
     preConnections.Clear();
-    
+
     var connectionTasks = gameData.KnownServers.Select(CreateKnownServerItem).ToList();
     await Task.WhenAll(connectionTasks);
     serverListUpdating = false;
@@ -246,8 +246,8 @@ async Task UpdateServerList()
 Task.Run(UpdateServerList);
 
 serversPage.Children.Add(serverList);
-var serversOptionsGrid = new Grid(4, 1, Control.BoundsZero, () => (int)(window.GetView().Size.Y - 152),
-    () => (int)window.GetView().Size.X, () => 64)
+var serversOptionsGrid = new Grid(4, 1, Control.BoundsZero, () => (int) (window.GetView().Size.Y - 152),
+    () => (int) window.GetView().Size.X, () => 64)
 {
     ColumnGap = 16
 };
@@ -260,14 +260,14 @@ serverDeleteButton.OnMouseUp += (_, _) =>
     {
         return;
     }
-    
+
     gameData.KnownServers.RemoveAt(serverList.SelectedIndex);
     storage.Save(nameof(GameData.KnownServers), gameData.KnownServers);
     serverList.SelectedIndex = -1;
     Task.Run(UpdateServerList);
 };
 serversOptionsGrid.Children[0, 0] = serverDeleteButton;
-var serverRefreshButton = new Button("Refresh", Control.BoundsZero, Control.BoundsZero, 
+var serverRefreshButton = new Button("Refresh", Control.BoundsZero, Control.BoundsZero,
     Control.BoundsZero, Control.BoundsZero);
 serverRefreshButton.OnMouseUp += (_, _) =>
 {
@@ -295,8 +295,8 @@ serverAddButton.OnMouseUp += (_, _) =>
 };
 serversOptionsGrid.Children[3, 0] = serverAddButton;
 
-var serversPageGrid = new Grid(4, 1, Control.BoundsZero, () => (int)(window.GetView().Size.Y - 72),
-    () => (int)window.GetView().Size.X, () => 64)
+var serversPageGrid = new Grid(4, 1, Control.BoundsZero, () => (int) (window.GetView().Size.Y - 72),
+    () => (int) window.GetView().Size.X, () => 64)
 {
     ColumnGap = 16
 };
@@ -371,13 +371,13 @@ skinButton.OnMouseUp += (_, _) =>
     {
         return;
     }
-    
+
     var skinDataFromFile = SkinHelpers.SkinDataFromFile(file.Path);
     gameData.Skin = skinDataFromFile;
     skinEditor.Data = skinDataFromFile;
 };
 var accountsBackButton = new Button("Back");
-accountsBackButton.OnMouseUp += (_, _) => 
+accountsBackButton.OnMouseUp += (_, _) =>
 {
     gameData.CurrentPage = mainPage;
 };
@@ -431,10 +431,10 @@ var logoRect = new TextureRect(new Texture(@"Resources/Brand/logo.png"),
     LogoWidth, LogoHeight);
 mainPage.Children.Add(logoRect);
 
-var playButton = new Button("Play", 
+var playButton = new Button("Play",
     () => (int) (window.GetView().Center.X - 0.5 * window.GetView().Center.X),
     () => (int) (window.GetView().Size.Y * 0.5),
-    () => (int) (0.5 * window.GetView().Size.X), 
+    () => (int) (0.5 * window.GetView().Size.X),
     () => (int) (0.05 * window.GetView().Size.X));
 playButton.OnMouseUp += (_, _) =>
 {
@@ -442,10 +442,10 @@ playButton.OnMouseUp += (_, _) =>
 };
 mainPage.Children.Add(playButton);
 
-var accountButton = new Button("Account & Profile", 
+var accountButton = new Button("Account & Profile",
     () => (int) (window.GetView().Center.X - 0.5 * window.GetView().Center.X),
     () => playButton.Bounds.EndY() + 16,
-    () => (int) (0.5 * window.GetView().Size.X), 
+    () => (int) (0.5 * window.GetView().Size.X),
     () => (int) (0.05 * window.GetView().Size.X));
 accountButton.OnMouseUp += (_, _) =>
 {
@@ -453,10 +453,10 @@ accountButton.OnMouseUp += (_, _) =>
 };
 mainPage.Children.Add(accountButton);
 
-var optionsButton = new Button("Options", 
+var optionsButton = new Button("Options",
     () => (int) (window.GetView().Center.X - 0.5 * window.GetView().Center.X),
     () => accountButton.Bounds.EndY() + 48,
-    () => (int) (0.25 * window.GetView().Size.X - 8), 
+    () => (int) (0.25 * window.GetView().Size.X - 8),
     () => (int) (0.05 * window.GetView().Size.X));
 optionsButton.OnMouseUp += (_, _) =>
 {
@@ -464,10 +464,10 @@ optionsButton.OnMouseUp += (_, _) =>
 };
 mainPage.Children.Add(optionsButton);
 
-var quitButton = new Button("Quit", 
+var quitButton = new Button("Quit",
     () => (int) (window.GetView().Center.X + 8),
     () => accountButton.Bounds.EndY() + 48,
-    () => (int) (0.25 * window.GetView().Size.X - 8), 
+    () => (int) (0.25 * window.GetView().Size.X - 8),
     () => (int) (0.05 * window.GetView().Size.X));
 quitButton.OnMouseUp += (_, _) =>
 {
@@ -500,8 +500,8 @@ var authInput = new TextInput("invite code",
 authPage.Children.Add(authInput);
 var authButton = new Button("Continue",
     () => (int) (window.GetView().Size.X - 0.2 * window.GetView().Size.X - 16),
-    () =>  (int) (window.GetView().Size.Y - 0.05 * window.GetView().Size.X - 16), 
-    () => (int) (0.2 * window.GetView().Size.X), 
+    () => (int) (window.GetView().Size.Y - 0.05 * window.GetView().Size.X - 16),
+    () => (int) (0.2 * window.GetView().Size.X),
     () => (int) (0.05 * window.GetView().Size.X));
 authButton.OnMouseUp += async (_, _) =>
 {
@@ -518,7 +518,7 @@ async Task<bool> Authorise(string? key = null)
     {
         return false;
     }
-    
+
     // Check key validity
     var response = await gameData.HttpClient.GetAsync("https://blobk.at:1024/" + key);
     var lines = (await response.Content.ReadAsStringAsync()).Split("\n");
@@ -526,12 +526,12 @@ async Task<bool> Authorise(string? key = null)
     {
         return false;
     }
-    
+
     gameData.Name = lines[0];
     gameData.PublicKey = lines[1];
     gameData.PrivateKey = lines[2];
     gameData.AuthSignature = lines[3];
-    
+
     storage.Save("AuthKey", key);
     storage.Save(nameof(gameData.Name), gameData.Name);
     storage.Save(nameof(GameData.PublicKey), gameData.PublicKey);
@@ -547,7 +547,7 @@ Task.Run(async () =>
     {
         gameData.CurrentPage = authPage;
     }
-    
+
     await gameData.Host.RunAsync();
 });
 
@@ -572,7 +572,7 @@ while (window.IsOpen)
 {
     var deltaTime = renderClock.ElapsedTime.AsSeconds();
     renderClock.Restart();
-    
+
     window.DispatchEvents();
     window.SetView(gameData.WorldLayer);
     gameData.World?.Render(window, gameData.WorldLayer, gameData.BackgroundLayer, deltaTime);

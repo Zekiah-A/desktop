@@ -5,17 +5,17 @@ namespace OpenMcDesktop;
 public class Storage
 {
     public string DataPath;
-    
+
     public Storage(string dataPath)
     {
         DataPath = dataPath;
-        
+
         if (!Directory.Exists(DataPath))
         {
             Directory.CreateDirectory(DataPath);
         }
     }
-    
+
     public T? Get<T>(string name)
     {
         var path = Path.Join(DataPath, name);

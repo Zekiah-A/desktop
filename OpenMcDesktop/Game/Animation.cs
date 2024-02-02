@@ -68,7 +68,7 @@ public class Animation
             case KeyframeEase.BounceZeroIn:
                 var a = Math.Pow(2, Math.Floor(Math.Log2(1 - timeProgress)));
                 var b = timeProgress / a % 1;
-                return (float) ((float)((float) 2 * (-4 * Math.Pow(b - 0.5, 2) + 1) * valueDiff + previousValue) * a);
+                return (float) ((float) ((float) 2 * (-4 * Math.Pow(b - 0.5, 2) + 1) * valueDiff + previousValue) * a);
             default:
                 throw new NotImplementedException();
         }

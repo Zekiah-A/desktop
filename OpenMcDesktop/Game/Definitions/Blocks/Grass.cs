@@ -9,7 +9,7 @@ public class Grass : Block
     public override Texture InstanceTexture { get; }
     public override float BreakTime => 1.5f;
     public override Tool Tool => Tool.Shovel;
-    
+
     public Grass() { InstanceTexture = Texture; }
 }
 

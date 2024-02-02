@@ -13,19 +13,19 @@ public static class Extensions
     {
         return (int) vector2.X;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int IntY(this Vector2 vector2)
     {
         return (int) vector2.Y;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector2f Multiply(this Vector2f vector1, Vector2f vector2)
     {
         return new Vector2f(vector1.X * vector2.X, vector1.Y * vector2.Y);
     }
-    
+
     public static string ToPascalCase(this string input)
     {
         var words = input.Split("_");
@@ -33,7 +33,7 @@ public static class Extensions
         {
             words[i] = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(words[i].ToLower());
         }
-        
+
         return string.Concat(words);
     }
 

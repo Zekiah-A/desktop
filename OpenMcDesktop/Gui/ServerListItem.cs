@@ -17,7 +17,7 @@ public class ServerListItem : DisplayListItem
     private long lastClick;
 
     private void InvokeDoubleClick(object? sender, EventArgs args) => OnDoubleClick?.Invoke(sender, args);
-    
+
     public ServerListItem(Texture texture, string name, string description, string pageUri) : base(texture, name, description)
     {
         openPageButton = new Button("?", () => Bounds.EndX() - 64, () => Bounds.StartY(), () => 64, () => 64);
@@ -27,14 +27,14 @@ public class ServerListItem : DisplayListItem
         openPageButton.OnMouseUp += (_, _) =>
         {
             using var webview = new Webview();
-            webview.SetTitle($"{WebviewWindowName} - Server statistics")             
+            webview.SetTitle($"{WebviewWindowName} - Server statistics")
                 .SetSize(1024, 768, WebviewHint.None)
                 .SetSize(800, 600, WebviewHint.Min)
                 .Navigate(new UrlContent("https://" + WebviewUri + ":27277/"))
                 .Run();
         };
     }
-    
+
     public override bool HitTest(int x, int y, TestType type)
     {
         if (openPageButton.HitTest(x, y, type))
@@ -46,7 +46,7 @@ public class ServerListItem : DisplayListItem
         if (type == TestType.MouseUp && State == State.Pressed)
         {
             State = State.Default;
-            
+
             var now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
             if (now - lastClick < 500)
             {
@@ -57,7 +57,7 @@ public class ServerListItem : DisplayListItem
                 InvokeMouseUp(this, EventArgs.Empty);
             }
             lastClick = now;
-            
+
             return true;
         }
 
@@ -67,7 +67,7 @@ public class ServerListItem : DisplayListItem
             {
                 return false;
             }
-            
+
             if (type == TestType.MouseHover && State != State.Hover)
             {
                 State = State.Hover;
@@ -77,7 +77,7 @@ public class ServerListItem : DisplayListItem
             {
                 State = State.Pressed;
                 InvokeMouseDown(this, EventArgs.Empty);
-                
+
                 Focused = true;
                 InvokeFocus(this, EventArgs.Empty);
             }
@@ -90,7 +90,7 @@ public class ServerListItem : DisplayListItem
             Focused = false;
             InvokeBlur(this, EventArgs.Empty);
         }
-        
+
         if (type == TestType.MouseHover && State == State.Hover || State == State.Pressed)
         {
             State = State.Default;
@@ -101,7 +101,7 @@ public class ServerListItem : DisplayListItem
         return false;
     }
 
-    
+
     public override void Render(RenderWindow window, View view, float deltaTime)
     {
         if (State == State.Hover || Selected)
@@ -116,7 +116,7 @@ public class ServerListItem : DisplayListItem
             };
             window.Draw(border);
         }
-        
+
         var image = new RectangleShape
         {
             Position = new Vector2f(Bounds.StartX() + 8, Bounds.StartY() + 8),
@@ -124,7 +124,7 @@ public class ServerListItem : DisplayListItem
             Texture = Texture
         };
         window.Draw(image);
-        
+
         var font = new Font(@"Resources/Fonts/mojangles.ttf");
         var nameText = new Text(Name, font)
         {
@@ -133,7 +133,7 @@ public class ServerListItem : DisplayListItem
             Position = new Vector2f(Bounds.StartX() + image.Size.X + 24, Bounds.StartY() + 8)
         };
         window.Draw(nameText);
-        
+
         var descriptionText = new Text(Description, font)
         {
             CharacterSize = 24,
@@ -141,7 +141,7 @@ public class ServerListItem : DisplayListItem
             Position = new Vector2f(Bounds.StartX() + image.Size.X + 24, Bounds.StartY() + Height / 2)
         };
         window.Draw(descriptionText);
-        
+
         openPageButton.Render(window, view, deltaTime);
     }
 }

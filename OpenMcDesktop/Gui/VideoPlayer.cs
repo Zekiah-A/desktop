@@ -31,7 +31,7 @@ public class VideoPlayer : Control
             ((float) Bounds.EndX() - Bounds.StartX()) / Source.VideoSize.X,
             ((float) Bounds.EndY() - Bounds.StartY()) / Source.VideoSize.Y
         );
-        
+
         Source.Update();
         window.Draw(VideoPlayback);
     }

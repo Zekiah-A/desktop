@@ -16,7 +16,7 @@ public class Button : Control
 
     public Button(string text) : this(text, BoundsZero, BoundsZero, BoundsZero, BoundsZero)
     {
-        
+
     }
 
     public Button(string text, Func<int> x, Func<int> y, Func<int> width, Func<int> height) : base(x, y, width, height)
@@ -52,13 +52,13 @@ public class Button : Control
             Texture = guiTexture
         };
         window.Draw(background);
-        
+
         // We include backgroundLeft/right to cover up the "squished" side borders when the button has a non-default width,
         // like NinePatching, except for only two sides.
         var backgroundLeft = new RectangleShape
         {
             Position = new Vector2f(Bounds.StartX(), Bounds.StartY()),
-            Size = new Vector2f(0.1f  * (Bounds.EndY() - Bounds.StartY()), Bounds.EndY() - Bounds.StartY()),
+            Size = new Vector2f(0.1f * (Bounds.EndY() - Bounds.StartY()), Bounds.EndY() - Bounds.StartY()),
             TextureRect = State switch
             {
                 State.Default => normalCrop with { Width = 2 },
@@ -68,11 +68,11 @@ public class Button : Control
             Texture = guiTexture
         };
         window.Draw(backgroundLeft);
-        
+
         var backgroundRight = new RectangleShape
         {
-            Position = new Vector2f(Bounds.EndX() - 0.1f  * (Bounds.EndY() - Bounds.StartY()), Bounds.StartY()),
-            Size = new Vector2f(0.1f  * (Bounds.EndY() - Bounds.StartY()), Bounds.EndY() - Bounds.StartY()),
+            Position = new Vector2f(Bounds.EndX() - 0.1f * (Bounds.EndY() - Bounds.StartY()), Bounds.StartY()),
+            Size = new Vector2f(0.1f * (Bounds.EndY() - Bounds.StartY()), Bounds.EndY() - Bounds.StartY()),
             TextureRect = State switch
             {
                 State.Default => normalCrop with { Width = 2, Left = 198 },
@@ -85,7 +85,7 @@ public class Button : Control
 
         var text = new Text(Text, font);
         text.CharacterSize = (uint) ((Bounds.EndY() - Bounds.StartY()) / 1.4f);
-        text.Position = new Vector2f(Bounds.StartX() +  (Bounds.EndX() - Bounds.StartX()) / 2 - text.GetLocalBounds().Width / 2, Bounds.StartY() + 2);
+        text.Position = new Vector2f(Bounds.StartX() + (Bounds.EndX() - Bounds.StartX()) / 2 - text.GetLocalBounds().Width / 2, Bounds.StartY() + 2);
         window.Draw(text);
     }
 }

@@ -11,9 +11,9 @@ public class SkinEditor : Control
     private List<Control> Children;
     public SkinDisplay Display;
     private Grid layersGrid;
-    private Button armBackLayerButton; 
-    private Button bodyLayerButton; 
-    private Button LayerButton; 
+    private Button armBackLayerButton;
+    private Button bodyLayerButton;
+    private Button LayerButton;
 
     public SkinEditor(byte[] data, Func<int> x, Func<int> y, Func<int> width, Func<int> height) : base(x, y, width, height)
     {
@@ -73,7 +73,7 @@ public class SkinEditor : Control
         };
         Children.Add(layersGrid);
     }
-    
+
     public override bool HitTest(int x, int y, TestType type)
     {
         for (var i = Children.Count - 1; i >= 0; i--)
@@ -86,7 +86,7 @@ public class SkinEditor : Control
 
         return false;
     }
-    
+
     public override void Render(RenderWindow window, View view, float deltaTime)
     {
         foreach (var child in Children.ToList())

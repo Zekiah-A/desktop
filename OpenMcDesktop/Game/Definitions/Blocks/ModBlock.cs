@@ -10,7 +10,7 @@ public class ModBlock : Block
     public new Texture Texture;
     public override Texture InstanceTexture { get; }
     public Dictionary<string, object> Data { get; } // Additional properties that can be attatched to mod block.
-    
+
     public ModBlock(Texture texture)
     {
         Texture = texture;

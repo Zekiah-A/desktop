@@ -19,7 +19,7 @@ public static class SkinHelpers
             skinData[i] = pixel.R;
             skinData[i + 1] = pixel.G;
             skinData[i + 2] = pixel.B;
-        
+
             if (i % 3 == 0)
             {
                 skinI++;
@@ -28,7 +28,7 @@ public static class SkinHelpers
 
         return skinData;
     }
-    
+
     /// <summary>
     /// Decodes a skin into it's respective textures, if the skin happens to be in the minecraft format, it will also
     /// perform a beforehand conversion to the correct format.
@@ -56,7 +56,7 @@ public static class SkinHelpers
         WriteSpanToImageRegion(source, 28, 0, 0, 4, 12, body, 0, 0);
         WriteSpanToImageRegion(source, 28, 12, 0, 16, 12, legFront, 0, 0);
         WriteSpanToImageRegion(source, 28, 16, 0, 20, 12, legBack, 0, 0);
-        
+
         result.Head = head;
         result.ArmFront = armFront;
         result.ArmBack = armBack;
@@ -74,12 +74,12 @@ public static class SkinHelpers
     {
         var result = new Span<byte>(new byte[1008]);
         var image = new Image(data);
-        
+
         if (image.Size.X != 64 || image.Size.Y != 64)
         {
             return null;
         }
-        
+
         // Head, Arm Front, Arm Back, Body, Leg Front, Leg Back
         WriteImageRegionToSpan(image, 0, 8, 8, 16, result, 28, 20, 4);
         WriteImageRegionToSpan(image, 44, 20, 48, 32, result, 28, 4, 0);
@@ -111,14 +111,14 @@ public static class SkinHelpers
                 destination[destinationIndex] = pixel.R;
                 destination[destinationIndex + 1] = pixel.G;
                 destination[destinationIndex + 2] = pixel.B;
-                
+
                 destinationIndex += 3;
                 destinationX++;
             }
             destinationY++;
         }
     }
-    
+
     /// <summary>
     /// Writes a rectangular region of a span to a SFML image as if it were 2D.
     /// "destinationWidth" must be the FULL 2D width of the destination, as if it were a 2d image.

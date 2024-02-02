@@ -30,23 +30,23 @@ public class GameData
 
 
     // Game runtime objects and definitions
-        // We can use Activator.CreateInstance() to create instances from these [thing] types
+    // We can use Activator.CreateInstance() to create instances from these [thing] types
     public string[] BlockDefinitions { get; set; }
     public string[] ItemDefinitions { get; set; }
     public string[] EntityDefinitions { get; set; }
-        // Maps the type of [thing] to the index of [thing] in [Thing]s
+    // Maps the type of [thing] to the index of [thing] in [Thing]s
     public Dictionary<string, int> BlockIndex { get; set; }
     public Dictionary<string, int> ItemIndex { get; set; }
     public Dictionary<string, int> EntityIndex { get; set; }
-        // Shared/template objects for all [thing] types that can be used to avoid creating thousands of identical block
-        // instances for [thing] that have no variation (like grass), or to copy from for creating new [thing] instances.
+    // Shared/template objects for all [thing] types that can be used to avoid creating thousands of identical block
+    // instances for [thing] that have no variation (like grass), or to copy from for creating new [thing] instances.
     public Block[] Blocks { get; set; }
     public Item[] Items { get; set; }
     public Entity[] Entities { get; set; }
 
     // Specific client properties
     public long MyPlayerId { get; set; }
-    public Entity MyPlayer { get; set;}
+    public Entity MyPlayer { get; set; }
     public byte MyPlayerKey { get; set; }
 
     // Account and authorisation

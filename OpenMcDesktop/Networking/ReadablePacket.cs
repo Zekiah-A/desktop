@@ -20,7 +20,7 @@ public ref struct ReadablePacket
         Data = data;
     }
 
-    public object? Read(object? target, Type type)     
+    public object? Read(object? target, Type type)
     {
         if (type == typeof(byte) || type == typeof(sbyte)) return ReadByte();
         if (type == typeof(short)) return ReadShort();
@@ -32,7 +32,7 @@ public ref struct ReadablePacket
         if (type == typeof(bool)) return ReadBool();
         if (type == typeof(string)) return ReadString();
         if (type == typeof(byte[])) return ReadByteArray();
-        
+
         // If it is a decodable, such an an item, then the item's deserializer will handle this data
         if (typeof(IDecodable).IsAssignableFrom(type))
         {
@@ -59,26 +59,26 @@ public ref struct ReadablePacket
 
         return target;
     }
-    
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public byte ReadByte() => Data[Position++];
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public short ReadShort() => BinaryPrimitives.ReadInt16BigEndian(Data[((Position += 2) - 2)..]);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ushort ReadUShort() => BinaryPrimitives.ReadUInt16BigEndian(Data[((Position += 2) - 2)..]);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int ReadInt() => BinaryPrimitives.ReadInt32BigEndian(Data[((Position += 4) - 4)..]);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public uint ReadUInt() => BinaryPrimitives.ReadUInt32BigEndian(Data[((Position += 4) - 4)..]);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public double ReadDouble() => BinaryPrimitives.ReadDoubleBigEndian(Data[((Position += 8) - 8)..]);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public float ReadFloat() => BinaryPrimitives.ReadSingleBigEndian(Data[((Position += 4) - 4)..]);
 
@@ -111,7 +111,7 @@ public ref struct ReadablePacket
 
         return value;
     }
-    
+
     public byte[] ReadBytes(int count)
     {
         var array = Data[Position..(Position + count)];
@@ -138,7 +138,7 @@ public ref struct ReadablePacket
         var subArray = ReadByteArray();
         return Encoding.UTF8.GetString(subArray);
     }
-    
+
     public static implicit operator ReadablePacket(byte[] data)
     {
         return new ReadablePacket(data);
@@ -148,7 +148,7 @@ public ref struct ReadablePacket
     {
         return packet.Data.ToArray();
     }
-    
+
     public static implicit operator Span<byte>(ReadablePacket packet)
     {
         return packet.Data;

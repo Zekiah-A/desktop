@@ -45,7 +45,7 @@ public class World
     public Vector2f CameraSize { get; set; } = new Vector2f(28, 16); // How many (blocks) across and up/down camera can see
     public int CameraZoomLevel { get; set; } = 1;
     public int[] CameraZoomRealBlockSizes { get; set; } = { 32, 64, 128, 256 };
-    
+
     private GameData gameData;
 
     static World()
@@ -61,7 +61,7 @@ public class World
 
         Map = new ConcurrentDictionary<int, Chunk>();
         Entities = new ConcurrentDictionary<long, Entity>();
-        
+
         var skyTexture = new Texture("Resources/Textures/sky.png");
         Sun = new Texture(skyTexture.CopyToImage(), new IntRect(128, 64, 32, 32));
         Moons = new[]
@@ -93,14 +93,14 @@ public class World
         tickTimer.Elapsed += Tick;
         tickTimer.Start();
     }
-    
+
     public Block GetBlock(int x, int y)
     {
         var chunkKey = (x >>> 6) + (y >>> 6) * 67108864;
         var chunk = Map.GetValueOrDefault(chunkKey);
         return chunk?.Tiles[(x & 63) + ((y & 63) << 6)] ?? gameData.Blocks[gameData.BlockIndex[nameof(Air)]];
     }
-    
+
     public void SetBlock(int x, int y, int blockId)
     {
         var chunkKey = (x >>> 6) + (y >>> 6) * 67108864;
@@ -140,17 +140,10 @@ public class World
         {
             gameData.MyPlayerId = -1;
         }
-        
+
         entity.Chunk?.Entities.Remove(entity);
     }
-    
-    /// <summary>
-    /// #0a0c14: RGB(10, 12, 20) - A dark blue-black color used as the darker shade in the sky gradient.
-    /// #040609: RGB(4, 6, 9) - A darker blue-black color used as the darkest shade in the sky gradient.
-    /// #c3d2ff: RGB(195, 210, 255) - A light blue color used as the lighter shade in the sky gradient.
-    /// #78a7ff: RGB(120, 167, 255) - A brighter blue color used as the brightest shade in the sky gradient.
-    /// #c5563b: RGB(197, 86, 59) - A reddish-orange color used as the base color for the horizon during sunset and sunrise.
-    /// </summary>
+
     private void RenderSky(RenderWindow window, View worldLayer, View backgroundLayer)
     {
         window.SetView(backgroundLayer);
@@ -164,25 +157,25 @@ public class World
                 < 1800 => (int) (255 * (1 - Math.Abs(time - 900) / 900f)),
                 >= 13800 and < 15600 => (int) (255 * (1 - Math.Abs(time - 14700) / 900f)),
                 _ => 0
-            };        
+            };
 
-            var atmosphereColour = new Color(10, 12, 20);
-            var horizonColour = new Color(4, 6, 9);
+            var atmosphereColour = new Color(10, 12, 20); // dark sky
+            var horizonColour = new Color(4, 6, 9); //darkest sky 
             // Night sky backing sky layer
             CreateSkyGradient(window, atmosphereColour, horizonColour);
             // Daylight horizon and sky
-            CreateSkyGradient(window, new Color(120, 167, 255, (byte) lightness),
+            CreateSkyGradient(window, new Color(120, 167, 255, (byte) lightness), // bright blue daylight sky
                 new Color(195, 210, 255, (byte) lightness));
             // Orange sunrise/sunset hue
-            CreateSkyGradient(window, Color.Transparent, new Color(197, 86, 59, (byte) orangeness));
+            CreateSkyGradient(window, Color.Transparent, new Color(197, 86, 59, (byte) orangeness)); // sunset sunrise orange
         }
         else if (Dimension == OpenMcDesktop.Game.Dimension.Nether)
         {
-		    var backgroundRect = new RectangleShape(window.GetView().Size)
+            var backgroundRect = new RectangleShape(window.GetView().Size)
             {
                 FillColor = new Color(25, 4, 4)
             };
-            
+
             window.Draw(backgroundRect);
         }
         else if (Dimension == OpenMcDesktop.Game.Dimension.End)
@@ -192,16 +185,16 @@ public class World
                 FillColor = Color.Black
             };
             window.Draw(backgroundRect);
-            
+
             var skyRect = new RectangleShape
             {
                 Size = window.GetView().Size,
                 Texture = EndSky,
-                TextureRect = new IntRect((int)window.GetView().Viewport.Left, (int)window.GetView().Viewport.Top,
-                    (int)window.GetView().Viewport.Width, (int)window.GetView().Viewport.Height),
+                TextureRect = new IntRect((int) window.GetView().Viewport.Left, (int) window.GetView().Viewport.Top,
+                    (int) window.GetView().Viewport.Width, (int) window.GetView().Viewport.Height),
                 FillColor = new Color(255, 255, 255, 38)
             };
-            
+
             window.Draw(skyRect);
         }
 
@@ -212,7 +205,7 @@ public class World
     private static void CreateSkyGradient(RenderTarget window, Color atmosphereColour, Color horizonColour)
     {
         var vertices = new VertexArray(PrimitiveType.Quads, 4);
-        
+
         vertices[0] = new Vertex(new Vector2f(0, 0), atmosphereColour);
         vertices[1] = new Vertex(new Vector2f(window.GetView().Size.X, 0), atmosphereColour);
         vertices[2] = new Vertex(new Vector2f(window.GetView().Size.X, window.GetView().Size.Y), horizonColour);
@@ -250,7 +243,7 @@ public class World
         // At fullscreen, 1920 / n = realBlockSize, 1080 / n realBlockSize, so to keep blocks square, we just have to find N for X and Y
         CameraSize = new Vector2f(gameData.WorldLayer.Size.X / realBlockSize, gameData.WorldLayer.Size.Y / realBlockSize);
     }
-    
+
     private Vector2f lastPosition;
     public void Update(float deltaTime)
     {
@@ -270,11 +263,7 @@ public class World
         {
             CameraPosition += new Vector2f(0.1f, 0) * (Keyboard.IsKeyPressed(Keyboard.Key.LShift) ? 20 : 1);
         }
-        if (Keyboard.IsKeyPressed(Keyboard.Key.Num1))
-        {
-               
-        }
-        
+
         if (Mouse.IsButtonPressed(Mouse.Button.Left))
         {
             var mousePosition = Mouse.GetPosition();
@@ -287,7 +276,7 @@ public class World
             lastPosition = CameraPosition;
         }
     }
-    
+
     private void Tick(object? sender, ElapsedEventArgs args)
     {
         TickCount++;

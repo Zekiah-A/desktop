@@ -12,14 +12,14 @@ public class DisplayListItem : Control
     public int Height { get; set; } = 128;
     public Color BorderColour { get; set; } = new(255, 255, 255, 128);
     public Color DescriptionColour { get; set; } = new(255, 255, 255, 200);
-    
+
     public DisplayListItem(Texture texture, string name, string description)
     {
         Texture = texture;
         Name = name;
         Description = description;
     }
-    
+
     public override void Render(RenderWindow window, View view, float deltaTime)
     {
         if (State == State.Hover || Selected)
@@ -34,7 +34,7 @@ public class DisplayListItem : Control
             };
             window.Draw(border);
         }
-        
+
         var image = new RectangleShape
         {
             Position = new Vector2f(Bounds.StartX() + 8, Bounds.StartY() + 8),
@@ -42,7 +42,7 @@ public class DisplayListItem : Control
             Texture = Texture
         };
         window.Draw(image);
-        
+
         var font = new Font(@"Resources/Fonts/mojangles.ttf");
         var nameText = new Text(Name, font)
         {
@@ -51,7 +51,7 @@ public class DisplayListItem : Control
             Position = new Vector2f(Bounds.StartX() + image.Size.X + 24, Bounds.StartY() + 8)
         };
         window.Draw(nameText);
-        
+
         var descriptionText = new Text(Description, font)
         {
             CharacterSize = 24,

@@ -25,7 +25,7 @@ public ref struct WriteablePacket
         Array.Resize(ref RawData, RawData.Length + ReallocSize);
         Data = new Span<byte>(RawData);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteByte(byte data)
     {
@@ -49,7 +49,7 @@ public ref struct WriteablePacket
         Data[Position] = (byte) (data ? 1 : 0);
         Position++;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteUShort(ushort data)
     {
@@ -86,7 +86,7 @@ public ref struct WriteablePacket
         BinaryPrimitives.WriteUInt32BigEndian(Data[Position..], data);
         Position += sizeof(uint);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteInt(int data)
     {
@@ -98,7 +98,7 @@ public ref struct WriteablePacket
         BinaryPrimitives.WriteInt32BigEndian(Data[Position..], data);
         Position += sizeof(int);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteFloat(float data)
     {
@@ -110,7 +110,7 @@ public ref struct WriteablePacket
         BinaryPrimitives.WriteSingleBigEndian(Data[Position..], data);
         Position += sizeof(float);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteDouble(double data)
     {
@@ -122,7 +122,7 @@ public ref struct WriteablePacket
         BinaryPrimitives.WriteDoubleBigEndian(Data[Position..], data);
         Position += sizeof(double);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteString(string data)
     {
@@ -137,7 +137,7 @@ public ref struct WriteablePacket
         {
             if (size > 2147483647)
             {
-                
+
             }
         }
 
@@ -163,7 +163,7 @@ public ref struct WriteablePacket
     {
         return packet.Data[..packet.Position].ToArray();
     }
-    
+
     public static implicit operator Span<byte>(WriteablePacket packet)
     {
         return packet.Data[..packet.Position];

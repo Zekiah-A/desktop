@@ -13,7 +13,7 @@ public class ModLoader
     private string apiScript;
     private string definitionsScript;
     private string worldScript;
-    
+
     public ModLoader()
     {
         glue = new ModGlue(StaticData.GameData);
@@ -21,7 +21,7 @@ public class ModLoader
         definitionsScript = File.ReadAllText("Resources/ModBindings/definitions.js");
         worldScript = File.ReadAllText("Resources/ModBindings/world.js");
     }
-    
+
     public async Task ExecutePack(string url)
     {
         try
@@ -32,10 +32,10 @@ public class ModLoader
             using var engine = new V8ScriptEngine();
             engine.DocumentSettings = new DocumentSettings
             {
-                SearchPath =  uri.ToString(),
+                SearchPath = uri.ToString(),
                 AccessFlags = DocumentAccessFlags.EnableAllLoading
             };
-            
+
             engine.AddHostObject("glue", glue);
             engine.DocumentSettings.AddSystemDocument("api", ModuleCategory.Standard, apiScript);
             engine.DocumentSettings.AddSystemDocument("world", ModuleCategory.Standard, definitionsScript);
@@ -43,7 +43,7 @@ public class ModLoader
 
             engine.Execute(new DocumentInfo(uri) { Category = ModuleCategory.Standard }, initialScript);
         }
-        catch(Exception exception)
+        catch (Exception exception)
         {
             StaticData.GameData.Logger.LogError("Failed to execute mod pack {url}, {exception}", url, exception);
         }

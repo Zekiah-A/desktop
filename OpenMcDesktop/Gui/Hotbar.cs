@@ -11,19 +11,19 @@ public class Hotbar : Control
     private Texture backgroundTexture;
     private Texture selectionTexture;
     private Item?[] Items;
-    
+
     public Hotbar(Func<int> x, Func<int> y, Func<int> width, Func<int> height) : base(x, y, width, height)
     {
         backgroundTexture = new Texture("Resources/Textures/gui.png", new IntRect(0, 0, 182, 22));
         selectionTexture = new Texture("Resources/Textures/gui.png", new IntRect(0, 22, 24, 24));
         Items = new Item?[9];
     }
-    
+
     public override void Render(RenderWindow window, View view, float deltaTime)
     {
         var width = Bounds.EndX() - Bounds.StartX();
         var height = Bounds.EndY() - Bounds.StartY();
-        
+
         var backgroundRect = new RectangleShape
         {
             Texture = backgroundTexture,
@@ -38,18 +38,18 @@ public class Hotbar : Control
             {
                 continue;
             }
-            
+
             var itemRect = new RectangleShape
             {
                 Position = new Vector2f(Bounds.StartX() + i * height, Bounds.StartY()),
                 Size = new Vector2f(height, height),
                 Texture = Items[i]!.InstanceTexture
             };
-            
+
             window.Draw(itemRect);
         }
-        
-        var selectSize = selectionTexture.Size.X / (float)backgroundTexture.Size.X * width;
+
+        var selectSize = selectionTexture.Size.X / (float) backgroundTexture.Size.X * width;
         var selectRect = new RectangleShape
         {
             Texture = selectionTexture,

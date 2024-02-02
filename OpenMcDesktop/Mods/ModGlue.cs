@@ -13,17 +13,17 @@ public class ModGlue
     {
         gameData = data;
     }
-    
+
     public void GetPaused()
     {
-        
+
     }
 
     public void SetPaused()
     {
-        
+
     }
-    
+
     Block[] GetBlockDefinitions()
     {
         return gameData.Blocks;
@@ -36,26 +36,26 @@ public class ModGlue
 
     void DefineBlock(Block block)
     {
-        
+
     }
 
     void DefineItem()
     {
-        
+
     }
 
     void DefineEntity()
     {
-        
+
     }
-    
+
     void GetBlock()
     {
-        
+
     }
 
     void SetBlock()
     {
-        
+
     }
 }

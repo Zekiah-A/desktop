@@ -35,7 +35,7 @@ public class SkinDisplay : Control
     {
         mouseX = x;
         mouseY = y;
-        return base.HitTest(x, y, type);;
+        return base.HitTest(x, y, type); ;
     }
 
     public override void Render(RenderWindow window, View view, float deltaTime)
@@ -47,7 +47,7 @@ public class SkinDisplay : Control
             12 / virtualHeight * (Bounds.EndY() - Bounds.StartY()));
         var frontRotation = (float) Math.Sin(frame) * 30f;
         var backRotation = (float) Math.Sin(frame + (float) Math.PI) * 30f;
-        
+
         var bodyPosition = topLeft + new Vector2f(
             6 / virtualWidth * (Bounds.EndX() - Bounds.StartX()) + (limbSize.X / 2),
             8 / virtualHeight * (Bounds.EndY() - Bounds.StartY()));
@@ -56,9 +56,9 @@ public class SkinDisplay : Control
         var armsBodyPosition = topLeft + new Vector2f(
             6 / virtualWidth * (Bounds.EndX() - Bounds.StartX()) + (limbSize.X / 2),
             8 / virtualHeight * (Bounds.EndY() - Bounds.StartY()) + (limbSize.Y / 6));
-        
+
         var headSize = new Vector2f(8 / virtualWidth * (Bounds.EndX() - Bounds.StartX()),
-            8  / virtualHeight * (Bounds.EndY() - Bounds.StartY()));
+            8 / virtualHeight * (Bounds.EndY() - Bounds.StartY()));
         var headCentrePosition =
             topLeft + new Vector2f(4 / virtualWidth * (Bounds.EndX() - Bounds.StartX()), 0) + headSize / 2;
         var flip = mouseX < headCentrePosition.X;
@@ -66,7 +66,7 @@ public class SkinDisplay : Control
         var flipTransform = Transform.Identity;
         flipTransform.Scale(flip ? new Vector2f(-1, 1) : new Vector2f(1, 1));
         var flipStates = new RenderStates(flipTransform);
-         
+
         if ((Layer & Layers.LegBack) == Layers.LegBack)
         {
             var legsBackRect = new RectangleShape
@@ -74,7 +74,7 @@ public class SkinDisplay : Control
                 Position = legsPosition.Multiply(flipVector),
                 Size = limbSize,
                 Texture = new Texture(Skin.LegBack)
-            }; 
+            };
             legsBackRect.Origin = new Vector2f(limbSize.X / 2, 0);
             legsBackRect.Rotation = backRotation;
             window.Draw(legsBackRect, flipStates);
@@ -126,7 +126,7 @@ public class SkinDisplay : Control
             armFrontRect.Rotation = frontRotation;
             window.Draw(armFrontRect, flipStates);
         }
-        
+
         var headRect = new RectangleShape
         {
             Position = bodyPosition.Multiply(flipVector),
@@ -134,12 +134,12 @@ public class SkinDisplay : Control
             Size = headSize,
             Texture = new Texture(Skin.Head)
         };
-        var headAngle = float.Atan2( (mouseY - headCentrePosition.Y), Math.Abs(mouseX - headCentrePosition.X));
+        var headAngle = float.Atan2((mouseY - headCentrePosition.Y), Math.Abs(mouseX - headCentrePosition.X));
         headAngle = MathHelpers.RadToDeg(headAngle);
         headRect.Rotation = MathHelpers.Lerp(headRotation, headAngle, 0.1f);
         headRotation = headRect.Rotation;
         window.Draw(headRect, flipStates);
-        
+
         if (State == State.Hover)
         {
             var border = new RectangleShape

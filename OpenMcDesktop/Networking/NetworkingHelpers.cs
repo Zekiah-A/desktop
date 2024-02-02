@@ -18,7 +18,7 @@ public static class NetworkingHelpers
             }
             else
             {
-                result.Append('%' + ((int)@char).ToString("X2"));
+                result.Append('%' + ((int) @char).ToString("X2"));
             }
         }
 

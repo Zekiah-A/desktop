@@ -9,7 +9,7 @@ public class TextInput : Control
     public string Text { get; set; } = "";
     public string Placeholder { get; set; }
     public Color BorderColour { get; set; } = new(255, 255, 255, 128);
-    
+
     public EventHandler<EventArgs>? OnSubmit;
 
     private Texture guiTexture;
@@ -30,7 +30,7 @@ public class TextInput : Control
         {
             return false;
         }
-        
+
         switch (key)
         {
             case Keyboard.Key.Enter:
@@ -51,7 +51,7 @@ public class TextInput : Control
         {
             return false;
         }
-        
+
         Text += unicode;
         return true;
     }
@@ -75,7 +75,7 @@ public class TextInput : Control
         window.Draw(text);
 
         window.SetMouseCursor(State is State.Hover or State.Pressed ? SfmlHelpers.TextCursor : SfmlHelpers.DefaultCursor);
-        
+
         if (Focused)
         {
             var cursorRect = new RectangleShape

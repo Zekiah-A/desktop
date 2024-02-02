@@ -8,7 +8,7 @@ public class Netherrack : Block
     public new static Texture Texture => World.TerrainAtlas.AtBlock(7, 6);
     public override Texture InstanceTexture { get; }
     public override Tool Tool => Tool.Pickaxe;
-    
+
     public Netherrack() { InstanceTexture = Texture; }
 }
 

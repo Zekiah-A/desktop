@@ -12,7 +12,7 @@ public abstract class Control
     public event EventHandler<EventArgs>? OnLeave;
     public event EventHandler<EventArgs>? OnMouseDown;
     public event EventHandler<EventArgs>? OnMouseUp;
-    public event EventHandler<EventArgs>? OnFocus; 
+    public event EventHandler<EventArgs>? OnFocus;
     public event EventHandler<EventArgs>? OnBlur;
     public static int BoundsZero() => 0;
     private int Width => Bounds.EndX() - Bounds.StartX();
@@ -37,7 +37,7 @@ public abstract class Control
     {
         Bounds = bounds;
     }
-    
+
     protected Control()
     {
         Bounds.StartX = BoundsZero;
@@ -45,7 +45,7 @@ public abstract class Control
         Bounds.EndX = BoundsZero;
         Bounds.EndY = BoundsZero;
     }
-    
+
     public virtual bool HitTest(int x, int y, TestType type)
     {
         if (type == TestType.MouseUp && State == State.Pressed)
@@ -61,7 +61,7 @@ public abstract class Control
             {
                 return false;
             }
-            
+
             if (type == TestType.MouseHover && State != State.Hover)
             {
                 State = State.Hover;
@@ -71,7 +71,7 @@ public abstract class Control
             {
                 State = State.Pressed;
                 OnMouseDown?.Invoke(this, EventArgs.Empty);
-                
+
                 Focused = true;
                 OnFocus?.Invoke(this, EventArgs.Empty);
             }
@@ -84,7 +84,7 @@ public abstract class Control
             Focused = false;
             OnBlur?.Invoke(this, EventArgs.Empty);
         }
-        
+
         if (type == TestType.MouseHover && State == State.Hover || State == State.Pressed)
         {
             State = State.Default;

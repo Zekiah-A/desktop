@@ -11,12 +11,12 @@ public class DisplayList : Control
     public int ItemSpacing = 16;
     public int Scroll = 0;
     public int SelectedIndex = -1;
-    
+
     public DisplayList(Func<int> x, Func<int> y, Func<int> width, Func<int> height) : base(x, y, width, height)
     {
         Children = new List<DisplayListItem>();
     }
-    
+
     public override bool HitTest(int x, int y, TestType type)
     {
         for (var i = Children.Count - 1; i >= 0; i--)

@@ -39,10 +39,10 @@ public abstract class Item : IDecodable
         {
             target.SaveData = data.Read(target.SaveData, target.SaveDataType);
         }
-        
+
         return target;
     }
-    
+
     /// <summary>
     /// Deep copies an item, usually from a template instance such as those provided in the item definitions to apply
     /// specific modifications, such as a certain nametag, etc.

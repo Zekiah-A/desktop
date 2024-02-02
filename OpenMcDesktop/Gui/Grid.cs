@@ -18,12 +18,12 @@ public class Grid : Control
     public int RowGap { get; set; } = 0;
     public int ColumnGap { get; set; } = 0;
     public Control?[,] Children { get; set; }
-    
+
     public Grid(int columns, int rows, Func<int> x, Func<int> y, Func<int> width, Func<int> height) : base(x, y, width, height)
     {
         Children = new Control?[columns, rows];
     }
-    
+
     public override bool HitTest(int x, int y, TestType type)
     {
 
@@ -46,10 +46,10 @@ public class Grid : Control
                 return true;
             }
         }
-        
+
         return false;
     }
-    
+
     public override bool TextTest(string unicode)
     {
         foreach (var child in Children)
@@ -67,7 +67,7 @@ public class Grid : Control
     {
         var columnWidth = (Bounds.EndX() - Bounds.StartX()) / Columns;
         var rowHeight = (Bounds.EndY() - Bounds.StartY()) / Rows;
-        
+
         for (var column = 0; column < Columns; column++)
         {
             for (var row = 0; row < Rows; row++)

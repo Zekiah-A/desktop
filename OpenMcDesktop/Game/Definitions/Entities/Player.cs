@@ -50,6 +50,6 @@ public class Player : Entity
 
     public override void Render(RenderWindow window)
     {
-        
+
     }
 }
