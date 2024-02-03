@@ -194,11 +194,13 @@ serversPage.Children.Add(serversLabel);
 
 var serverListStartX = () => 64;
 var serverListStartY = () => 192;
-var serverListWidth = () => (int) (window.GetView().Size.X - 128);
-var serverListHeight = () => (int) (window.GetView().Size.Y - 384);
+var serverListWidth = () => (int) (window.Size.X - 128);
+var serverListHeight = () => (int) (window.Size.Y - 384);
 
-var serverListScroll = new ScrollBox(serverListStartX, serverListStartY, serverListWidth, serverListHeight);
-var serverList = new DisplayList(serverListStartX, serverListStartY, serverListWidth, serverListHeight);
+var serverListScroll = new ScrollBox(serverListStartX, serverListStartY,
+    serverListWidth, serverListHeight);
+var serverList = new DisplayList(() => serverListStartX() + 16,
+    () => serverListStartY() + 8, () => serverListWidth() - 32, serverListHeight);
 serverListScroll.Children.Add(serverList);
 serversPage.Children.Add(serverListScroll);
 
