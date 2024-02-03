@@ -53,8 +53,8 @@ public partial class Connections
         int GameHotbarHeight() => (int) (22 / 182.0f * gameData.Window.GetView().Size.X * 0.4f);
         int GameHotbarWidth() => (int) (gameData.Window.GetView().Size.X * 0.4f);
 
-        gameChat = new ChatBox(Control.BoundsZero, () => (int)(gameData.Window.GetView().Size.Y / 2),
-            () => (int)(gameData.Window.GetView().Size.X / 2), () => (int)(gameData.Window.GetView().Size.Y / 2));
+        gameChat = new ChatBox(Control.BoundsZero, () => (int) (gameData.Window.GetView().Size.Y / 2),
+            () => (int) (gameData.Window.GetView().Size.X / 2), () => (int) (gameData.Window.GetView().Size.Y / 2));
         gameGuiPage.Children.Add(gameChat);
 
         gameHotbar = new Hotbar(

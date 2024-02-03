@@ -5,7 +5,7 @@ able to run otherwise.
 
 ![image](https://user-images.githubusercontent.com/73035340/226137372-7dfd48f6-5d94-46fe-9763-a9cacb168030.png)
 
-### Dpendencies:
+## Dependencies:
 All dependencies should be included with this project via the csproj.
  - There is a known bug in SFML.NET that may cause the csfml packages to appear as unavailable on linux systems due to
 the `csfml` library not being bundled into the C# package. This is being tracked and can be rectified with the solutions
@@ -27,6 +27,13 @@ All native library depdencies are included as git submodules on this repository,
    - Run cmake in the openmc desktop root directory with the additional flags `-DCMAKE_TOOLCHAIN_FILE=CrossWindowsToolchain.cmake /path/to/library` in order to cross compile a library.
    - Keep note that this has only been tested on arch linux, with the `mingw-w64-gcc` package being required to compile with the toolchain.
    - For example, to compile motion, the command should look like `export CC=x86_64-w64-mingw32-gcc && cmake -DCMAKE_TOOLCHAIN_FILE=CrossWindowsToolchain.cmake Motion/Motion/ -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=TRUE -DMOTION_LINK_SFML_STATICALLY=FALSE` 
+
+## Development:
+### GUI:
+ - The game custom GUI library is located in [](OpenMcDesktop/Gui). It features a few notable difference from most regular UI libraries. For instance:
+   - Elements don't use X, Y, Width, Height, but instead use StartX, StartY, EndX, EndY (Bounds).
+   - All positioning properties are also functions that are evaluated each frame, meaning that positioning can be made agnostic to screen dimensions.
+   - Child element positioning on elements such as Page and ScrollBox are relative to the screen, regardless of the positioning of their parent, unless the parent is a special positioning control like a Grid or DisplayList.
 
 ### TODO:
  - Dynamically link motion to .NET SFML.NET dependencies

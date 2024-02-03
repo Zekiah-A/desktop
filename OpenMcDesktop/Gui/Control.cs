@@ -14,6 +14,8 @@ public abstract class Control
     public event EventHandler<EventArgs>? OnMouseUp;
     public event EventHandler<EventArgs>? OnFocus;
     public event EventHandler<EventArgs>? OnBlur;
+    public event EventHandler<ScrollEventArgs>? OnScroll;
+
     public static int BoundsZero() => 0;
     private int Width => Bounds.EndX() - Bounds.StartX();
     private int Height => Bounds.EndY() - Bounds.StartY();
@@ -24,6 +26,7 @@ public abstract class Control
     protected void InvokeMouseUp(object? sender, EventArgs args) => OnMouseUp?.Invoke(sender, args);
     protected void InvokeFocus(object? sender, EventArgs args) => OnFocus?.Invoke(sender, args);
     protected void InvokeBlur(object? sender, EventArgs args) => OnBlur?.Invoke(sender, args);
+    protected void InvokeScroll(object? sender, ScrollEventArgs args) => OnScroll?.Invoke(sender, args);
 
     protected Control(Func<int> x, Func<int> y, Func<int>? width = null, Func<int>? height = null)
     {
@@ -90,6 +93,17 @@ public abstract class Control
             State = State.Default;
             OnLeave?.Invoke(this, EventArgs.Empty);
             return false;
+        }
+
+        return false;
+    }
+
+    public virtual bool WheelTest(int x, int y, float delta, TestType type)
+    {
+        if (x > Bounds.StartX() && x < Bounds.EndX() && y > Bounds.StartY() && y < Bounds.EndY())
+        {
+            OnScroll?.Invoke(this, new ScrollEventArgs(delta));
+            return true;
         }
 
         return false;

@@ -72,7 +72,7 @@ window.MouseButtonPressed += (_, args) =>
         if (gameData.CurrentPage?.HitTest(args.X, args.Y, TestType.MouseDown) is false)
         {
             // If not blocked by the UI, then we propagate the hit test to the main game
-            Keybinds.MouseDown(args.X, args.Y, TestType.MouseDown);
+            Keybinds.MouseEvent(args.X, args.Y, TestType.MouseDown);
         }
     }
 };
@@ -83,7 +83,7 @@ window.MouseButtonReleased += (_, args) =>
         if (gameData.CurrentPage?.HitTest(args.X, args.Y, TestType.MouseUp) is false)
         {
             // If not blocked by the UI, then we propagate the hit test to the main game
-            Keybinds.MouseUp(args.X, args.Y, TestType.MouseUp);
+            Keybinds.MouseEvent(args.X, args.Y, TestType.MouseUp);
         }
     }
 };
@@ -97,7 +97,20 @@ window.MouseMoved += (_, args) =>
     if (gameData.CurrentPage?.HitTest(args.X, args.Y, TestType.MouseHover) is false)
     {
         // If not blocked by the UI, then we propagate the hit test to the main game
-        Keybinds.MouseMove(args.X, args.Y, TestType.MouseHover);
+        Keybinds.MouseEvent(args.X, args.Y, TestType.MouseHover);
+    }
+};
+window.MouseWheelScrolled += (_, args) =>
+{
+    if (!window.HasFocus())
+    {
+        return;
+    }
+
+    if (gameData.CurrentPage?.WheelTest(args.X, args.Y, args.Delta, TestType.MouseWheel) is false)
+    {
+        // If not blocked by the UI, then we propagate the hit test to the main game
+        Keybinds.MouseEvent(args.X, args.Y, TestType.MouseWheel);
     }
 };
 
@@ -112,7 +125,7 @@ void PropagateKeyTest(KeyEventArgs args, TestType type)
     if (gameData.CurrentPage?.KeyboardTest(args.Code, modifiers, type) is false)
     {
         // If not blocked by the UI, then we propagate the keyboard test to the main game
-        Keybinds.KeyPressed(args.Code, modifiers, type);
+        Keybinds.KeyEvent(args.Code, modifiers, type);
     }
 }
 
@@ -178,12 +191,18 @@ var serversLabel = new Label("Connect to a server:", 28, Color.White)
     Bounds = new Bounds(() => (int) (window.GetView().Size.X / 2) - 156, () => 128, () => 0, () => 0)
 };
 serversPage.Children.Add(serversLabel);
-var serverList = new DisplayList(() => 64, () => 192,
-    () => (int) (window.GetView().Size.X - 128),
-    () => (int) (window.GetView().Size.X * 0.8));
+
+var serverListStartX = () => 64;
+var serverListStartY = () => 192;
+var serverListWidth = () => (int) (window.GetView().Size.X - 128);
+var serverListHeight = () => (int) (window.GetView().Size.Y - 384);
+
+var serverListScroll = new ScrollBox(serverListStartX, serverListStartY, serverListWidth, serverListHeight);
+var serverList = new DisplayList(serverListStartX, serverListStartY, serverListWidth, serverListHeight);
+serverListScroll.Children.Add(serverList);
+serversPage.Children.Add(serverListScroll);
 
 var serverListUpdating = false;
-
 async Task CreateKnownServerItem(string serverIp)
 {
     var listItem = new ServerListItem(new Texture(@"Resources/Brand/grass_icon.png"),
@@ -245,7 +264,6 @@ async Task UpdateServerList()
 
 Task.Run(UpdateServerList);
 
-serversPage.Children.Add(serverList);
 var serversOptionsGrid = new Grid(4, 1, Control.BoundsZero, () => (int) (window.GetView().Size.Y - 152),
     () => (int) window.GetView().Size.X, () => 64)
 {

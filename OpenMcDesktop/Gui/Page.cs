@@ -6,6 +6,7 @@ namespace OpenMcDesktop.Gui;
 
 /// <summary>
 /// A generic control that has the ability to group a number of controls via it's Children.
+/// Most child-having controls should inherit from this.
 /// </summary>
 public class Page : Control
 {
@@ -21,6 +22,19 @@ public class Page : Control
         for (var i = Children.Count - 1; i >= 0; i--)
         {
             if (Children[i].HitTest(x, y, type))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public override bool WheelTest(int x, int y, float delta, TestType type)
+    {
+        for (var i = Children.Count - 1; i >= 0; i--)
+        {
+            if (Children[i].WheelTest(x, y, delta, type))
             {
                 return true;
             }
