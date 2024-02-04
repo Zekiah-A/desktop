@@ -28,46 +28,33 @@ public partial class Connections
     private delegate void PacketHandler(ref ReadablePacket data);
     private readonly Dictionary<int, PacketHandler> packetHandlers;
     private readonly GameData gameData;
-    private readonly Page gameGuiPage;
     private readonly Page serverLoadingPage;
     private bool initialPacket;
     private Label serverLoadingLabel;
-    public Hotbar GameHotbar;
-    public ChatBox GameChat;
+    private readonly World world;
 
     public Connections(GameData data)
     {
         gameData = data;
-        gameGuiPage = new Page();
         serverLoadingPage = new Page();
         packetHandlers = new Dictionary<int, PacketHandler>
         {
             { 1, RubberPacket },
             { 2, DimensionPacket },
             { 3, ClockSyncPacket },
+            { 4, ServerPacket },
+            //{ 5, ConfigPacket },
             { 8, BlockSetPacket },
             { 16, ChunkPacket },
             { 17, ChunkDeletePacket },
+            //{ 19, WorldPacket },
             { 20, EntityPacket }
+            //{ 64, OffsetBigIntPacket }
         };
 
-        // Game GUI page
-        int GameHotbarHeight() => (int) (22 / 182.0f * gameData.Window.GetView().Size.X * 0.4f);
-        int GameHotbarWidth() => (int) (gameData.Window.GetView().Size.X * 0.4f);
-
-        GameChat = new ChatBox(
-            Control.BoundsZero,
-            () => (int) (gameData.Window.GetView().Size.Y / 2 - GameHotbarHeight() - 32),
-            () => (int) (gameData.Window.GetView().Size.X / 2),
-            () => (int) (gameData.Window.GetView().Size.Y / 2));
-        gameGuiPage.Children.Add(GameChat);
-
-        GameHotbar = new Hotbar(
-            () => (int) (gameData.Window.GetView().Size.X / 2 - GameHotbarWidth() / 2.0f),
-            () => (int) (gameData.Window.GetView().Size.Y - GameHotbarHeight() - 8),
-            GameHotbarWidth,
-            GameHotbarHeight);
-        gameGuiPage.Children.Add(GameHotbar);
+        // Setup session world renderer
+        world = new World(gameData);
+        gameData.World = world;
 
         // Server connecting loading screen
         serverLoadingPage.Children.Add(gameData.DirtBackgroundRect);
@@ -264,11 +251,12 @@ public partial class Connections
     /// </summary>
     public async Task Connect(PreConnectData serverData)
     {
-        gameData.CurrentPage = serverLoadingPage;
+        //gameData.CurrentPage = serverLoadingPage;
         gameData.CurrentServer = serverData.Socket;
         gameData.CurrentServer.ServerDisconnected += OnSocketDisconnected;
         gameData.CurrentServer.ServerConnected += OnSocketConnected;
         gameData.CurrentServer.MessageReceived += OnMessageReceived;
+        gameData.CurrentServer.Logger = (message) => gameData.Logger.LogInformation(message);
 
         // Apply data sent to us by server from packs to current client
         var blockDefinitions = serverData.DataPacks[0].Split("\n");
@@ -299,9 +287,9 @@ public partial class Connections
 
         void OnMessageReceived(object? sender, MessageReceivedEventArgs args)
         {
-            if (!initialPacket)
+            if (!initialPacket && world is not null)
             {
-                gameData.CurrentPage = gameGuiPage;
+                gameData.CurrentPage = world.GameGuiPage;
                 gameData.Logger.LogInformation("Successfully connected to server");
                 initialPacket = true;
             }
@@ -324,8 +312,8 @@ public partial class Connections
 
         void OnSocketDisconnected(object? sender, EventArgs args)
         {
-            gameData.CurrentPage = serverLoadingPage;
-            serverLoadingLabel.Accent = LabelAccent.Error;
+            //gameData.CurrentPage = serverLoadingPage;
+            serverLoadingLabel.SetAccent(LabelAccent.Error);
             serverLoadingLabel.Text = "Connection to server closed unexpectedly!";
             gameData.Logger.LogError("Connection to server closed unexpectedly!");
         }
@@ -362,7 +350,7 @@ public partial class Connections
                 var colour = StaticData.TextColours[style & 15];
                 var shadow = StaticData.TextShadows[style & 15];
                 var decoration = StaticData.TextDecorations[style >> 4];
-                GameChat.Messages.Add(new ChatBoxItem(message[2..], colour, shadow, decoration));
+                world!.GameChat.Messages.Add(new ChatBoxItem(message[2..], colour, shadow, decoration));
                 break;
         }
     }
@@ -370,16 +358,16 @@ public partial class Connections
     private void RubberPacket(ref ReadablePacket data)
     {
         gameData.MyPlayerId = data.ReadUInt() + data.ReadUShort() * 4294967296;
-        var playerEntity = gameData.World?.Entities.GetValueOrDefault(gameData.MyPlayerId);
+        var playerEntity = world?.Entities.GetValueOrDefault(gameData.MyPlayerId);
         if (playerEntity is not null && playerEntity != gameData.MyPlayer)
         {
-            gameData.World?.AddEntity(playerEntity);
+            world?.AddEntity(playerEntity);
         }
 
         gameData.MyPlayerKey = data.ReadByte();
-        if (gameData.World is not null)
+        if (world is not null)
         {
-            gameData.World.TicksPerSecond = data.ReadFloat();
+            world.TicksPerSecond = data.ReadFloat();
         }
     }
 
@@ -393,11 +381,9 @@ public partial class Connections
         var gravityY = data.ReadFloat();
         var ticks = data.ReadDouble();
 
-        gameData.World = new World(gameData, dimension)
-        {
-            Gravity = new Vector2f(gravityX, gravityY),
-            TickCount = ticks
-        };
+        world.Dimension = dimension;
+        world.Gravity = new Vector2f(gravityX, gravityY);
+        world.TickCount = ticks;
     }
 
     /// <summary>
@@ -406,10 +392,25 @@ public partial class Connections
     /// </summary>
     private void ClockSyncPacket(ref ReadablePacket data)
     {
-        if (gameData.World is not null)
+        if (world is not null)
         {
-            gameData.World.TickCount = data.ReadDouble();
+            world.TickCount = data.ReadDouble();
         }
+    }
+
+    /// <summary>
+    /// Provides information for use in serverlist / tab player list
+    /// </summary>
+    private void ServerPacket(ref ReadablePacket data)
+    {
+        var title = data.ReadString();
+        var description = data.ReadString();
+        Console.WriteLine("--------------------------------------------------");
+        Console.WriteLine(title);
+        Console.WriteLine(description);
+
+        world.GameServerMenu.Title = title;
+        world.GameServerMenu.Description = description;
     }
 
     /// <summary>
@@ -417,15 +418,15 @@ public partial class Connections
     /// </summary>
     private void ChunkPacket(ref ReadablePacket data)
     {
-        if (gameData.World is null)
+        if (world is null)
         {
             return;
         }
 
         var chunk = new Chunk(ref data, gameData);
         var chunkKey = (chunk.X & 67108863) + (chunk.Y & 67108863) * 67108864;
-        gameData.World.Map.TryAdd(chunkKey, chunk);
-        gameData.World.CameraPosition = new Vector2f(chunk.X * 64, chunk.Y * 64);
+        world.Map.TryAdd(chunkKey, chunk);
+        world.CameraPosition = new Vector2f(chunk.X * 64, chunk.Y * 64);
 
         Console.WriteLine("CHUNK X: {0}, CHUNK Y: {1}", chunk.X, chunk.Y);
 
@@ -448,7 +449,7 @@ public partial class Connections
 
     private void ChunkDeletePacket(ref ReadablePacket data)
     {
-        if (gameData.World is null)
+        if (world is null)
         {
             return;
         }
@@ -458,7 +459,7 @@ public partial class Connections
             var chunkX = data.ReadInt();
             var chunkY = data.ReadInt();
             var chunkKey = (chunkX & 67108863) + (chunkY & 67108863) * 67108864;
-            gameData.World.Map.TryRemove(chunkKey, out _);
+            world.Map.TryRemove(chunkKey, out _);
         }
     }
 
@@ -479,14 +480,14 @@ public partial class Connections
                 var x = data.ReadInt();
                 var y = data.ReadInt();
                 var id = data.ReadUInt();
-                gameData.World?.SetBlock(x, y, (int) id);
+                world?.SetBlock(x, y, (int) id);
             }
             else
             {
                 var x = data.ReadInt();
                 var y = data.ReadInt();
                 var blockId = data.ReadShort();
-                gameData.World?.SetBlock(x, y, blockId);
+                world?.SetBlock(x, y, blockId);
             }
         }
     }
@@ -507,22 +508,22 @@ public partial class Connections
                 var type = data.ReadByte();
                 if (type == 0)
                 {
-                    var target = gameData.World?.Entities.GetValueOrDefault(data.ReadUInt() + data.ReadUShort() * 4294967296);
+                    var target = world?.Entities.GetValueOrDefault(data.ReadUInt() + data.ReadUShort() * 4294967296);
                     if (target is not null)
                     {
-                        gameData.World?.RemoveEntity(target);
+                        world?.RemoveEntity(target);
                     }
                 }
                 else
                 {
-                    var target = gameData.World?.Entities.GetValueOrDefault(data.ReadUInt() + data.ReadUShort() * 4294967296);
+                    var target = world?.Entities.GetValueOrDefault(data.ReadUInt() + data.ReadUShort() * 4294967296);
                     // entity?.TriggerEvent(type)
                 }
                 continue;
             }
 
             var entityId = data.ReadUInt() + data.ReadUShort() * 4294967296;
-            var entity = gameData.World?.Entities.GetValueOrDefault(entityId);
+            var entity = world?.Entities.GetValueOrDefault(entityId);
             if (entity is null)
             {
                 // We create a new entity, it does not yet have a chunk or position
@@ -551,12 +552,12 @@ public partial class Connections
             if ((action & 1) != 0)
             {
                 entity.X = data.ReadDouble();
-                gameData.World?.MoveEntity(entity);
+                world?.MoveEntity(entity);
             }
             if ((action & 2) != 0)
             {
                 entity.Y = data.ReadDouble();
-                gameData.World?.MoveEntity(entity);
+                world?.MoveEntity(entity);
             }
             if ((action & 4) != 0)
             {
@@ -569,12 +570,12 @@ public partial class Connections
             if ((action & 16) != 0)
             {
                 entity.Velocity = entity.Velocity with { X = data.ReadFloat() };
-                gameData.World?.MoveEntity(entity);
+                world?.MoveEntity(entity);
             }
             if ((action & 32) != 0)
             {
                 entity.Velocity = entity.Velocity with { Y = data.ReadFloat() };
-                gameData.World?.MoveEntity(entity);
+                world?.MoveEntity(entity);
             }
             if ((action & 64) != 0)
             {
@@ -586,7 +587,7 @@ public partial class Connections
             }
             if ((action & 256) != 0)
             {
-                gameData.World?.AddEntity(entity);
+                world?.AddEntity(entity);
                 // TODO: Fire placed event on entity
             }
         }

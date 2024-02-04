@@ -499,7 +499,6 @@ mainPage.Children.Add(quitButton);
 var disclaimerLabel = new Label(
     "Open source project. Not affiliated with Mojang Studios",
     24,
-    Color.White,
     () => 8,
     () => (int) window.GetView().Size.Y - 32);
 mainPage.Children.Add(disclaimerLabel);

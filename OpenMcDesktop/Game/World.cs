@@ -26,6 +26,12 @@ public class World
     public static int BlockTextureWidth = 16;
     public static int BlockTextureHeight = 16;
 
+    // Session world interface
+    public readonly Page GameGuiPage;
+    public Hotbar GameHotbar;
+    public ChatBox GameChat;
+    public ServerMenu GameServerMenu;
+
     // Game world components
     public ConcurrentDictionary<int, Chunk> Map { get; set; }
     public ConcurrentDictionary<long, Entity> Entities { get; set; }
@@ -54,10 +60,38 @@ public class World
         ItemsAtlas = new Texture("Resources/Textures/items.png");
     }
 
-    public World(GameData data, string dimension)
+    public World(GameData data)
     {
-        Dimension = dimension;
+        // Setup defaults
         gameData = data;
+        Dimension = "void";
+        Gravity = new Vector2f(0, 0);
+        TickCount = 0;
+
+        // Game GUI page
+        GameGuiPage = new Page();
+        int GameHotbarHeight() => (int) (22 / 182.0f * gameData.Window.GetView().Size.X * 0.4f);
+        int GameHotbarWidth() => (int) (gameData.Window.GetView().Size.X * 0.4f);
+
+        GameChat = new ChatBox(
+            Control.BoundsZero,
+            () => (int) (gameData.Window.GetView().Size.Y / 2 - GameHotbarHeight() - 32),
+            () => (int) (gameData.Window.GetView().Size.X / 2),
+            () => (int) (gameData.Window.GetView().Size.Y / 2));
+        GameGuiPage.Children.Add(GameChat);
+
+        GameHotbar = new Hotbar(
+            () => (int) (gameData.Window.GetView().Size.X / 2 - GameHotbarWidth() / 2.0f),
+            () => (int) (gameData.Window.GetView().Size.Y - GameHotbarHeight() - 8),
+            GameHotbarWidth,
+            GameHotbarHeight);
+        GameGuiPage.Children.Add(GameHotbar);
+
+        GameServerMenu = new ServerMenu(
+            () => 128,
+            () => 128,
+            () => (int) gameData.Window.GetView().Size.X - 256,
+            () => (int) gameData.Window.GetView().Size.Y - 256);
 
         Map = new ConcurrentDictionary<int, Chunk>();
         Entities = new ConcurrentDictionary<long, Entity>();
@@ -100,7 +134,26 @@ public class World
                 return;
             }
 
-            gameData.Connection!.GameHotbar.Selected += (int) args.Delta;
+            GameHotbar.Selected += (int) args.Delta;
+        };
+
+        data.Window.KeyPressed += (_, args) =>
+        {
+            if (args.Code == Keyboard.Key.Tab)
+            {
+                if (!GameGuiPage.Children.Contains(GameServerMenu))
+                {
+                    GameGuiPage.Children.Add(GameServerMenu);
+                }
+            }
+        };
+
+        data.Window.KeyReleased += (_, args) =>
+        {
+            if (args.Code == Keyboard.Key.Tab)
+            {
+                GameGuiPage.Children.Remove(GameServerMenu);
+            }
         };
     }
 
