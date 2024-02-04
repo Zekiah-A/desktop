@@ -18,8 +18,9 @@ using System.Globalization;
 namespace OpenMcDesktop.Networking;
 
 /// <summary>
-/// This class handles all networking within the game, a mix between https://github.com/open-mc/client/blob/main/iframe/ipc.js
-/// and https://github.com/open-mc/client/blob/main/iframe/incomingPacket.js.
+/// This class handles the current session's networking, a mix between https://github.com/open-mc/client/blob/main/iframe/ipc.js
+/// and https://github.com/open-mc/client/blob/main/iframe/incomingPacket.js. It manages maintaining server connection, and delegates
+/// events to and from the game renderer/input handler (World.cs)
 /// </summary>
 public partial class Connections
 {
@@ -30,8 +31,8 @@ public partial class Connections
     private readonly Page serverLoadingPage;
     private bool initialPacket;
     private Label serverLoadingLabel;
-    private Hotbar gameHotbar;
-    private ChatBox gameChat;
+    public Hotbar GameHotbar;
+    public ChatBox GameChat;
 
     public Connections(GameData data)
     {
@@ -53,19 +54,19 @@ public partial class Connections
         int GameHotbarHeight() => (int) (22 / 182.0f * gameData.Window.GetView().Size.X * 0.4f);
         int GameHotbarWidth() => (int) (gameData.Window.GetView().Size.X * 0.4f);
 
-        gameChat = new ChatBox(
+        GameChat = new ChatBox(
             Control.BoundsZero,
             () => (int) (gameData.Window.GetView().Size.Y / 2 - GameHotbarHeight() - 32),
             () => (int) (gameData.Window.GetView().Size.X / 2),
             () => (int) (gameData.Window.GetView().Size.Y / 2));
-        gameGuiPage.Children.Add(gameChat);
+        gameGuiPage.Children.Add(GameChat);
 
-        gameHotbar = new Hotbar(
+        GameHotbar = new Hotbar(
             () => (int) (gameData.Window.GetView().Size.X / 2 - GameHotbarWidth() / 2.0f),
             () => (int) (gameData.Window.GetView().Size.Y - GameHotbarHeight() - 8),
             GameHotbarWidth,
             GameHotbarHeight);
-        gameGuiPage.Children.Add(gameHotbar);
+        gameGuiPage.Children.Add(GameHotbar);
 
         // Server connecting loading screen
         serverLoadingPage.Children.Add(gameData.DirtBackgroundRect);
@@ -350,7 +351,7 @@ public partial class Connections
                 var colour = StaticData.TextColours[style & 15];
                 var shadow = StaticData.TextShadows[style & 15];
                 var decoration = StaticData.TextDecorations[style >> 4];
-                gameChat.Messages.Add(new ChatBoxItem(message[2..], colour, shadow, decoration));
+                GameChat.Messages.Add(new ChatBoxItem(message[2..], colour, shadow, decoration));
                 break;
         }
     }

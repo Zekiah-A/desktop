@@ -15,9 +15,9 @@ using SFML.Window;
 namespace OpenMcDesktop.Game;
 
 /// <summary>
-/// Contains helper methods for interacting with game world, similar to client file
-/// https://github.com/open-mc/client/blob/preview/iframe/world.js, except more involved within the actual game, and can
-/// co-ordinate core game functions like chunk rendering.
+/// Contains methods for the current session's  game world, borrows methods from https://github.com/open-mc/client/blob/preview/iframe/world.js.
+/// Each desktop session should have it's own World.cs and Connections.cs instances. Co-ordinates core game functions like game rendering,
+/// input handling for the current player and consuming/sending game events from Connection.cs
 /// </summary>
 public class World
 {
@@ -92,6 +92,16 @@ public class World
         };
         tickTimer.Elapsed += Tick;
         tickTimer.Start();
+
+        data.Window.MouseWheelScrolled += (_, args) =>
+        {
+            if (!data.Window.HasFocus())
+            {
+                return;
+            }
+
+            gameData.Connection!.GameHotbar.Selected += (int) args.Delta;
+        };
     }
 
     public Block GetBlock(int x, int y)

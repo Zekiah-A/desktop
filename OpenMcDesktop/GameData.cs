@@ -1,6 +1,7 @@
 using System.Resources;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using OpenMcDesktop.Networking;
 using OpenMcDesktop.Game;
 using OpenMcDesktop.Game.Definitions;
 using OpenMcDesktop.Gui;
@@ -21,6 +22,7 @@ public class GameData
     public IHost Host { get; set; }
     public ModLoader ModLoader { get; set; }
     public World? World { get; set; }
+    public Connections? Connection { get; set; }
     public RenderWindow Window { get; set; }
     public View WorldLayer { get; set; } // Blocks, chunks terrain
     public View BackgroundLayer { get; set; } // Game sky, background effects, etc

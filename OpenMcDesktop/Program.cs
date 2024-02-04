@@ -158,9 +158,8 @@ AppDomain.CurrentDomain.UnhandledException += (sender, exceptionEventArgs) =>
 };
 
 var connections = new Connections(gameData);
+gameData.Connection = connections;
 var preConnections = new List<PreConnectData>();
-
-
 gameData.DirtBackgroundRect = dirtBackgroundRect;
 
 // Game window icon
