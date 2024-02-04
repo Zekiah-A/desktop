@@ -14,6 +14,7 @@ using SFML.Graphics;
 using SFML.System;
 using Item = OpenMcDesktop.Game.Definitions.Item;
 using System.Globalization;
+using DataProto;
 
 namespace OpenMcDesktop.Networking;
 
@@ -70,10 +71,20 @@ public partial class Connections
 
         // Server connecting loading screen
         serverLoadingPage.Children.Add(gameData.DirtBackgroundRect);
-        serverLoadingLabel = new Label("Connecting to server...", 24, Color.White);
+        serverLoadingLabel = new Label("Connecting to server...", 24, LabelAccent.Default);
         serverLoadingLabel.Bounds.StartX = () => (int) (gameData.Window.GetView().Size.X / 2 - serverLoadingLabel.GetWidth() / 2);
         serverLoadingLabel.Bounds.StartY = () => (int) (gameData.Window.GetView().Size.Y / 2);
         serverLoadingPage.Children.Add(serverLoadingLabel);
+        var backButton = new Button("Back to main menu",
+            () => (int) (gameData.Window.GetView().Center.X - gameData.Window.GetView().Center.X / 4),
+            () => (int) (gameData.Window.GetView().Size.Y / 2 + 60),
+            () => (int) (gameData.Window.GetView().Size.X / 4),
+            () => (int) (0.03 * gameData.Window.GetView().Size.X));
+        backButton.OnMouseUp += (_, _) =>
+        {
+            gameData.CurrentPage = gameData.ServersPage;
+        };
+        serverLoadingPage.Children.Add(backButton);
     }
 
     private static string GetWebsocketUri(string ip)
@@ -253,8 +264,7 @@ public partial class Connections
     /// </summary>
     public async Task Connect(PreConnectData serverData)
     {
-        gameData.CurrentPage = gameGuiPage;
-        //gameData.CurrentPage = serverLoadingPage;
+        gameData.CurrentPage = serverLoadingPage;
         gameData.CurrentServer = serverData.Socket;
         gameData.CurrentServer.ServerDisconnected += OnSocketDisconnected;
         gameData.CurrentServer.ServerConnected += OnSocketConnected;
@@ -314,7 +324,9 @@ public partial class Connections
 
         void OnSocketDisconnected(object? sender, EventArgs args)
         {
-            //gameData.CurrentPage = serverLoadingPage;
+            gameData.CurrentPage = serverLoadingPage;
+            serverLoadingLabel.Accent = LabelAccent.Error;
+            serverLoadingLabel.Text = "Connection to server closed unexpectedly!";
             gameData.Logger.LogError("Connection to server closed unexpectedly!");
         }
     }
@@ -341,13 +353,12 @@ public partial class Connections
                 gameData.CurrentPage = serverLoadingPage;
                 break;
             case -2: // TODO: Call onpending instead
-                Console.WriteLine($"PENDING: {message[2..]}");
+                gameData.Logger.LogInformation("pending: {message}", message[2..]);
                 break;
             case -3: // TODO: Call wait for connection
-                Console.WriteLine($"WAIT: {message[2..]}");
+                gameData.Logger.LogInformation("wait: {message}", message[2..]);
                 break;
             default: // Chat message
-                Console.WriteLine($"CHAT: {message[2..]}");
                 var colour = StaticData.TextColours[style & 15];
                 var shadow = StaticData.TextShadows[style & 15];
                 var decoration = StaticData.TextDecorations[style >> 4];

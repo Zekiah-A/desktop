@@ -4,6 +4,7 @@ using OpenMcDesktop.Game.Definitions;
 using OpenMcDesktop.Networking;
 using SFML.Graphics;
 using SFML.System;
+using DataProto;
 
 namespace OpenMcDesktop.Game;
 

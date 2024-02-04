@@ -48,13 +48,14 @@ var gameData = new GameData
     DirtBackgroundRect = dirtBackgroundRect,
     Logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger(nameof(OpenMcDesktop)),
     Translations = ResourceManager.CreateFileBasedResourceManager("Translations", "Locale/", typeof(Translations)),
-    ModLoader = new ModLoader()
+    ModLoader = new ModLoader(),
+    ServersPage = serversPage
 };
 StaticData.GameData = gameData;
 
+// Window configuration
 // TODO: Make configurable, perhaps a setter in GameData
 window.SetFramerateLimit(60);
-
 window.Closed += (_, _) =>
 {
     gameData.Logger.LogInformation("Quit received. Exiting.");
@@ -157,6 +158,7 @@ AppDomain.CurrentDomain.UnhandledException += (sender, exceptionEventArgs) =>
         sender, exceptionEventArgs.ExceptionObject);
 };
 
+// Additional gameData registrations
 var connections = new Connections(gameData);
 gameData.Connection = connections;
 var preConnections = new List<PreConnectData>();
@@ -185,7 +187,7 @@ async Task PlayServer(PreConnectData serverData)
 
 // Servers page UI
 serversPage.Children.Add(dirtBackgroundRect);
-var serversLabel = new Label("Connect to a server:", 28, Color.White)
+var serversLabel = new Label("Connect to a server:", 28, LabelAccent.Default)
 {
     Bounds = new Bounds(() => (int) (window.GetView().Size.X / 2) - 156, () => 128, () => 0, () => 0)
 };
@@ -505,7 +507,7 @@ mainPage.Children.Add(disclaimerLabel);
 // Central server auth key page
 authPage.Children.Add(dirtBackgroundRect);
 authPage.Children.Add(dirtBackgroundRect);
-var authLabel = new Label("Please enter your game invite code:", 28, Color.Yellow)
+var authLabel = new Label("Please enter your game invite code:", 28, LabelAccent.Notice)
 {
     Bounds = new Bounds(() => (int) (window.GetView().Size.X / 2) - 256,
         () => (int) ((int) window.GetView().Size.Y * 0.4), () => 0, () => 0)

@@ -8,22 +8,27 @@ public class Label : Control
     public string Text
     {
         get => text.DisplayedString;
-        set => text.DisplayedString = value;
+        set
+        {
+            text.DisplayedString = value;
+            shadow.DisplayedString = value;
+        }
     }
 
     public int FontSize
     {
         get => (int) text.CharacterSize;
-        set => text.CharacterSize = (uint) value;
+        set
+        {
+            text.CharacterSize = (uint) value;
+            shadow.CharacterSize = (uint) value;
+        }
     }
 
-    public Color Colour
-    {
-        get => text.FillColor;
-        set => text.FillColor = value;
-    }
+    public LabelAccent Accent { get; set; }
 
     private readonly Text text;
+    private readonly Text shadow;
     private static readonly Font font;
 
     static Label()
@@ -31,18 +36,20 @@ public class Label : Control
         font = new Font(@"Resources/Fonts/mojangles.ttf");
     }
 
-    public Label(string content, int fontSize, Color colour)
+    public Label(string content, int fontSize, LabelAccent accent)
     {
         text = new Text(content, font);
+        shadow = new Text(content, font);
         FontSize = fontSize;
-        Colour = colour;
+        Accent = accent;
     }
 
     public Label(string content, int fontSize, Color colour, Func<int> x, Func<int> y)
     {
         text = new Text(content, font);
+        shadow = new Text(content, font);
         FontSize = fontSize;
-        Colour = colour;
+        Accent = LabelAccent.Default;
         Bounds.StartX = x;
         Bounds.StartY = y;
     }
@@ -54,7 +61,33 @@ public class Label : Control
 
     public override void Render(RenderWindow window, View view, float deltaTime)
     {
-        text.Position = new Vector2f(Bounds.StartX(), Bounds.StartY());
+        var position = new Vector2f(Bounds.StartX(), Bounds.StartY());
+        var style = Accent switch
+        {
+            LabelAccent.Notice => SFML.Graphics.Text.Styles.Italic,
+            _ => SFML.Graphics.Text.Styles.Regular
+        };
+        shadow.FillColor = Accent switch
+        {
+            LabelAccent.Default => new Color(108, 108, 108),
+            LabelAccent.Warn => new Color(136, 136, 136),
+            LabelAccent.Error => new Color(195, 142, 126),
+            LabelAccent.Notice => new Color(189, 185, 167),
+            _ => Color.Black
+        };
+        shadow.Style = style;
+        shadow.Position = position + new Vector2f(2, 2);
+        window.Draw(shadow);
+        text.FillColor = Accent switch
+        {
+            LabelAccent.Default => Color.White,
+            LabelAccent.Warn => Color.Yellow,
+            LabelAccent.Error => Color.Red,
+            LabelAccent.Notice => new Color(229, 255, 126),
+            _ => Color.Black
+        };
+        text.Style = style;
+        text.Position = position;
         window.Draw(text);
     }
 }

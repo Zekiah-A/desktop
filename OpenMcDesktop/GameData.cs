@@ -28,6 +28,7 @@ public class GameData
     public View BackgroundLayer { get; set; } // Game sky, background effects, etc
     public View UiLayer { get; set; } // Interfaces, menus, etc
     public Page? CurrentPage { get; set; }
+    public Page? ServersPage { get; set; }
     public TextureRect DirtBackgroundRect { get; set; } // Shared against many pages
 
 
