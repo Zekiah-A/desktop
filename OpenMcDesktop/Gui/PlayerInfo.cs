@@ -2,4 +2,4 @@ using SFML.Graphics;
 
 namespace OpenMcDesktop.Gui;
 
-public record PlayerInfo(Image Skin, string Name, int Health, int Ping);
+public record PlayerInfo(Texture SkinIcon, string Name, int Health, int Ping);

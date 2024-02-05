@@ -31,6 +31,7 @@ public class World
     public Hotbar GameHotbar;
     public ChatBox GameChat;
     public ServerMenu GameServerMenu;
+    public PauseMenu GamePauseMenu;
 
     // Game world components
     public ConcurrentDictionary<int, Chunk> Map { get; set; }
@@ -86,12 +87,17 @@ public class World
             GameHotbarWidth,
             GameHotbarHeight);
         GameGuiPage.Children.Add(GameHotbar);
-
         GameServerMenu = new ServerMenu(
             () => 128,
             () => 128,
             () => (int) gameData.Window.GetView().Size.X - 256,
             () => (int) gameData.Window.GetView().Size.Y - 256);
+        // Pause
+        GamePauseMenu = new PauseMenu(
+            Control.BoundsZero,
+            Control.BoundsZero,
+            () => (int) gameData.Window.GetView().Size.X,
+            () => (int) gameData.Window.GetView().Size.Y);
 
         Map = new ConcurrentDictionary<int, Chunk>();
         Entities = new ConcurrentDictionary<long, Entity>();
@@ -150,9 +156,21 @@ public class World
 
         data.Window.KeyReleased += (_, args) =>
         {
-            if (args.Code == Keyboard.Key.Tab)
+            switch (args.Code)
             {
-                GameGuiPage.Children.Remove(GameServerMenu);
+                case Keyboard.Key.Tab:
+                    GameGuiPage.Children.Remove(GameServerMenu);
+                    break;
+                case Keyboard.Key.Escape:
+                    if (!GameGuiPage.Children.Contains(GamePauseMenu))
+                    {
+                        GameGuiPage.Children.Add(GamePauseMenu);
+                    }
+                    else
+                    {
+                        GameGuiPage.Children.Remove(GamePauseMenu);
+                    }
+                    break;
             }
         };
     }

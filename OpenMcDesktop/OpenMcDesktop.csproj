@@ -17,8 +17,8 @@
         <PackageReference Include="SharpWebview" Version="0.7.0" />
         <PackageReference Include="SharpZipLib" Version="1.4.2" />
         <ProjectReference Include="..\DataProto\DataProto\DataProto.csproj" />
-        <ProjectReference Include="..\Motion\MotionNET\MotionNET\MotionNET.csproj" />
-        <ProjectReference Include="..\Motion\MotionNET\MotionNET.SFML\MotionNET.SFML.csproj" />
+        <!--<ProjectReference Include="..\Motion\MotionNET\MotionNET\MotionNET.csproj" />
+        <ProjectReference Include="..\Motion\MotionNET\MotionNET.SFML\MotionNET.SFML.csproj" />-->
         <ProjectReference Include="..\WatsonWebsocketPlus\src\WatsonWebsocket\WatsonWebsocket.csproj" />
     </ItemGroup>
     

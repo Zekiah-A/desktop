@@ -1,5 +1,5 @@
-using MotionNET;
-using MotionNET.SFML;
+/*using MotionNET;
+using MotionNET.SFML;*/
 using SFML.Graphics;
 using SFML.System;
 
@@ -7,7 +7,7 @@ namespace OpenMcDesktop.Gui;
 
 public class VideoPlayer : Control
 {
-    public DataSource Source;
+    /*public DataSource Source;
     public SfmlVideoPlayback VideoPlayback;
     public bool LoadingSuccess { get; }
 
@@ -34,5 +34,5 @@ public class VideoPlayer : Control
 
         Source.Update();
         window.Draw(VideoPlayback);
-    }
+    }*/
 }

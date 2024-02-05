@@ -405,12 +405,29 @@ public partial class Connections
     {
         var title = data.ReadString();
         var description = data.ReadString();
-        Console.WriteLine("--------------------------------------------------");
-        Console.WriteLine(title);
-        Console.WriteLine(description);
-
         world.GameServerMenu.Title = title;
         world.GameServerMenu.Description = description;
+
+        if (data.Left == 0)
+        {
+            // No players
+            return;
+        }
+        for (var playerCount = data.ReadFlexInt(); playerCount > 0; playerCount--)
+        {
+            var name = data.ReadString();
+            var skinData = data.ReadBytes(192); // 8 (W) * 8 (H) * 3 (RGB)
+            var health = data.ReadByte();
+            var ping = data.ReadShort();
+            var skinImage = new Image(8, 8);
+
+            for (var i = 0; i < 192; i += 3)
+            {
+                skinImage.SetPixel(((uint) i / 3) % 8, (uint) i / 24,
+                    new Color(skinData[i], skinData[i + 1], skinData[i + 2]));
+            }
+            world.GameServerMenu.Players.Add(new PlayerInfo(new Texture(skinImage), name, health, ping));
+        }
     }
 
     /// <summary>
@@ -418,6 +435,7 @@ public partial class Connections
     /// </summary>
     private void ChunkPacket(ref ReadablePacket data)
     {
+        return; // TODO: Fix this
         if (world is null)
         {
             return;
@@ -427,8 +445,6 @@ public partial class Connections
         var chunkKey = (chunk.X & 67108863) + (chunk.Y & 67108863) * 67108864;
         world.Map.TryAdd(chunkKey, chunk);
         world.CameraPosition = new Vector2f(chunk.X * 64, chunk.Y * 64);
-
-        Console.WriteLine("CHUNK X: {0}, CHUNK Y: {1}", chunk.X, chunk.Y);
 
         // Read chunk entities
         while (data.Left > 0)
