@@ -36,4 +36,4 @@ All native library depdencies are included as git submodules on this repository,
    - Child element positioning on elements such as Page and ScrollBox are relative to the screen, regardless of the positioning of their parent, unless the parent is a special positioning control like a Grid or DisplayList.
 
 ### TODO:
- - Dynamically link motion to .NET SFML.NET dependencies
+ - See github [issues](https://github.com/open-mc/desktop/issues)
