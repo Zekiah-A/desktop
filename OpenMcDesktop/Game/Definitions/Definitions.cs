@@ -5,6 +5,11 @@ using Entities = OpenMcDesktop.Game.Definitions.Entities;
 
 namespace OpenMcDesktop.Definitions;
 
+/// <summary>
+/// Defines the immutable standard templates for block, item and entity definitions in the vanilla game pack. These definitions can
+/// be referenced within the "packs" file sent by the server to the client, with the instancess being moved into BlockIndex,
+/// ItemIndex, EntityIndex alongside any runtime Blocks/Items/Entities definied by a modpack.
+/// </summary>
 public static class Definitions
 {
     public static IReadOnlyDictionary<string, Block> BlockDefinitions { get; set; } // All blocks present in the vanilla game pack

@@ -30,6 +30,7 @@ public class GameData
     public Page? CurrentPage { get; set; }
     public Page? ServersPage { get; set; }
     public TextureRect DirtBackgroundRect { get; set; } // Shared against many pages
+    // TODO: Add interface font here, or move all texture/graphic assets to a new class for reuse everywhere
 
     // Vanilla blocks/items/entities actuually used in the game (vanilla definitions requested by packs
     // + custom runtime blocks defined here).

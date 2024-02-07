@@ -1,5 +1,4 @@
 using System.Net.WebSockets;
-using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -8,7 +7,6 @@ using Microsoft.Extensions.Logging;
 using OpenMcDesktop.Gui;
 using OpenMcDesktop.Game;
 using OpenMcDesktop.Game.Definitions;
-using OpenMcDesktop.Game.Definitions.Entities;
 using WatsonWebsocket;
 using SFML.Graphics;
 using SFML.System;
@@ -424,7 +422,7 @@ public partial class Connections
     /// </summary>
     private void ChunkPacket(ref ReadablePacket data)
     {
-        return;
+        return; // TODO: Fix this
         if (world is null)
         {
             return;
@@ -535,8 +533,7 @@ public partial class Connections
                 if ((action & 128) != 0)
                 {
                     action |= 256;
-                    var entityType = gameData.EntityDefinitions[data.ReadShort()];
-                    //entity = (Entity?) Activator.CreateInstance(entityType);
+                    var entityType = gameData.Entities[data.ReadShort()];
                     if (entity is not null)
                     {
                         entity.Id = entityId;

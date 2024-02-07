@@ -1,14 +1,9 @@
 using System.Collections.Concurrent;
-using System.Collections.ObjectModel;
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Timers;
-using OpenMcDesktop.Game.Definitions.Blocks;
 using OpenMcDesktop.Game.Definitions;
 using OpenMcDesktop.Gui;
-using OpenMcDesktop.Networking;
 using SFML.Graphics;
-using SFML.Graphics.Glsl;
 using SFML.System;
 using SFML.Window;
 
@@ -177,13 +172,15 @@ public class World
 
     public Block GetBlock(int x, int y)
     {
+        // TODO: Fix this
         var chunkKey = (x >>> 6) + (y >>> 6) * 67108864;
         var chunk = Map.GetValueOrDefault(chunkKey);
-        return chunk?.Tiles[(x & 63) + ((y & 63) << 6)] ?? gameData.Blocks[gameData.BlockIndex[nameof(Air)]];
+        return chunk?.Tiles[(x & 63) + ((y & 63) << 6)] ?? throw new NotImplementedException(); /*?? gameData.Blocks[gameData.BlockIndex[nameof(Air)]];*/
     }
 
     public void SetBlock(int x, int y, int blockId)
     {
+        // TODO: Fix this
         var chunkKey = (x >>> 6) + (y >>> 6) * 67108864;
         var chunk = Map.GetValueOrDefault(chunkKey);
         if (chunk is not null)
@@ -194,6 +191,7 @@ public class World
 
     public void AddEntity(Entity entity)
     {
+        // TODO: Fix this
         Entities.TryAdd(entity.Id, entity);
         if (entity.Id == gameData.MyPlayerId)
         {
@@ -204,6 +202,7 @@ public class World
 
     public void MoveEntity(Entity entity)
     {
+        // TODO: Fix this
         // Chunk that the entity now is in
         var newChunk = Map.GetValueOrDefault((((int) Math.Floor(entity.X)) >>> 6) + (((int) Math.Floor(entity.Y)) >>> 6) * 67108864);
         if (newChunk != entity.Chunk)
@@ -216,6 +215,7 @@ public class World
 
     public void RemoveEntity(Entity entity)
     {
+        // TODO: Fix this
         Entities.TryRemove(entity.Id, out _);
         if (entity == gameData.MyPlayer)
         {

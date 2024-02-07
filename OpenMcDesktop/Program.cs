@@ -265,7 +265,7 @@ async Task UpdateServerList()
     serverListUpdating = false;
 }
 
-Task.Run(UpdateServerList);
+_ = Task.Run(UpdateServerList);
 
 var serversOptionsGrid = new Grid(4, 1, Control.BoundsZero, () => (int) (window.GetView().Size.Y - 152),
     () => (int) window.GetView().Size.X, () => 64)

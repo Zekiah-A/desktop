@@ -1,4 +1,3 @@
-using OpenMcDesktop.Networking;
 using SFML.Graphics;
 using DataProto;
 
