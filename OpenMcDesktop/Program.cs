@@ -178,7 +178,7 @@ async Task PlayServer(PreConnectData serverData)
         }
         catch (Exception error)
         {
-            gameData.Logger.LogWarning("Failed to disconnect from server: {error}", error);
+            gameData?.Logger.LogWarning("Failed to disconnect from server: {error}", error);
         }
     }
 
@@ -561,7 +561,7 @@ async Task<bool> Authorise(string? key = null)
 }
 
 gameData.CurrentPage = mainPage;
-Task.Run(async () =>
+_ = Task.Run(async () =>
 {
     if (gameData.CurrentPage != authPage && !await Authorise(storage.Get<string>("AuthKey")))
     {
@@ -572,7 +572,7 @@ Task.Run(async () =>
 });
 
 // Update loop
-Task.Run(async () =>
+_ = Task.Run(async () =>
 {
     var updateClock = new Clock();
 

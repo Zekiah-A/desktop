@@ -25,14 +25,38 @@ public class Chunk
 
     public Chunk(ref ReadablePacket data, GameData gameData)
     {
-        var x = data.ReadInt();
-        var y = data.ReadInt();
+        X = data.ReadInt();
+        Y = data.ReadInt();
+        Entities = new List<Entity>();
+        Palette = new List<Block>();
 
+        var saveDataHistory = data.ReadFlexInt();
+        var length = data.ReadShort();
+        data.Position += length * 2;
+
+        // Entities
+        var paletteLength = data.ReadByte() + 1;
+        var id = 0;
+        while ((id = data.ReadShort()) != 65535)
+        {
+            /*var entity e = new EntityIDs[id]()
+            e.x = buf.short() / 1024 + (this.x << 6)
+            e.y = buf.short() / 1024 + (this.y << 6)
+            e.netId = buf.uint32() + buf.uint16() * 4294967296
+            e.name = buf.string(); e.state = buf.short()
+            e.dx = buf.float(); e.dy = buf.float()
+            e.f = buf.float(); e.age = buf.double()
+            e.chunk = this
+            if(e.savedata)buf.read(e.savedatahistory[buf.flint()] || e.savedata, e)
+            e.place()
+            this.entities.add(e)*/
+        }
+
+
+        /*
         X = x << 6 >> 6;
         Y = y << 6 >> 6;
         Tiles = new Block[4096]; // Chunk size is 64x64
-        Entities = new List<Entity>();
-        Palette = new List<Block>();
         this.gameData = gameData;
         generatedVBOs = new Dictionary<Block, VertexArray>();
 
@@ -166,17 +190,17 @@ public class Chunk
         if (gameData.GenerateChunkVBOs)
         {
             GenerateChunkVBO();
-        }
+        }*/
     }
 
     public void GenerateChunkVBO()
     {
         foreach (var blockType in Palette)
         {
-            if (blockType == gameData.Blocks[gameData.BlockIndex[nameof(Air)]])
+            /*if (blockType == gameData.Blocks[gameData.BlockIndex[nameof(Air)]])
             {
                 continue;
-            }
+            }*/
 
             var vertices = new List<Vertex>();
 

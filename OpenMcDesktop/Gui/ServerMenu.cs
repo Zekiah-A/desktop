@@ -41,11 +41,11 @@ public class ServerMenu : Control
         var pingtextureMap = new Texture(@"Resources/Textures/icons.png");
         pingTextures = new Texture[]
         {
-            new Texture(pingtextureMap.CopyToImage(), new IntRect(60, 54, 10, 10)), // 1 bar
-            new Texture(pingtextureMap.CopyToImage(), new IntRect(49, 54, 10, 10)), // 2 bars
-            new Texture(pingtextureMap.CopyToImage(), new IntRect(38, 54, 10, 10)), // 3 bars
-            new Texture(pingtextureMap.CopyToImage(), new IntRect(27, 54, 10, 10)), // 4 bars
             new Texture(pingtextureMap.CopyToImage(), new IntRect(16, 54, 10, 10)), // 5 bars
+            new Texture(pingtextureMap.CopyToImage(), new IntRect(27, 54, 10, 10)), // 4 bars
+            new Texture(pingtextureMap.CopyToImage(), new IntRect(38, 54, 10, 10)), // 3 bars
+            new Texture(pingtextureMap.CopyToImage(), new IntRect(49, 54, 10, 10)), // 2 bars
+            new Texture(pingtextureMap.CopyToImage(), new IntRect(60, 54, 10, 10)), // 1 bar
         };
     }
 
@@ -53,7 +53,7 @@ public class ServerMenu : Control
     {
         title = "";
         description = "";
-        titleLabel = new Label("...", 24, Control.BoundsZero, ()  => Bounds.StartY() + 16);
+        titleLabel = new Label("...", 24, Control.BoundsZero, () => Bounds.StartY() + 16);
         titleLabel.Bounds.StartX = () => (int) (Bounds.StartX() + (Bounds.EndX() - Bounds.StartX()) / 2 - titleLabel.GetWidth() / 2);
 
         descriptionLabel = new Label("...", 24, Control.BoundsZero, () => Bounds.StartX() + 48);
@@ -66,7 +66,7 @@ public class ServerMenu : Control
         var background = new RectangleShape
         {
             Position = new Vector2f(Bounds.StartX(), Bounds.StartY()),
-            FillColor = new Color(0, 0, 0, 96),
+            FillColor = new Color(0, 0, 0, 64),
             Size = new Vector2f(Bounds.EndX() - Bounds.StartX(), Bounds.EndY() - Bounds.StartY()),
         };
         window.Draw(background);
@@ -77,10 +77,6 @@ public class ServerMenu : Control
         var labelColumn = 0;
         for (var i = 0; i < Players.ToList().Count; i++)
         {
-            for (var j = 0; j < 50; j++)
-            {
-
-
             var player = Players[i];
             var columnWidth = Bounds.StartY() + 96 + i * (LabelHeight + LabelSpacing);
             var labelPosition = new Vector2f(labelColumn + Bounds.StartX() + 120, columnWidth - 16);
@@ -134,7 +130,7 @@ public class ServerMenu : Control
             if (Bounds.EndX() - labelPosition.Y < 64)
             {
                 labelColumn += columnWidth + 16;
-            }}
+            }
         }
     }
 }

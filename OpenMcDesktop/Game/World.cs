@@ -349,11 +349,11 @@ public class World
         {
             var mousePosition = Mouse.GetPosition();
             ScreenToWorld(new Vector2f(mousePosition.X, mousePosition.Y));
-            SetBlock(mousePosition.X, mousePosition.Y, gameData.BlockIndex[nameof(Stone)]);
+            //SetBlock(mousePosition.X, mousePosition.Y, gameData.BlockIndex[nameof(Stone)]);
         }
         if (!lastPosition.Equals(CameraPosition))
         {
-            Console.WriteLine(CameraPosition);
+            //Console.WriteLine(CameraPosition);
             lastPosition = CameraPosition;
         }
     }

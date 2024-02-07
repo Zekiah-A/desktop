@@ -62,10 +62,10 @@ public class ScrollBox : Page
             (Bounds.EndX() - Bounds.StartX()),
             (Bounds.EndY() - Bounds.StartY())));
         scrollView.Viewport = new FloatRect(
-            Bounds.StartX() / (float)window.Size.X,
-            Bounds.StartY() / (float)window.Size.Y,
-            (Bounds.EndX() - Bounds.StartX()) / (float)window.Size.X,
-            (Bounds.EndY() - Bounds.StartY()) / (float)window.Size.Y);
+            Bounds.StartX() / (float) window.Size.X,
+            Bounds.StartY() / (float) window.Size.Y,
+            (Bounds.EndX() - Bounds.StartX()) / (float) window.Size.X,
+            (Bounds.EndY() - Bounds.StartY()) / (float) window.Size.Y);
 
         // Simulate kinetic scrolling
         Delta = MathHelpers.Lerp(Delta, 0, 0.1f);

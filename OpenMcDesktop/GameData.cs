@@ -14,7 +14,7 @@ namespace OpenMcDesktop;
 public class GameData
 {
     // Global program objects
-    public HttpClient HttpClient { get; } = new();
+    public HttpClient HttpClient { get; }
     public WatsonWsClient CurrentServer { get; set; }
     public Storage Storage { get; set; }
     public ILogger Logger { get; set; }
@@ -31,18 +31,13 @@ public class GameData
     public Page? ServersPage { get; set; }
     public TextureRect DirtBackgroundRect { get; set; } // Shared against many pages
 
-
-    // Game runtime objects and definitions
-    // We can use Activator.CreateInstance() to create instances from these [thing] types
-    public string[] BlockDefinitions { get; set; }
-    public string[] ItemDefinitions { get; set; }
-    public string[] EntityDefinitions { get; set; }
-    // Maps the type of [thing] to the index of [thing] in [Thing]s
-    public Dictionary<string, int> BlockIndex { get; set; }
-    public Dictionary<string, int> ItemIndex { get; set; }
-    public Dictionary<string, int> EntityIndex { get; set; }
-    // Shared/template objects for all [thing] types that can be used to avoid creating thousands of identical block
-    // instances for [thing] that have no variation (like grass), or to copy from for creating new [thing] instances.
+    // Vanilla blocks/items/entities actuually used in the game (vanilla definitions requested by packs
+    // + custom runtime blocks defined here).
+    // Maps string block/item/entity name to integer index in blocks/items/entities
+    public Dictionary<string, Block> BlockIndex { get; set; }
+    public Dictionary<string, Item> ItemIndex { get; set; }
+    public Dictionary<string, Entity> EntityIndex { get; set; }
+    // Integer block/item/entitiy indexes
     public Block[] Blocks { get; set; }
     public Item[] Items { get; set; }
     public Entity[] Entities { get; set; }
@@ -62,4 +57,9 @@ public class GameData
     public List<string> KnownServers { get; set; } = new();
     public byte[] Skin { get; set; } = new byte[1008]; // 28*12*3
     public bool GenerateChunkVBOs { get; set; } = false;
+
+    public GameData()
+    {
+        HttpClient = new();
+    }
 }

@@ -196,32 +196,21 @@ public partial class Connections
     /// <summary>
     /// Creates a GameData *Definitions array of types from the server's initial connection packs packet containing block IDs/definitions.
     /// </summary>
-    private (string[], Dictionary<string, int>, T[]) DecodePacksDefinition<T>(string[] definitions, string typeNamespace)
+    private (Dictionary<string, T>, T[]) DecodePacksDefinition<T>(string[] definitions, string typeNamespace)
     {
         var names = new List<string>();
-        var indexes = new Dictionary<string, int>();
+        var indexes = new Dictionary<string, T>();
         var sharedInstances = new List<T>();
 
         for (var i = 0; i < definitions.Length; i++)
         {
             var members = definitions[i].Split(" ");
-            var name = members[0].ToPascalCase();
-            var typeName = "OpenMcDesktop.Game.Definitions." + typeNamespace + "." + name;
+            var name = members[0];
+            Console.WriteLine(definitions[i]);
 
             if (members.Length >= 1)
             {
-                var type = Type.GetType(typeName);
-                if (type != null)
-                {
-                    var instance = (T) Activator.CreateInstance(type)!;
 
-                    names.Add(name);
-                    if (!indexes.Keys.Contains(name))
-                    {
-                        indexes.Add(name, i);
-                        sharedInstances.Add(instance);
-                    }
-                }
             }
             /*if (members.Length == 2)
 		    {
@@ -242,7 +231,7 @@ public partial class Connections
 		    }*/
         }
 
-        return (names.ToArray(), indexes, sharedInstances.ToArray());
+        return (indexes, sharedInstances.ToArray());
     }
 
     /// <summary>
@@ -260,13 +249,13 @@ public partial class Connections
 
         // Apply data sent to us by server from packs to current client
         var blockDefinitions = serverData.DataPacks[0].Split("\n");
-        (gameData.BlockDefinitions, gameData.BlockIndex, gameData.Blocks) = DecodePacksDefinition<Block>(blockDefinitions, "Blocks");
+        (gameData.BlockIndex, gameData.Blocks) = DecodePacksDefinition<Block>(blockDefinitions, "Blocks");
 
         var itemDefinitions = serverData.DataPacks[1].Split("\n");
-        (gameData.ItemDefinitions, gameData.ItemIndex, gameData.Items) = DecodePacksDefinition<Item>(itemDefinitions, "Items");
+        (gameData.ItemIndex, gameData.Items) = DecodePacksDefinition<Item>(itemDefinitions, "Items");
 
         var entityDefinitions = serverData.DataPacks[2].Split("\n");
-        (gameData.EntityDefinitions, gameData.EntityIndex, gameData.Entities) = DecodePacksDefinition<Entity>(entityDefinitions, "Entities");
+        (gameData.EntityIndex, gameData.Entities) = DecodePacksDefinition<Entity>(entityDefinitions, "Entities");
 
         await gameData.ModLoader.ExecutePack(serverData.DataPacks[3]);
 
@@ -435,14 +424,14 @@ public partial class Connections
     /// </summary>
     private void ChunkPacket(ref ReadablePacket data)
     {
-        return; // TODO: Fix this
+        return;
         if (world is null)
         {
             return;
         }
 
         var chunk = new Chunk(ref data, gameData);
-        var chunkKey = (chunk.X & 67108863) + (chunk.Y & 67108863) * 67108864;
+        /*var chunkKey = (chunk.X & 67108863) + (chunk.Y & 67108863) * 67108864;
         world.Map.TryAdd(chunkKey, chunk);
         world.CameraPosition = new Vector2f(chunk.X * 64, chunk.Y * 64);
 
@@ -460,7 +449,7 @@ public partial class Connections
             playerEntity.Chunk = chunk;
 
             chunk.Entities.Add(playerEntity);
-        }
+        }*/
     }
 
     private void ChunkDeletePacket(ref ReadablePacket data)
