@@ -87,13 +87,6 @@ public partial class Connections
         return ip;
     }
 
-    private async Task<Image> FetchImage(string uri)
-    {
-        var response = await gameData.HttpClient.GetAsync(uri);
-        var data = await response.Content.ReadAsStreamAsync();
-        return new Image(data);
-    }
-
     /// <summary>
     /// ServerList MOTD and server info initial query 
     /// </summary>
@@ -140,13 +133,23 @@ public partial class Connections
 
                 try
                 {
-                    imageTask.SetResult(await FetchImage(imageUri));
+                    using var response = await gameData.HttpClient.GetAsync(imageUri);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var data = await response.Content.ReadAsStreamAsync();
+                        imageTask.SetResult(new Image(data));
+                        return;
+                    }
+
+                    imageTask.SetCanceled();
                 }
                 catch (Exception)
                 {
                     imageTask.SetCanceled();
                 }
             });
+
+            socket.MessageReceived -= OnMessageReceived;
         }
 
         void OnSocketDisconnected(object? sender, EventArgs args)
@@ -291,7 +294,7 @@ public partial class Connections
             }
             else
             {
-                var data = new ReadablePacket(args.Data.ToArray());
+                var data = new ReadablePacket([.. args.Data]);
                 var code = data.ReadByte();
                 packetHandlers.GetValueOrDefault(code)?.Invoke(ref data);
             }
@@ -334,10 +337,10 @@ public partial class Connections
                 gameData.Logger.LogInformation("wait: {message}", message[2..]);
                 break;
             default: // Chat message
-                var colour = StaticData.TextColours[style & 15];
-                var shadow = StaticData.TextShadows[style & 15];
-                var decoration = StaticData.TextDecorations[style >> 4];
-                world!.GameChat.Messages.Add(new ChatBoxItem(message[2..], colour, shadow, decoration));
+                var colour = TextHelpers.TextColours[style & 15];
+                var shadow = TextHelpers.TextShadows[style & 15];
+                var decoration = TextHelpers.TextDecorations[style >> 4];
+                world!.GameChat.Messages.Add(new StyledText(message[2..], colour, shadow, decoration));
                 break;
         }
     }
@@ -387,6 +390,9 @@ public partial class Connections
 
     /// <summary>
     /// Provides information for use in serverlist / tab player list
+    /// TODO: This packet is inefficient at scale, and should be refactored like
+    ///       https://wiki.vg/index.php?title=Protocol&oldid=7368#Player_List_Item
+    ///       To only send diffs
     /// </summary>
     private void ServerPacket(ref ReadablePacket data)
     {
@@ -413,6 +419,7 @@ public partial class Connections
                 skinImage.SetPixel(((uint) i / 3) % 8, (uint) i / 24,
                     new Color(skinData[i], skinData[i + 1], skinData[i + 2]));
             }
+            world.GameServerMenu.Players.Clear();
             world.GameServerMenu.Players.Add(new PlayerInfo(new Texture(skinImage), name, health, ping));
         }
     }
@@ -506,6 +513,7 @@ public partial class Connections
         while (data.Left > 0)
         {
             var action = (int) data.ReadByte();
+            var entityId = data.ReadUInt() + data.ReadUShort() * 4294967296;
             if (action == 0)
             {
                 var type = data.ReadByte();
@@ -525,7 +533,6 @@ public partial class Connections
                 continue;
             }
 
-            var entityId = data.ReadUInt() + data.ReadUShort() * 4294967296;
             var entity = world?.Entities.GetValueOrDefault(entityId);
             if (entity is null)
             {

@@ -27,6 +27,7 @@ public class World
     public ChatBox GameChat;
     public ServerMenu GameServerMenu;
     public PauseMenu GamePauseMenu;
+    public ChatInput GameChatInput;
 
     // Game world components
     public ConcurrentDictionary<int, Chunk> Map { get; set; }
@@ -75,6 +76,16 @@ public class World
             () => (int) (gameData.Window.GetView().Size.X / 2),
             () => (int) (gameData.Window.GetView().Size.Y / 2));
         GameGuiPage.Children.Add(GameChat);
+        GameChatInput = new ChatInput("Press Enter to send chat message...",
+            Control.BoundsZero,
+            () => (int) gameData.Window.GetView().Size.Y - 48,
+            () => (int) gameData.Window.GetView().Size.X,
+            () => 48);
+        GameChatInput.OnSubmit += (_, _) =>
+        {
+            gameData.CurrentServer?.SendAsync(GameChatInput.Text.Trim());
+            HideChatInput();
+        };
 
         GameHotbar = new Hotbar(
             () => (int) (gameData.Window.GetView().Size.X / 2 - GameHotbarWidth() / 2.0f),
@@ -135,17 +146,59 @@ public class World
                 return;
             }
 
-            GameHotbar.Selected += (int) args.Delta;
+            GameHotbar.ScrollSelection((int) args.Delta);
         };
 
         data.Window.KeyPressed += (_, args) =>
         {
-            if (args.Code == Keyboard.Key.Tab)
+            switch (args.Code)
             {
-                if (!GameGuiPage.Children.Contains(GameServerMenu))
-                {
-                    GameGuiPage.Children.Add(GameServerMenu);
-                }
+                case Keyboard.Key.Tab:
+                    if (!GameGuiPage.Children.Contains(GameServerMenu))
+                    {
+                        GameGuiPage.Children.Add(GameServerMenu);
+                    }
+                    break;
+                case Keyboard.Key.Slash:
+                case Keyboard.Key.T:
+                    if (!GameGuiPage.Children.Contains(GameChatInput))
+                    {
+                        GameGuiPage.Children.Add(GameChatInput);
+                    }
+                    break;
+                case Keyboard.Key.Backspace:
+                    if (string.IsNullOrEmpty(GameChatInput.Text))
+                    {
+                        HideChatInput();
+                    }
+                    break;
+                case Keyboard.Key.Num1:
+                    GameHotbar.Selected = 0;
+                    break;
+                case Keyboard.Key.Num2:
+                    GameHotbar.Selected = 1;
+                    break;
+                case Keyboard.Key.Num3:
+                    GameHotbar.Selected = 2;
+                    break;
+                case Keyboard.Key.Num4:
+                    GameHotbar.Selected = 3;
+                    break;
+                case Keyboard.Key.Num5:
+                    GameHotbar.Selected = 4;
+                    break;
+                case Keyboard.Key.Num6:
+                    GameHotbar.Selected = 5;
+                    break;
+                case Keyboard.Key.Num7:
+                    GameHotbar.Selected = 6;
+                    break;
+                case Keyboard.Key.Num8:
+                    GameHotbar.Selected = 7;
+                    break;
+                case Keyboard.Key.Num9:
+                    GameHotbar.Selected = 8;
+                    break;
             }
         };
 
@@ -155,6 +208,22 @@ public class World
             {
                 case Keyboard.Key.Tab:
                     GameGuiPage.Children.Remove(GameServerMenu);
+                    break;
+                case Keyboard.Key.Slash:
+                    if (GameGuiPage.Children.Contains(GameChatInput) && !GameChatInput.Focused)
+                    {
+                        GameChatInput.Focused = true;
+                        GameChatInput.Text = "/";
+                    }
+                    break;
+                case Keyboard.Key.T:
+                    // Workaround for T getting mistakenly input into input 
+                    if (GameGuiPage.Children.Contains(GameChatInput) && !GameChatInput.Focused)
+                    {
+                        GameChatInput.Focused = true;
+                        GameChatInput.Text = "";
+                    }
+                    //GameGuiPage.Children.Remove(GameChatInput);
                     break;
                 case Keyboard.Key.Escape:
                     if (!GameGuiPage.Children.Contains(GamePauseMenu))
@@ -225,11 +294,20 @@ public class World
         entity.Chunk?.Entities.Remove(entity);
     }
 
+    private void HideChatInput()
+    {
+        gameData.Window.SetMouseCursor(SfmlHelpers.DefaultCursor);
+        GameChatInput.State = State.Default;
+        GameChatInput.Focused = false;
+        GameChatInput.Text = "";
+        GameGuiPage.Children.Remove(GameChatInput);
+    }
+
     private void RenderSky(RenderWindow window, View worldLayer, View backgroundLayer)
     {
         window.SetView(backgroundLayer);
 
-        if (Dimension == OpenMcDesktop.Game.Dimension.Overworld)
+        if (Dimension == Game.Dimension.Overworld)
         {
             var time = TickCount % 24000;
             var lightness = time < 1800 ? time / 1800 * 255 : time < 13800 ? 255 : time < 15600 ? (15600 - time) / 1800 * 255 : 0;
@@ -250,7 +328,7 @@ public class World
             // Orange sunrise/sunset hue
             CreateSkyGradient(window, Color.Transparent, new Color(197, 86, 59, (byte) orangeness)); // sunset sunrise orange
         }
-        else if (Dimension == OpenMcDesktop.Game.Dimension.Nether)
+        else if (Dimension == Game.Dimension.Nether)
         {
             var backgroundRect = new RectangleShape(window.GetView().Size)
             {
@@ -259,7 +337,7 @@ public class World
 
             window.Draw(backgroundRect);
         }
-        else if (Dimension == OpenMcDesktop.Game.Dimension.End)
+        else if (Dimension == Game.Dimension.End)
         {
             var backgroundRect = new RectangleShape(window.GetView().Size)
             {
@@ -283,7 +361,7 @@ public class World
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void CreateSkyGradient(RenderTarget window, Color atmosphereColour, Color horizonColour)
+    private static void CreateSkyGradient(RenderWindow window, Color atmosphereColour, Color horizonColour)
     {
         var vertices = new VertexArray(PrimitiveType.Quads, 4);
 
@@ -358,6 +436,7 @@ public class World
         }
     }
 
+    // https://github.com/open-mc/client/blob/e147ff57d0f9653e1ef6bafea27744a1ced40376/iframe/index.js#L31
     private void Tick(object? sender, ElapsedEventArgs args)
     {
         TickCount++;

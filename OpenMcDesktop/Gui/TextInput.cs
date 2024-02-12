@@ -14,14 +14,18 @@ public class TextInput : Control
 
     private Texture guiTexture;
     private IntRect normalCrop;
-    private Font font;
+    protected static Font font;
+
+    static TextInput()
+    {
+        font = new Font(@"Resources/Fonts/mojangles.ttf");
+    }
 
     public TextInput(string placeholder, Func<int> x, Func<int> y, Func<int> width, Func<int> height) : base(x, y, width, height)
     {
         Placeholder = placeholder;
         guiTexture = new Texture(@"Resources/Textures/gui.png");
         normalCrop = new IntRect(0, 66, 200, 20);
-        font = new Font(@"Resources/Fonts/mojangles.ttf");
     }
 
     public override bool KeyboardTest(Keyboard.Key key, int modifiers, TestType type)
@@ -68,10 +72,12 @@ public class TextInput : Control
         };
         window.Draw(backgroundRect);
 
-        var text = new Text(string.IsNullOrEmpty(Text) && !Focused ? Placeholder : Text, font);
-        text.CharacterSize = (uint) ((Bounds.EndY() - Bounds.StartY()) / 1.4f);
-        text.Position = new Vector2f(Bounds.StartX() + 8, Bounds.StartY() + 2);
-        text.FillColor = string.IsNullOrEmpty(Text) ? BorderColour : Color.White;
+        var text = new Text(string.IsNullOrEmpty(Text) && !Focused ? Placeholder : Text, font)
+        {
+            CharacterSize = (uint) ((Bounds.EndY() - Bounds.StartY()) / 1.4f),
+            Position = new Vector2f(Bounds.StartX() + 8, Bounds.StartY() + 2),
+            FillColor = string.IsNullOrEmpty(Text) ? BorderColour : Color.White
+        };
         window.Draw(text);
 
         window.SetMouseCursor(State is State.Hover or State.Pressed ? SfmlHelpers.TextCursor : SfmlHelpers.DefaultCursor);
@@ -82,9 +88,9 @@ public class TextInput : Control
             {
                 Position = new Vector2f(Bounds.StartX() + text.GetGlobalBounds().Width + 12, Bounds.EndY() - 12),
                 Size = new Vector2f(24, 4),
-                OutlineColor = BorderColour
+                OutlineColor = BorderColour,
+                FillColor = BorderColour
             };
-            cursorRect.FillColor = BorderColour;
             window.Draw(cursorRect);
         }
     }

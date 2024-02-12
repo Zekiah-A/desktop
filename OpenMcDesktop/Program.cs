@@ -59,6 +59,7 @@ window.SetFramerateLimit(60);
 window.Closed += (_, _) =>
 {
     gameData.Logger.LogInformation("Quit received. Exiting.");
+    gameData.CurrentServer?.Stop();
     window.Close();
 };
 window.Resized += (_, args) =>

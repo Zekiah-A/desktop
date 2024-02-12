@@ -37,8 +37,12 @@ public class Chunk
         var id = 0;
         while ((id = data.ReadShort()) != 65535)
         {
-            /*var entity e = new EntityIDs[id]()
-            e.x = buf.short() / 1024 + (this.x << 6)
+            var entity = gameData.Entities[id].CopyNew(); //new EntityIDs[id]()
+            entity.X = data.ReadShort() / 1024 + (X << 6);
+            entity.Y = data.ReadShort() / 1024 + (Y << 6);
+            entity.Id = data.ReadInt() + data.ReadShort() * 4294967296;
+            entity.Name = data.ReadString();
+            /*e.x = buf.short() / 1024 + (this.x << 6)
             e.y = buf.short() / 1024 + (this.y << 6)
             e.netId = buf.uint32() + buf.uint16() * 4294967296
             e.name = buf.string(); e.state = buf.short()

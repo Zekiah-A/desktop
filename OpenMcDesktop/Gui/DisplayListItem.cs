@@ -13,6 +13,13 @@ public class DisplayListItem : Control
     public Color BorderColour { get; set; } = new(255, 255, 255, 128);
     public Color DescriptionColour { get; set; } = new(255, 255, 255, 200);
 
+    private static readonly Font font;
+
+    static DisplayListItem()
+    {
+        font = new Font(@"Resources/Fonts/mojangles.ttf");
+    }
+
     public DisplayListItem(Texture texture, string name, string description)
     {
         Texture = texture;
@@ -43,7 +50,6 @@ public class DisplayListItem : Control
         };
         window.Draw(image);
 
-        var font = new Font(@"Resources/Fonts/mojangles.ttf");
         var nameText = new Text(Name, font)
         {
             CharacterSize = 32,

@@ -54,3 +54,7 @@ _deps
 
 # Kate
 *.kate-swp
+
+# Syncthing
+.stfolder/
+.stignore

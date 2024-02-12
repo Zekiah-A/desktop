@@ -17,6 +17,12 @@ public class ServerListItem : DisplayListItem
     private long lastClick;
 
     private void InvokeDoubleClick(object? sender, EventArgs args) => OnDoubleClick?.Invoke(sender, args);
+    private static readonly Font font;
+
+    static ServerListItem()
+    {
+        font = new Font(@"Resources/Fonts/mojangles.ttf");
+    }
 
     public ServerListItem(Texture texture, string name, string description, string pageUri) : base(texture, name, description)
     {
@@ -27,7 +33,7 @@ public class ServerListItem : DisplayListItem
         openPageButton.OnMouseUp += (_, _) =>
         {
             using var webview = new Webview();
-            webview.SetTitle($"{WebviewWindowName} - Server statistics")
+            webview.SetTitle($"{WebviewWindowName} - Server info")
                 .SetSize(1024, 768, WebviewHint.None)
                 .SetSize(800, 600, WebviewHint.Min)
                 .Navigate(new UrlContent("https://" + WebviewUri + ":27277/"))
@@ -125,7 +131,6 @@ public class ServerListItem : DisplayListItem
         };
         window.Draw(image);
 
-        var font = new Font(@"Resources/Fonts/mojangles.ttf");
         var nameText = new Text(Name, font)
         {
             CharacterSize = 32,

@@ -15,7 +15,7 @@ public class GameData
 {
     // Global program objects
     public HttpClient HttpClient { get; }
-    public WatsonWsClient CurrentServer { get; set; }
+    public WatsonWsClient? CurrentServer { get; set; }
     public Storage Storage { get; set; }
     public ILogger Logger { get; set; }
     public ResourceManager Translations { get; set; }

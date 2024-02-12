@@ -120,9 +120,9 @@ public class Label : Control
 
         text.DisplayedString = format[2..];
         shadow.DisplayedString = format[2..];
-        text.FillColor = StaticData.TextColours[style & 15];
-        shadow.FillColor = StaticData.TextShadows[style & 15];
-        var decoration = StaticData.TextDecorations[style >> 4];
+        text.FillColor = TextHelpers.TextColours[style & 15];
+        shadow.FillColor = TextHelpers.TextShadows[style & 15];
+        var decoration = TextHelpers.TextDecorations[style >> 4];
         text.Style = decoration;
         shadow.Style = decoration;
     }
