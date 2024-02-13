@@ -172,6 +172,21 @@ public class World
                         HideChatInput();
                     }
                     break;
+                case Keyboard.Key.Escape:
+                    if (GameGuiPage.Children.Contains(GameChatInput))
+                    {
+                        GameGuiPage.Children.Remove(GameChatInput);
+                        break;
+                    }
+                    if (!GameGuiPage.Children.Contains(GamePauseMenu))
+                    {
+                        GameGuiPage.Children.Add(GamePauseMenu);
+                    }
+                    else
+                    {
+                        GameGuiPage.Children.Remove(GamePauseMenu);
+                    }
+                    break;
                 case Keyboard.Key.Num1:
                     GameHotbar.Selected = 0;
                     break;
@@ -224,16 +239,6 @@ public class World
                         GameChatInput.Text = "";
                     }
                     //GameGuiPage.Children.Remove(GameChatInput);
-                    break;
-                case Keyboard.Key.Escape:
-                    if (!GameGuiPage.Children.Contains(GamePauseMenu))
-                    {
-                        GameGuiPage.Children.Add(GamePauseMenu);
-                    }
-                    else
-                    {
-                        GameGuiPage.Children.Remove(GamePauseMenu);
-                    }
                     break;
             }
         };

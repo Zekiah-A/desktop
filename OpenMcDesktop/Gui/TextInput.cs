@@ -6,7 +6,7 @@ namespace OpenMcDesktop.Gui;
 
 public class TextInput : Control
 {
-    public string Text { get; set; } = "";
+    public virtual string Text { get; set; } = "";
     public string Placeholder { get; set; }
     public Color BorderColour { get; set; } = new(255, 255, 255, 128);
 

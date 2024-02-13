@@ -284,9 +284,13 @@ public partial class Connections
                 initialPacket = true;
             }
 
-            Console.Write("Packet: ");
-            foreach (var @byte in args.Data) Console.Write(@byte + " ");
-            Console.WriteLine();
+            var builder = new StringBuilder();
+            foreach (var @byte in args.Data)
+            {
+                builder.Append(@byte);
+                builder.Append(' ');
+            }
+            gameData.Logger.LogTrace("Packet: {builder}", builder.ToString());
 
             if (args.MessageType == WebSocketMessageType.Text)
             {
@@ -331,16 +335,16 @@ public partial class Connections
                 gameData.CurrentPage = serverLoadingPage;
                 break;
             case -2: // TODO: Call onpending instead
-                gameData.Logger.LogInformation("pending: {message}", message[2..]);
+                gameData.Logger.LogInformation("Chat pending: {message}", message[2..]);
                 break;
             case -3: // TODO: Call wait for connection
-                gameData.Logger.LogInformation("wait: {message}", message[2..]);
+                gameData.Logger.LogInformation("Chat wait: {message}", message[2..]);
                 break;
             default: // Chat message
                 var colour = TextHelpers.TextColours[style & 15];
                 var shadow = TextHelpers.TextShadows[style & 15];
                 var decoration = TextHelpers.TextDecorations[style >> 4];
-                world!.GameChat.Messages.Add(new StyledText(message[2..], colour, shadow, decoration));
+                world!.GameChat.Messages.Add(new StyledTextNode(message[2..], colour, shadow, decoration));
                 break;
         }
     }

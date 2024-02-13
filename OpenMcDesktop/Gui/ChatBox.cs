@@ -6,7 +6,7 @@ namespace OpenMcDesktop.Gui;
 
 public class ChatBox : Control
 {
-    public readonly List<StyledText> Messages;
+    public readonly List<StyledTextNode> Messages;
     private static readonly Font font;
 
     static ChatBox()
@@ -16,7 +16,7 @@ public class ChatBox : Control
 
     public ChatBox(Func<int> x, Func<int> y, Func<int> width, Func<int> height) : base(x, y, width, height)
     {
-        Messages = new List<StyledText>();
+        Messages = new List<StyledTextNode>();
     }
 
     public override void Render(RenderWindow window, View view, float deltaTime)

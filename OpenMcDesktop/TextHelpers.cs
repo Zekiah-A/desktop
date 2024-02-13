@@ -69,30 +69,15 @@ public partial class TextHelpers
         Text.Styles.Bold | Text.Styles.Italic | Text.Styles.Underlined | Text.Styles.StrikeThrough, // .s14
     };
 
-    private static Dictionary<Regex, Color> ChatColourMap = new()
+    public static Dictionary<Regex, int> CommandStyleMap = new()
     {
-        { DefaultMessageRegex(), TextColours[15] }, // .msg default white
-        { BaseCommandRegex(), TextColours[7] }, // .c7 grey /basecommand
-        { RelativeCordinateRegex(), TextColours[11] }, //  .c11 yellow tilde relative cordinate ~0 ~1 ~ 2
-        { CommandStringLiteralRegex(), TextColours[13] }, // .c13 purple sub command string literal
-        { SubCommandRegex(), TextColours[10] }, // .c10 green sub command (not string literal)
-        { BadCommandLiteralRegex(), TextColours[9] }, // .c9 red unclosed string command literal
+        { BaseCommandRegex(), 7 }, // .c7 grey /basecommand
+        { SubCommandRegex(), 10 }, // .c10 green sub command (not string literal)
+        { RelativeCordinateRegex(), 11 }, //  .c11 yellow tilde relative cordinate ~0 ~1 ~ 2
+        { CommandStringLiteralRegex(), 13 }, // .c13 purple sub command string literal
+        { BadCommandLiteralRegex(), 9 }, // .c9 red unclosed string command literal
+        { DefaultMessageRegex(), 15 }, // .msg default white
     };
-
-    public static StyledText ParseCommandStyle(string text)
-    {
-        for (var i = 0; i < ChatColourMap.Count; i++)
-        {
-            var pair = ChatColourMap.ElementAt(i);
-            if (pair.Key.IsMatch(text))
-            {
-                return new StyledText(text, TextColours[i], TextShadows[i], TextDecorations[0]);
-            }
-        }
-
-        // Default if no match
-        return new StyledText(text, TextColours[0], TextShadows[0], TextDecorations[0]);
-    }
 
     [GeneratedRegex(@"^[^/][^\s]*$")]
     private static partial Regex DefaultMessageRegex();
