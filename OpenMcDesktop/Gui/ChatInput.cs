@@ -225,11 +225,28 @@ public class ChatInput : TextInput
                 }
                 default:
                 {
-                    styledTextNodes.Add(TextHelpers.TextNodeFrom(
-                        Text[index++].ToString(),
-                        unclosedQuote
-                            ? TextHelpers.UnclosedStringLiteralStyle
-                            : TextHelpers.SubCommandStyle));
+                    while (true)
+                    {
+                        if (Text.Length > index)
+                        {
+                            styledTextNodes.Add(TextHelpers.TextNodeFrom(
+                                Text[index].ToString(),
+                                unclosedQuote
+                                    ? TextHelpers.UnclosedStringLiteralStyle
+                                    : TextHelpers.SubCommandStyle));
+                            var whiteSpace = char.IsWhiteSpace(Text[index]);
+                            index++;
+
+                            if (whiteSpace)
+                            {
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
                     break;
                 }
             }
