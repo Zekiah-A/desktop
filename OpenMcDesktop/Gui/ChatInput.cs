@@ -40,11 +40,9 @@ public class ChatInput : TextInput
 
         if (insideCommand)
         {
-            styledTextNodes.Add(new StyledTextNode(
+            styledTextNodes.Add(TextHelpers.TextNodeFrom(
                 Text[index++].ToString(),
-                TextHelpers.TextColours[7],
-                Color.Black,
-                SFML.Graphics.Text.Styles.Bold));
+                TextHelpers.BaseCommandStyle));
 
             while (true)
             {
@@ -55,11 +53,9 @@ public class ChatInput : TextInput
                         break;
                     }
 
-                    styledTextNodes.Add(new StyledTextNode(
+                    styledTextNodes.Add(TextHelpers.TextNodeFrom(
                         Text[index].ToString(),
-                        TextHelpers.TextColours[7],
-                        Color.Black,
-                        SFML.Graphics.Text.Styles.Bold));
+                        TextHelpers.BaseCommandStyle));
                 }
                 else
                 {
@@ -71,64 +67,50 @@ public class ChatInput : TextInput
         }
         else
         {
-            styledTextNodes.Add(new StyledTextNode(
+            styledTextNodes.Add(TextHelpers.TextNodeFrom(
                 Text,
-                Color.White,
-                Color.Black,
-                SFML.Graphics.Text.Styles.Regular));
-
+                TextHelpers.DefaultMessageStyle));
             return;
         }
 
-        var defaultColor = Color.White;
         var unclosedQuote = false;
-
         while (Text.Length > index)
         {
             switch (Text[index])
             {
                 case '@':
+                {
                     if (unclosedQuote)
                     {
-                        styledTextNodes.Add(
-                            new StyledTextNode(Text[index++].ToString(),
-                                unclosedQuote 
-                                    ? TextHelpers.TextColours[9] 
-                                    : TextHelpers.TextColours[10],
-                                Color.Black,
-                                SFML.Graphics.Text.Styles.Regular));
-
+                        styledTextNodes.Add(TextHelpers.TextNodeFrom(
+                            Text[index++].ToString(),
+                            unclosedQuote
+                                ? TextHelpers.UnclosedStringLiteralStyle
+                                : TextHelpers.SubCommandStyle));
                         break;
                     }
-                    
+
                     if (Text.Length > index + 1)
                     {
                         index++;
 
-                        styledTextNodes.Add(
-                            new StyledTextNode($"@{Text[index++]}",
-                                Color.Green,
-                                Color.Black,
-                                SFML.Graphics.Text.Styles.Bold));
+                        styledTextNodes.Add(TextHelpers.TextNodeFrom(
+                            $"@{Text[index++]}",
+                            TextHelpers.SubCommandStyle));
                     }
                     else
                     {
-                        styledTextNodes.Add(
-                            new StyledTextNode(Text[index++].ToString(),
-                                defaultColor,
-                                Color.Black,
-                                SFML.Graphics.Text.Styles.Regular));
+                        styledTextNodes.Add(TextHelpers.TextNodeFrom(
+                            Text[index++].ToString(),
+                            TextHelpers.UnclosedStringLiteralStyle));
                     }
-
                     break;
-
+                }
                 case '"':
                 {
                     var start = index;
-
-                    index++;
-
                     var successful = false;
+                    index++;
 
                     while (true)
                     {
@@ -147,12 +129,9 @@ public class ChatInput : TextInput
                             index = start;
                             unclosedQuote = true;
 
-                            styledTextNodes.Add(
-                                new StyledTextNode(Text[index++].ToString(),
-                                    TextHelpers.TextColours[9],
-                                    Color.Black,
-                                    SFML.Graphics.Text.Styles.Regular));
-
+                            styledTextNodes.Add(TextHelpers.TextNodeFrom(
+                                Text[index++].ToString(),
+                                TextHelpers.UnclosedStringLiteralStyle));
                             break;
                         }
 
@@ -162,37 +141,26 @@ public class ChatInput : TextInput
                     if (successful)
                     {
                         var content = Text[start..++index];
-
-                        styledTextNodes.Add(
-                            new StyledTextNode(content,
-                                TextHelpers.TextColours[13],
-                                Color.Black,
-                                SFML.Graphics.Text.Styles.Regular));
+                        styledTextNodes.Add(TextHelpers.TextNodeFrom(
+                            content,
+                            TextHelpers.StringLiteralStyle));
                     }
 
                     break;
                 }
-
                 case '~':
                 {
                     if (unclosedQuote)
                     {
-                        styledTextNodes.Add(
-                            new StyledTextNode(Text[index++].ToString(),
-                                unclosedQuote 
-                                    ? TextHelpers.TextColours[9] 
-                                    : TextHelpers.TextColours[10],
-                                Color.Black,
-                                SFML.Graphics.Text.Styles.Regular));
-
+                        styledTextNodes.Add(TextHelpers.TextNodeFrom(
+                            Text[index++].ToString(),
+                            TextHelpers.UnclosedStringLiteralStyle));
                         break;
                     }
 
-                    styledTextNodes.Add(new StyledTextNode(
+                    styledTextNodes.Add(TextHelpers.TextNodeFrom(
                         Text[index++].ToString(),
-                        TextHelpers.TextColours[11],
-                        Color.Black,
-                        SFML.Graphics.Text.Styles.Bold));
+                        TextHelpers.RelativeCordinateStyle));
 
                     while (true)
                     {
@@ -200,11 +168,9 @@ public class ChatInput : TextInput
                         {
                             if (char.IsDigit(Text[index]))
                             {
-                                styledTextNodes.Add(new StyledTextNode(
+                                styledTextNodes.Add(TextHelpers.TextNodeFrom(
                                     Text[index++].ToString(),
-                                    Color.Yellow,
-                                    Color.Black,
-                                    SFML.Graphics.Text.Styles.Bold));
+                                    TextHelpers.RelativeCordinateStyle));
                             }
                             else
                             {
@@ -219,42 +185,33 @@ public class ChatInput : TextInput
 
                     break;
                 }
-
                 case >= '0' and <= '9':
                 {
                     if (unclosedQuote)
                     {
-                        styledTextNodes.Add(
-                            new StyledTextNode(Text[index++].ToString(),
-                                unclosedQuote 
-                                    ? TextHelpers.TextColours[9] 
-                                    : TextHelpers.TextColours[10],
-                                Color.Black,
-                                SFML.Graphics.Text.Styles.Regular));
-
+                        styledTextNodes.Add(TextHelpers.TextNodeFrom(
+                            Text[index++].ToString(),
+                            TextHelpers.UnclosedStringLiteralStyle));
                         break;
                     }
 
-                    styledTextNodes.Add(new StyledTextNode(
+                    styledTextNodes.Add(TextHelpers.TextNodeFrom(
                         Text[index++].ToString(),
-                        Color.Blue,
-                        Color.Black,
-                        SFML.Graphics.Text.Styles.Bold));
+                        TextHelpers.NumericLiteralStyle));
 
                     while (true)
                     {
                         if (Text.Length > index)
                         {
-                            if (char.IsWhiteSpace(Text[index]))
+                            var @char = Text[index];
+                            if (char.IsWhiteSpace(@char) || @char is not (>= '0' and <= '9'))
                             {
                                 break;
                             }
 
-                            styledTextNodes.Add(new StyledTextNode(
-                                Text[index].ToString(),
-                                Color.Blue,
-                                Color.Black,
-                                SFML.Graphics.Text.Styles.Bold));
+                            styledTextNodes.Add(TextHelpers.TextNodeFrom(
+                                @char.ToString(),
+                                TextHelpers.NumericLiteralStyle));
                         }
                         else
                         {
@@ -266,17 +223,15 @@ public class ChatInput : TextInput
 
                     break;
                 }
-
                 default:
-                    styledTextNodes.Add(
-                        new StyledTextNode(Text[index++].ToString(),
-                            unclosedQuote 
-                                ? TextHelpers.TextColours[9] 
-                                : TextHelpers.TextColours[10],
-                            Color.Black,
-                            SFML.Graphics.Text.Styles.Regular));
-
+                {
+                    styledTextNodes.Add(TextHelpers.TextNodeFrom(
+                        Text[index++].ToString(),
+                        unclosedQuote
+                            ? TextHelpers.UnclosedStringLiteralStyle
+                            : TextHelpers.SubCommandStyle));
                     break;
+                }
             }
         }
     }

@@ -69,26 +69,51 @@ public partial class TextHelpers
         Text.Styles.Bold | Text.Styles.Italic | Text.Styles.Underlined | Text.Styles.StrikeThrough, // .s14
     };
 
-    public static Dictionary<Regex, int> CommandStyleMap = new()
-    {
-        { BaseCommandRegex(), 7 }, // .c7 grey /basecommand
-        { SubCommandRegex(), 10 }, // .c10 green sub command (not string literal)
-        { RelativeCordinateRegex(), 11 }, //  .c11 yellow tilde relative cordinate ~0 ~1 ~ 2
-        { CommandStringLiteralRegex(), 13 }, // .c13 purple sub command string literal
-        { BadCommandLiteralRegex(), 9 }, // .c9 red unclosed string command literal
-        { DefaultMessageRegex(), 15 }, // .msg default white
-    };
+    // White (plain message text)
+    public static TextStyle DefaultMessageStyle = new TextStyle(
+        TextHelpers.TextColours[15],
+        TextHelpers.TextShadows[15],
+        TextHelpers.TextDecorations[0]);
 
-    [GeneratedRegex(@"^[^/][^\s]*$")]
-    private static partial Regex DefaultMessageRegex();
-    [GeneratedRegex(@"^\/\w*$")]
-    private static partial Regex BaseCommandRegex();
-    [GeneratedRegex(@"^~|~?[+-]?(\d+(\.\d*)?|\.\d+)([Ee][+-]?\d+)?$")]
-    private static partial Regex RelativeCordinateRegex();
-    [GeneratedRegex(@"^""(?:[^\\\""]|\\.)*""$")]
-    private static partial Regex CommandStringLiteralRegex();
-    [GeneratedRegex(@"^[^""\s]\S*$")]
-    private static partial Regex SubCommandRegex();
-    [GeneratedRegex(@"^""$")]
-    private static partial Regex BadCommandLiteralRegex();
+    // Grey (/basecommand text)
+    public static TextStyle BaseCommandStyle = new TextStyle(
+        TextHelpers.TextColours[7],
+        TextHelpers.TextShadows[7],
+        TextHelpers.TextDecorations[1]);
+
+    // Green (command argument (not literal))
+    public static TextStyle SubCommandStyle = new TextStyle(
+        TextHelpers.TextColours[10],
+        TextHelpers.TextShadows[10],
+        TextHelpers.TextDecorations[1]);
+
+    // Red (unclosed string command literal)
+    public static TextStyle UnclosedStringLiteralStyle = new TextStyle(
+        TextHelpers.TextColours[9],
+        TextHelpers.TextShadows[9],
+        TextHelpers.TextDecorations[0]);
+
+    // Purple (command argument string literal)
+    public static TextStyle StringLiteralStyle = new TextStyle(
+        TextHelpers.TextColours[13],
+        TextHelpers.TextShadows[13],
+        TextHelpers.TextDecorations[0]);
+
+    // Yellow (tilde relative cordinate)
+    public static TextStyle RelativeCordinateStyle = new TextStyle(
+        TextHelpers.TextColours[11],
+        TextHelpers.TextShadows[11],
+        TextHelpers.TextDecorations[1]);
+
+    // Blue (integer numeric literal)
+    public static TextStyle NumericLiteralStyle = new TextStyle(
+        TextHelpers.TextColours[4],
+        TextHelpers.TextShadows[4],
+        TextHelpers.TextDecorations[1]);
+
+    public static StyledTextNode TextNodeFrom(string text, TextStyle style)
+    {
+        var (colour, shadow, decoration) = style;
+        return new StyledTextNode(text, colour, shadow, decoration);
+    }
 }
