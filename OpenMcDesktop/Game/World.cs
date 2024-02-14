@@ -153,12 +153,19 @@ public class World
         {
             if (GameGuiPage.Children.Contains(GameChatInput) && GameChatInput.Focused)
             {
-                if (args.Code == Keyboard.Key.Escape)
+                switch (args.Code)
                 {
-                    GameGuiPage.Children.Remove(GameChatInput);
-                    GameChatInput.Text = string.Empty;
-                    GameChatInput.Focused = false;
+                    case Keyboard.Key.Escape:
+                        HideChatInput();
+                        break;
+                    case Keyboard.Key.Backspace:
+                        if (string.IsNullOrEmpty(GameChatInput.Text))
+                        {
+                            HideChatInput();
+                        }
+                        break;
                 }
+
                 return;
             }
 
@@ -175,12 +182,6 @@ public class World
                     if (!GameGuiPage.Children.Contains(GameChatInput))
                     {
                         GameGuiPage.Children.Add(GameChatInput);
-                    }
-                    break;
-                case Keyboard.Key.Backspace:
-                    if (string.IsNullOrEmpty(GameChatInput.Text))
-                    {
-                        HideChatInput();
                     }
                     break;
                 case Keyboard.Key.Escape:
