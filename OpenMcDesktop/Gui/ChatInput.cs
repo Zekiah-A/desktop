@@ -90,7 +90,7 @@ public class ChatInput : TextInput
                         break;
                     }
 
-                    if (Text.Length > index + 1)
+                    if (Text.Length > index + 1 && char.IsLetter(Text[index + 1]))
                     {
                         index++;
 
@@ -229,15 +229,14 @@ public class ChatInput : TextInput
                     {
                         if (Text.Length > index)
                         {
+                            var @char = Text[index];
                             styledTextNodes.Add(TextHelpers.TextNodeFrom(
-                                Text[index].ToString(),
+                                Text[index++].ToString(),
                                 unclosedQuote
                                     ? TextHelpers.UnclosedStringLiteralStyle
                                     : TextHelpers.SubCommandStyle));
-                            var whiteSpace = char.IsWhiteSpace(Text[index]);
-                            index++;
 
-                            if (whiteSpace)
+                            if (char.IsWhiteSpace(@char))
                             {
                                 break;
                             }
