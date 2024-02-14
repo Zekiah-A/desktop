@@ -118,11 +118,11 @@ window.MouseWheelScrolled += (_, args) =>
 
 void PropagateKeyTest(KeyEventArgs args, TestType type)
 {
-    var modifiers = 0;
-    modifiers |= args.Alt ? (int) ModifierFlags.Alt : 0;
-    modifiers |= args.Control ? (int) ModifierFlags.Control : 0;
-    modifiers |= args.Shift ? (int) ModifierFlags.Shift : 0;
-    modifiers |= args.System ? (int) ModifierFlags.System : 0;
+    var modifiers = KeyModifiers.None;
+    modifiers |= args.Alt ? KeyModifiers.Alt : KeyModifiers.None;
+    modifiers |= args.Control ? KeyModifiers.Control : KeyModifiers.None;
+    modifiers |= args.Shift ? KeyModifiers.Shift : KeyModifiers.None;
+    modifiers |= args.System ? KeyModifiers.System : KeyModifiers.None;
 
     if (gameData.CurrentPage?.KeyboardTest(args.Code, modifiers, type) is false)
     {

@@ -9,6 +9,8 @@ public class TextInput : Control
     public virtual string Text { get; set; } = "";
     public string Placeholder { get; set; }
     public Color BorderColour { get; set; } = new(255, 255, 255, 128);
+    public TextSelection? Selection;
+    public int Cursor = 0;
 
     public EventHandler<EventArgs>? OnSubmit;
 
@@ -28,7 +30,7 @@ public class TextInput : Control
         normalCrop = new IntRect(0, 66, 200, 20);
     }
 
-    public override bool KeyboardTest(Keyboard.Key key, int modifiers, TestType type)
+    public override bool KeyboardTest(Keyboard.Key key, KeyModifiers modifiers, TestType type)
     {
         if (type != TestType.KeyDown)
         {
@@ -41,7 +43,18 @@ public class TextInput : Control
                 OnSubmit?.Invoke(this, EventArgs.Empty);
                 return true;
             case Keyboard.Key.Backspace when Text.Length > 0:
-                Text = Text[..^1];
+                if (Selection != null)
+                {
+                    Text = Text.Remove(Selection.Start, Selection.End - Selection.Start);
+                    Selection = null;
+                }
+                else
+                {
+                    Text = Text[..^1];
+                }
+                return true;
+            case Keyboard.Key.A when modifiers.HasFlag(KeyModifiers.Control):
+                Selection = new TextSelection(0, Text.Length);
                 return true;
             default:
                 return false;
@@ -56,6 +69,7 @@ public class TextInput : Control
             return false;
         }
 
+        Selection = null;
         Text += unicode;
         return true;
     }
@@ -72,13 +86,56 @@ public class TextInput : Control
         };
         window.Draw(backgroundRect);
 
-        var text = new Text(string.IsNullOrEmpty(Text) && !Focused ? Placeholder : Text, font)
+        var textEndX = 0f;
+        if (Selection == null)
         {
-            CharacterSize = (uint) ((Bounds.EndY() - Bounds.StartY()) / 1.4f),
-            Position = new Vector2f(Bounds.StartX() + 8, Bounds.StartY() + 2),
-            FillColor = string.IsNullOrEmpty(Text) ? BorderColour : Color.White
-        };
-        window.Draw(text);
+            var text = new Text(string.IsNullOrEmpty(Text) && !Focused ? Placeholder : Text, font)
+            {
+                CharacterSize = (uint) ((Bounds.EndY() - Bounds.StartY()) / 1.4f),
+                Position = new Vector2f(Bounds.StartX() + 8, Bounds.StartY() + 2),
+                FillColor = string.IsNullOrEmpty(Text) ? BorderColour : Color.White
+            };
+            window.Draw(text);
+            textEndX = text.GetGlobalBounds().Width;
+        }
+        else
+        {
+            var preText = new Text(Text[..Selection.Start], font)
+            {
+                CharacterSize = (uint) ((Bounds.EndY() - Bounds.StartY()) / 1.4f),
+                Position = new Vector2f(Bounds.StartX() + 8, Bounds.StartY() + 2),
+                FillColor = Color.White
+            };
+            window.Draw(preText);
+            textEndX += preText.GetGlobalBounds().Width;
+
+            var selectionText = new Text(Text[Selection.Start..Selection.End], font)
+            {
+                CharacterSize = (uint) ((Bounds.EndY() - Bounds.StartY()) / 1.4f),
+                Position = new Vector2f(Bounds.StartX() + textEndX + 8, Bounds.StartY() + 2),
+                FillColor = TextHelpers.TextColours[4]
+            };
+            textEndX += selectionText.GetGlobalBounds().Width;
+
+            var selectionRect = new RectangleShape
+            {
+                Position = new Vector2f(Bounds.StartX() + 8, Bounds.StartY() + 12),
+                Size = new Vector2f(selectionText.GetGlobalBounds().Width, Bounds.EndY() - Bounds.StartY() - 24),
+                FillColor = new Color(255, 255, 255, 221),
+            };
+            window.Draw(selectionRect);
+            window.Draw(selectionText);
+
+            var postText = new Text(Text[Selection.End..], font)
+            {
+                CharacterSize = (uint) ((Bounds.EndY() - Bounds.StartY()) / 1.4f),
+                Position = new Vector2f(Bounds.StartX() + textEndX + 8, Bounds.StartY() + 2),
+                FillColor = Color.White
+            };
+            window.Draw(postText);
+            textEndX += postText.GetGlobalBounds().Width;
+        }
+
 
         window.SetMouseCursor(State is State.Hover or State.Pressed ? SfmlHelpers.TextCursor : SfmlHelpers.DefaultCursor);
 
@@ -86,7 +143,7 @@ public class TextInput : Control
         {
             var cursorRect = new RectangleShape
             {
-                Position = new Vector2f(Bounds.StartX() + text.GetGlobalBounds().Width + 12, Bounds.EndY() - 12),
+                Position = new Vector2f(Bounds.StartX() + textEndX + 12, Bounds.EndY() - 12),
                 Size = new Vector2f(24, 4),
                 OutlineColor = BorderColour,
                 FillColor = BorderColour

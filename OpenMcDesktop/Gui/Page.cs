@@ -43,7 +43,7 @@ public class Page : Control
         return false;
     }
 
-    public override bool KeyboardTest(Keyboard.Key key, int modifiers, TestType type)
+    public override bool KeyboardTest(Keyboard.Key key, KeyModifiers modifiers, TestType type)
     {
         for (var i = Children.Count - 1; i >= 0; i--)
         {

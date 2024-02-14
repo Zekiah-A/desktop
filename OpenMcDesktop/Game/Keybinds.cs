@@ -11,7 +11,7 @@ namespace OpenMcDesktop.Game;
 /// </summary>
 public static class Keybinds
 {
-    public delegate void KeyEventHandler(int modifiers, TestType type);
+    public delegate void KeyEventHandler(KeyModifiers modifiers, TestType type);
     public static Dictionary<Keyboard.Key, KeyEventHandler> KeySubscribers;
 
     public delegate void MouseEventHandler(int x, int y, TestType type);
@@ -31,7 +31,7 @@ public static class Keybinds
         }
     }
 
-    public static void KeyEvent(Keyboard.Key key, int modifiers, TestType type)
+    public static void KeyEvent(Keyboard.Key key, KeyModifiers modifiers, TestType type)
     {
         if (KeySubscribers.TryGetValue(key, out var subscriber))
         {

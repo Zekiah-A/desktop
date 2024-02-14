@@ -107,8 +107,8 @@ public partial class TextHelpers
 
     // Blue (integer numeric literal)
     public static TextStyle NumericLiteralStyle = new TextStyle(
-        TextHelpers.TextColours[4],
-        TextHelpers.TextShadows[4],
+        TextHelpers.TextColours[3],
+        TextHelpers.TextShadows[3],
         TextHelpers.TextDecorations[1]);
 
     public static StyledTextNode TextNodeFrom(string text, TextStyle style)

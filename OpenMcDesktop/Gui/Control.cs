@@ -109,7 +109,7 @@ public abstract class Control
         return false;
     }
 
-    public virtual bool KeyboardTest(Keyboard.Key key, int modifiers, TestType type)
+    public virtual bool KeyboardTest(Keyboard.Key key, KeyModifiers modifiers, TestType type)
     {
         return false;
     }

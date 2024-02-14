@@ -37,7 +37,7 @@ public class Grid : Control
         return false;
     }
 
-    public override bool KeyboardTest(Keyboard.Key key, int modifiers, TestType type)
+    public override bool KeyboardTest(Keyboard.Key key, KeyModifiers modifiers, TestType type)
     {
         foreach (var child in Children)
         {
