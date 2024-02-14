@@ -29,48 +29,254 @@ public class ChatInput : TextInput
     private void UpdateStyledText()
     {
         styledTextNodes.Clear();
-        var lineIndex = 0;
-        while (lineIndex < rawText.Length - 1)
-        {
-            var nodeCreated = false;
 
-            foreach (var pair in TextHelpers.CommandStyleMap)
+        if (string.IsNullOrWhiteSpace(Text))
+        {
+            return;
+        }
+
+        var index = 0;
+        var insideCommand = Text[0] == '/';
+
+        if (insideCommand)
+        {
+            styledTextNodes.Add(new StyledTextNode(
+                Text[index++].ToString(),
+                TextHelpers.TextColours[7],
+                Color.Black,
+                SFML.Graphics.Text.Styles.Bold));
+
+            while (true)
             {
-                var endIndex = rawText.Length - 1;
-                var matchFound = false;
-                Match? match = null;
-                while (endIndex >= lineIndex)
+                if (Text.Length > index)
                 {
-                    match = pair.Key.Match(rawText[lineIndex..endIndex]);
-                    if (match.Success && match.Index == lineIndex)
+                    if (char.IsWhiteSpace(Text[index]))
                     {
-                        matchFound  = true;
                         break;
                     }
 
-                    endIndex--;
+                    styledTextNodes.Add(new StyledTextNode(
+                        Text[index].ToString(),
+                        TextHelpers.TextColours[7],
+                        Color.Black,
+                        SFML.Graphics.Text.Styles.Bold));
                 }
-                if (!matchFound || match == null)
+                else
                 {
-                    continue;
+                    break;
                 }
 
-                styledTextNodes.Add(new StyledTextNode(match.Value,
-                    TextHelpers.TextColours[pair.Value],
-                    TextHelpers.TextShadows[pair.Value],
-                    TextHelpers.TextDecorations[0]));
-                lineIndex += match.Length;
-                nodeCreated = true;
-                break;
+                index++;
             }
+        }
+        else
+        {
+            styledTextNodes.Add(new StyledTextNode(
+                Text,
+                Color.White,
+                Color.Black,
+                SFML.Graphics.Text.Styles.Regular));
 
-            if (!nodeCreated)
+            return;
+        }
+
+        var defaultColor = Color.White;
+        var unclosedQuote = false;
+
+        while (Text.Length > index)
+        {
+            switch (Text[index])
             {
-                styledTextNodes.Add(new StyledTextNode(rawText[lineIndex].ToString(),
-                    TextHelpers.TextColours[15],
-                    TextHelpers.TextShadows[15],
-                    TextHelpers.TextDecorations[0]));
-                lineIndex++;
+                case '@':
+                    if (unclosedQuote)
+                    {
+                        styledTextNodes.Add(
+                            new StyledTextNode(Text[index++].ToString(),
+                                unclosedQuote 
+                                    ? TextHelpers.TextColours[9] 
+                                    : TextHelpers.TextColours[10],
+                                Color.Black,
+                                SFML.Graphics.Text.Styles.Regular));
+
+                        break;
+                    }
+                    
+                    if (Text.Length > index + 1)
+                    {
+                        index++;
+
+                        styledTextNodes.Add(
+                            new StyledTextNode($"@{Text[index++]}",
+                                Color.Green,
+                                Color.Black,
+                                SFML.Graphics.Text.Styles.Bold));
+                    }
+                    else
+                    {
+                        styledTextNodes.Add(
+                            new StyledTextNode(Text[index++].ToString(),
+                                defaultColor,
+                                Color.Black,
+                                SFML.Graphics.Text.Styles.Regular));
+                    }
+
+                    break;
+
+                case '"':
+                {
+                    var start = index;
+
+                    index++;
+
+                    var successful = false;
+
+                    while (true)
+                    {
+                        if (Text.Length > index)
+                        {
+                            if (Text[index] == '"')
+                            {
+                                unclosedQuote = false;
+                                successful = true;
+                                break;
+                            }
+                        }
+                        else
+                        {
+
+                            index = start;
+                            unclosedQuote = true;
+
+                            styledTextNodes.Add(
+                                new StyledTextNode(Text[index++].ToString(),
+                                    TextHelpers.TextColours[9],
+                                    Color.Black,
+                                    SFML.Graphics.Text.Styles.Regular));
+
+                            break;
+                        }
+
+                        index++;
+                    }
+
+                    if (successful)
+                    {
+                        var content = Text[start..++index];
+
+                        styledTextNodes.Add(
+                            new StyledTextNode(content,
+                                TextHelpers.TextColours[13],
+                                Color.Black,
+                                SFML.Graphics.Text.Styles.Regular));
+                    }
+
+                    break;
+                }
+
+                case '~':
+                {
+                    if (unclosedQuote)
+                    {
+                        styledTextNodes.Add(
+                            new StyledTextNode(Text[index++].ToString(),
+                                unclosedQuote 
+                                    ? TextHelpers.TextColours[9] 
+                                    : TextHelpers.TextColours[10],
+                                Color.Black,
+                                SFML.Graphics.Text.Styles.Regular));
+
+                        break;
+                    }
+
+                    styledTextNodes.Add(new StyledTextNode(
+                        Text[index++].ToString(),
+                        TextHelpers.TextColours[11],
+                        Color.Black,
+                        SFML.Graphics.Text.Styles.Bold));
+
+                    while (true)
+                    {
+                        if (Text.Length > index)
+                        {
+                            if (char.IsDigit(Text[index]))
+                            {
+                                styledTextNodes.Add(new StyledTextNode(
+                                    Text[index++].ToString(),
+                                    Color.Yellow,
+                                    Color.Black,
+                                    SFML.Graphics.Text.Styles.Bold));
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case >= '0' and <= '9':
+                {
+                    if (unclosedQuote)
+                    {
+                        styledTextNodes.Add(
+                            new StyledTextNode(Text[index++].ToString(),
+                                unclosedQuote 
+                                    ? TextHelpers.TextColours[9] 
+                                    : TextHelpers.TextColours[10],
+                                Color.Black,
+                                SFML.Graphics.Text.Styles.Regular));
+
+                        break;
+                    }
+
+                    styledTextNodes.Add(new StyledTextNode(
+                        Text[index++].ToString(),
+                        Color.Blue,
+                        Color.Black,
+                        SFML.Graphics.Text.Styles.Bold));
+
+                    while (true)
+                    {
+                        if (Text.Length > index)
+                        {
+                            if (char.IsWhiteSpace(Text[index]))
+                            {
+                                break;
+                            }
+
+                            styledTextNodes.Add(new StyledTextNode(
+                                Text[index].ToString(),
+                                Color.Blue,
+                                Color.Black,
+                                SFML.Graphics.Text.Styles.Bold));
+                        }
+                        else
+                        {
+                            break;
+                        }
+
+                        index++;
+                    }
+
+                    break;
+                }
+
+                default:
+                    styledTextNodes.Add(
+                        new StyledTextNode(Text[index++].ToString(),
+                            unclosedQuote 
+                                ? TextHelpers.TextColours[9] 
+                                : TextHelpers.TextColours[10],
+                            Color.Black,
+                            SFML.Graphics.Text.Styles.Regular));
+
+                    break;
             }
         }
     }
