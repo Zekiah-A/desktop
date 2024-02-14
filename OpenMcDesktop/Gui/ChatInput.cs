@@ -167,9 +167,16 @@ public class ChatInput : TextInput
                         if (Text.Length > index)
                         {
                             var @char = Text[index];
-                            if (char.IsDigit(@char)
-                                || @char is '+' or '-')
+                            if (char.IsDigit(@char) || @char is '+' or '-' or '.')
                             {
+                                if (Text.Length > index + 1 && @char is '.')
+                                {
+                                    if (Text[index + 1] is '.')
+                                    {
+                                        break;
+                                    }
+                                }
+
                                 styledTextNodes.Add(TextHelpers.TextNodeFrom(
                                     Text[index++].ToString(),
                                     TextHelpers.RelativeCordinateStyle));
@@ -246,6 +253,12 @@ public class ChatInput : TextInput
 
                             if (@char is '.')
                             {
+                                if (Text.Length > index + 1
+                                    && Text[index + 1] is '.')
+                                {
+                                    break;
+                                }
+                                
                                 styledTextNodes.Add(TextHelpers.TextNodeFrom(
                                     @char.ToString(),
                                     TextHelpers.NumericLiteralStyle));
