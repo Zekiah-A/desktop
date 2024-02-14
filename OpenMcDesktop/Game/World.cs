@@ -151,6 +151,17 @@ public class World
 
         data.Window.KeyPressed += (_, args) =>
         {
+            if (GameGuiPage.Children.Contains(GameChatInput) && GameChatInput.Focused)
+            {
+                if (args.Code == Keyboard.Key.Escape)
+                {
+                    GameGuiPage.Children.Remove(GameChatInput);
+                    GameChatInput.Text = string.Empty;
+                    GameChatInput.Focused = false;
+                }
+                return;
+            }
+
             switch (args.Code)
             {
                 case Keyboard.Key.Tab:
@@ -173,11 +184,6 @@ public class World
                     }
                     break;
                 case Keyboard.Key.Escape:
-                    if (GameGuiPage.Children.Contains(GameChatInput))
-                    {
-                        GameGuiPage.Children.Remove(GameChatInput);
-                        break;
-                    }
                     if (!GameGuiPage.Children.Contains(GamePauseMenu))
                     {
                         GameGuiPage.Children.Add(GamePauseMenu);
