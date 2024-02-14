@@ -76,20 +76,20 @@ public class ChatInput : TextInput
         var unclosedQuote = false;
         while (Text.Length > index)
         {
+            if (Text[index] is not '"'
+                && unclosedQuote)
+            {
+                styledTextNodes.Add(TextHelpers.TextNodeFrom(
+                    Text[index++].ToString(),
+                    TextHelpers.UnclosedStringLiteralStyle));
+
+                continue;
+            }
+
             switch (Text[index])
             {
                 case '@':
                 {
-                    if (unclosedQuote)
-                    {
-                        styledTextNodes.Add(TextHelpers.TextNodeFrom(
-                            Text[index++].ToString(),
-                            unclosedQuote
-                                ? TextHelpers.UnclosedStringLiteralStyle
-                                : TextHelpers.SubCommandStyle));
-                        break;
-                    }
-
                     if (Text.Length > index + 1 && char.IsLetter(Text[index + 1]))
                     {
                         index++;
@@ -150,14 +150,6 @@ public class ChatInput : TextInput
                 }
                 case '~':
                 {
-                    if (unclosedQuote)
-                    {
-                        styledTextNodes.Add(TextHelpers.TextNodeFrom(
-                            Text[index++].ToString(),
-                            TextHelpers.UnclosedStringLiteralStyle));
-                        break;
-                    }
-
                     styledTextNodes.Add(TextHelpers.TextNodeFrom(
                         Text[index++].ToString(),
                         TextHelpers.RelativeCordinateStyle));
@@ -196,14 +188,6 @@ public class ChatInput : TextInput
                 }
                 case '+' or '-':
                 {
-                    if (unclosedQuote)
-                    {
-                        styledTextNodes.Add(TextHelpers.TextNodeFrom(
-                            Text[index++].ToString(),
-                            TextHelpers.UnclosedStringLiteralStyle));
-                        break;
-                    }
-
                     if (Text.Length > index + 1)
                     {
                         if (char.IsDigit(Text[++index]))
@@ -233,14 +217,6 @@ public class ChatInput : TextInput
                 }
                 case >= '0' and <= '9':
                 {
-                    if (unclosedQuote)
-                    {
-                        styledTextNodes.Add(TextHelpers.TextNodeFrom(
-                            Text[index++].ToString(),
-                            TextHelpers.UnclosedStringLiteralStyle));
-                        break;
-                    }
-
                     styledTextNodes.Add(TextHelpers.TextNodeFrom(
                         Text[index++].ToString(),
                         TextHelpers.NumericLiteralStyle));
