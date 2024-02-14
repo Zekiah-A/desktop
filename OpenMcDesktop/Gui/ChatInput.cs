@@ -166,7 +166,9 @@ public class ChatInput : TextInput
                     {
                         if (Text.Length > index)
                         {
-                            if (char.IsDigit(Text[index]))
+                            var @char = Text[index];
+                            if (char.IsDigit(@char)
+                                || @char is '+' or '-')
                             {
                                 styledTextNodes.Add(TextHelpers.TextNodeFrom(
                                     Text[index++].ToString(),
