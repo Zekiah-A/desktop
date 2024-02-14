@@ -185,6 +185,43 @@ public class ChatInput : TextInput
 
                     break;
                 }
+                case '+' or '-':
+                {
+                    if (unclosedQuote)
+                    {
+                        styledTextNodes.Add(TextHelpers.TextNodeFrom(
+                            Text[index++].ToString(),
+                            TextHelpers.UnclosedStringLiteralStyle));
+                        break;
+                    }
+
+                    if (Text.Length > index + 1)
+                    {
+                        if (char.IsDigit(Text[++index]))
+                        {
+                            styledTextNodes.Add(TextHelpers.TextNodeFrom(
+                                Text[index - 1].ToString(),
+                                TextHelpers.NumericLiteralStyle));
+                        }
+                        else
+                        {
+                            styledTextNodes.Add(TextHelpers.TextNodeFrom(
+                                Text[index - 1].ToString(),
+                                unclosedQuote
+                                    ? TextHelpers.UnclosedStringLiteralStyle
+                                    : TextHelpers.SubCommandStyle));
+                        }
+                    }
+                    else
+                    {
+                        styledTextNodes.Add(TextHelpers.TextNodeFrom(
+                            Text[index++].ToString(),
+                            unclosedQuote
+                                ? TextHelpers.UnclosedStringLiteralStyle
+                                : TextHelpers.SubCommandStyle));
+                    }
+                    break;
+                }
                 case >= '0' and <= '9':
                 {
                     if (unclosedQuote)
@@ -204,7 +241,18 @@ public class ChatInput : TextInput
                         if (Text.Length > index)
                         {
                             var @char = Text[index];
-                            if (char.IsWhiteSpace(@char) || @char is not (>= '0' and <= '9'))
+
+                            if (@char is '.')
+                            {
+                                styledTextNodes.Add(TextHelpers.TextNodeFrom(
+                                    @char.ToString(),
+                                    TextHelpers.NumericLiteralStyle));
+
+                                index++;
+                                continue;
+                            }
+
+                            if (char.IsWhiteSpace(@char) || !char.IsDigit(@char))
                             {
                                 break;
                             }
